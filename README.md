@@ -66,8 +66,11 @@ repos:
       - id: python-flake8
       - id: eslint
       - id: prettier
-      
-      # File validation
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # Standard file validation
       - id: check-yaml
       - id: check-json
       - id: trailing-whitespace

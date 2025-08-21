@@ -196,54 +196,26 @@
 # =============================================================================
 
 # File format validation
-- id: check-yaml
-  name: Check YAML syntax
-  entry: check-yaml
-  language: python
-  types: [yaml]
-
-- id: check-json
-  name: Check JSON syntax
-  entry: check-json
-  language: python
-  types: [json]
-
 - id: check-xml
   name: Check XML syntax
   entry: hooks/check_xml.py
   language: python
   files: \.xml$
 
-- id: check-toml
-  name: Check TOML syntax
-  entry: check-toml
-  language: python
-  types: [toml]
-
-# File hygiene
-- id: trailing-whitespace
-  name: Trim trailing whitespace
-  entry: trailing-whitespace-fixer
-  language: python
-  types: [text]
-
-- id: end-of-file-fixer
-  name: Fix end of files
-  entry: end-of-file-fixer
-  language: python
-  types: [text]
-
-- id: check-merge-conflict
-  name: Check for merge conflicts
-  entry: check-merge-conflict
-  language: python
-  types: [text]
-
-- id: mixed-line-ending
-  name: Check for mixed line endings
-  entry: mixed-line-ending
-  language: python
-  types: [text]
+# Note: For standard file validation hooks like check-yaml, check-json, 
+# trailing-whitespace, end-of-file-fixer, etc., use the official pre-commit-hooks:
+# 
+# repos:
+#   - repo: https://github.com/pre-commit/pre-commit-hooks
+#     rev: v4.4.0
+#     hooks:
+#       - id: check-yaml
+#       - id: check-json
+#       - id: trailing-whitespace
+#       - id: end-of-file-fixer
+#       - id: check-merge-conflict
+#       - id: mixed-line-ending
+#       - id: check-toml
 
 # License and copyright validation
 - id: check-license
@@ -253,12 +225,9 @@
   types: [text]
   require_serial: false
 
-# Large file detection
-- id: check-large-files
-  name: Check for large files
-  entry: check-added-large-files
-  language: python
-  args: [--maxkb=1000]
+# Note: For large file detection, use the official pre-commit-hooks:
+# - id: check-added-large-files
+#   args: [--maxkb=1000]
 
 # Docker security
 - id: dockerfile-lint

@@ -15,14 +15,18 @@ repos:
       - id: genai-security-check
         name: "GenAI-specific security validation"
       
-      # Prevent large files (models, datasets)
-      - id: check-large-files
-        args: ['--maxkb=1000']
-      
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
       # Basic file hygiene
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-merge-conflict
+      
+      # Prevent large files (models, datasets)
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
 
 # Instructions:
 # 1. Copy this file to your project as .pre-commit-config.yaml
