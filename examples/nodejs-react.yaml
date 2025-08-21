@@ -1,0 +1,135 @@
+# Node.js/React Project Configuration
+# Setup for JavaScript/TypeScript development with security focus
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.0.0  # Use the latest version
+    hooks:
+      # Security hooks (essential for GenAI projects)
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+      
+      - id: hardcoded-urls
+        name: "Detect hardcoded URLs"
+        exclude: ^(node_modules/|build/|dist/|public/)
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+      
+      - id: npm-audit
+        name: "npm vulnerability scanner"
+        files: package\.json$
+      
+      # Alternative for Yarn projects
+      # - id: yarn-audit
+      #   name: "Yarn vulnerability scanner"
+      #   files: package\.json$
+      
+      # JavaScript/TypeScript code quality
+      - id: eslint
+        name: "ESLint JavaScript/TypeScript linter"
+        files: \.(js|jsx|ts|tsx)$
+        exclude: ^(node_modules/|build/|dist/)
+      
+      - id: prettier
+        name: "Prettier code formatter"
+        files: \.(js|jsx|ts|tsx|json|css|scss|md|html)$
+        exclude: ^(node_modules/|build/|dist/|package-lock\.json)
+      
+      - id: typescript-check
+        name: "TypeScript compiler check"
+        files: \.tsx?$
+        exclude: ^(node_modules/|build/|dist/)
+      
+      # File validation
+      - id: check-json
+        name: "Check JSON syntax"
+        exclude: ^(node_modules/)
+      
+      - id: check-yaml
+        name: "Check YAML syntax"
+      
+      - id: trailing-whitespace
+        name: "Remove trailing whitespace"
+        exclude: ^(node_modules/|\.md$)
+      
+      - id: end-of-file-fixer
+        name: "Ensure files end with newline"
+        exclude: ^(node_modules/)
+      
+      - id: check-merge-conflict
+        name: "Check for merge conflicts"
+      
+      - id: check-large-files
+        name: "Check for large files"
+        args: ['--maxkb=500']
+
+# Additional Node.js-specific configuration files to create:
+#
+# .eslintrc.js:
+# module.exports = {
+#   env: {
+#     browser: true,
+#     es2021: true,
+#     node: true
+#   },
+#   extends: [
+#     'eslint:recommended',
+#     '@typescript-eslint/recommended',
+#     'react-app',
+#     'react-app/jest'
+#   ],
+#   parser: '@typescript-eslint/parser',
+#   parserOptions: {
+#     ecmaFeatures: {
+#       jsx: true
+#     },
+#     ecmaVersion: 12,
+#     sourceType: 'module'
+#   },
+#   plugins: [
+#     'react',
+#     '@typescript-eslint',
+#     'security'
+#   ],
+#   rules: {
+#     'no-eval': 'error',
+#     'no-implied-eval': 'error',
+#     'no-new-func': 'error',
+#     'security/detect-eval-with-expression': 'error',
+#     'security/detect-non-literal-fs-filename': 'warn'
+#   }
+# };
+#
+# .prettierrc:
+# {
+#   "semi": true,
+#   "trailingComma": "es5",
+#   "singleQuote": true,
+#   "printWidth": 80,
+#   "tabWidth": 2,
+#   "useTabs": false
+# }
+#
+# tsconfig.json:
+# {
+#   "compilerOptions": {
+#     "target": "es5",
+#     "lib": ["dom", "dom.iterable", "es6"],
+#     "allowJs": true,
+#     "skipLibCheck": true,
+#     "esModuleInterop": true,
+#     "allowSyntheticDefaultImports": true,
+#     "strict": true,
+#     "forceConsistentCasingInFileNames": true,
+#     "moduleResolution": "node",
+#     "resolveJsonModule": true,
+#     "isolatedModules": true,
+#     "noEmit": true,
+#     "jsx": "react-jsx"
+#   },
+#   "include": ["src"]
+# }

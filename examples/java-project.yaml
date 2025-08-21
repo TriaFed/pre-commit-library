@@ -1,0 +1,144 @@
+# Java Project Configuration
+# Setup for Java development with security focus
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.0.0  # Use the latest version
+    hooks:
+      # Security hooks (essential for GenAI projects)
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+      
+      - id: hardcoded-urls
+        name: "Detect hardcoded URLs"
+        exclude: ^(target/|build/|\.gradle/|\.m2/)
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+      
+      - id: semgrep
+        name: "SAST security scanner"
+        args: ['--config=p/java', '--config=p/security-audit']
+      
+      # Java code quality
+      - id: java-checkstyle
+        name: "Java Checkstyle"
+        files: \.java$
+        exclude: ^(target/|build/)
+      
+      - id: java-spotbugs
+        name: "Java SpotBugs"
+        files: \.java$
+        exclude: ^(target/|build/)
+      
+      # File validation
+      - id: check-xml
+        name: "Check XML syntax"
+        files: \.(xml|pom)$
+      
+      - id: check-yaml
+        name: "Check YAML syntax"
+      
+      - id: check-json
+        name: "Check JSON syntax"
+      
+      - id: trailing-whitespace
+        name: "Remove trailing whitespace"
+        exclude: ^(target/|build/|\.gradle/)
+      
+      - id: end-of-file-fixer
+        name: "Ensure files end with newline"
+        exclude: ^(target/|build/|\.gradle/)
+      
+      - id: check-merge-conflict
+        name: "Check for merge conflicts"
+      
+      - id: check-large-files
+        name: "Check for large files"
+        args: ['--maxkb=1000']
+      
+      - id: check-license
+        name: "Check for license headers"
+        files: \.java$
+        exclude: ^(target/|build/|src/test/)
+
+# Additional Java-specific configuration files to create:
+#
+# checkstyle.xml (basic security-focused configuration):
+# <?xml version="1.0"?>
+# <!DOCTYPE module PUBLIC
+#     "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+#     "https://checkstyle.org/dtds/configuration_1_3.dtd">
+# <module name="Checker">
+#     <property name="charset" value="UTF-8"/>
+#     <property name="severity" value="warning"/>
+#     
+#     <module name="TreeWalker">
+#         <!-- Naming Conventions -->
+#         <module name="ConstantName"/>
+#         <module name="LocalFinalVariableName"/>
+#         <module name="LocalVariableName"/>
+#         <module name="MemberName"/>
+#         <module name="MethodName"/>
+#         <module name="PackageName"/>
+#         <module name="ParameterName"/>
+#         <module name="StaticVariableName"/>
+#         <module name="TypeName"/>
+#         
+#         <!-- Imports -->
+#         <module name="AvoidStarImport"/>
+#         <module name="IllegalImport"/>
+#         <module name="RedundantImport"/>
+#         <module name="UnusedImports"/>
+#         
+#         <!-- Security-related -->
+#         <module name="IllegalCatch"/>
+#         <module name="IllegalThrows"/>
+#         
+#         <!-- Code Quality -->
+#         <module name="EmptyStatement"/>
+#         <module name="EqualsHashCode"/>
+#         <module name="HiddenField"/>
+#         <module name="SimplifyBooleanExpression"/>
+#         <module name="SimplifyBooleanReturn"/>
+#     </module>
+# </module>
+#
+# For Maven projects, add to pom.xml:
+# <plugin>
+#   <groupId>org.apache.maven.plugins</groupId>
+#   <artifactId>maven-checkstyle-plugin</artifactId>
+#   <version>3.1.2</version>
+#   <configuration>
+#     <configLocation>checkstyle.xml</configLocation>
+#     <encoding>UTF-8</encoding>
+#     <consoleOutput>true</consoleOutput>
+#     <failsOnError>true</failsOnError>
+#   </configuration>
+# </plugin>
+#
+# <plugin>
+#   <groupId>com.github.spotbugs</groupId>
+#   <artifactId>spotbugs-maven-plugin</artifactId>
+#   <version>4.7.2.1</version>
+# </plugin>
+#
+# For Gradle projects, add to build.gradle:
+# plugins {
+#     id 'checkstyle'
+#     id 'com.github.spotbugs' version '5.0.13'
+# }
+#
+# checkstyle {
+#     toolVersion = '10.3.4'
+#     configFile = file('checkstyle.xml')
+# }
+#
+# spotbugs {
+#     ignoreFailures = false
+#     showStackTraces = true
+#     showProgress = true
+# }

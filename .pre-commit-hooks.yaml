@@ -1,0 +1,268 @@
+# Pre-commit hooks library for GenAI code validation and security
+# Supports: Node.js, Angular, React, Python, TypeScript, Java, Terraform, CloudFormation
+
+# =============================================================================
+# LINTING AND CODE QUALITY HOOKS
+# =============================================================================
+
+# Python linting and formatting
+- id: python-black
+  name: Black (Python formatter)
+  entry: black
+  language: python
+  types: [python]
+  require_serial: false
+
+- id: python-flake8
+  name: Flake8 (Python linter)
+  entry: flake8
+  language: python
+  types: [python]
+  require_serial: false
+
+- id: python-isort
+  name: isort (Python import sorter)
+  entry: isort
+  language: python
+  types: [python]
+  require_serial: false
+
+- id: python-mypy
+  name: MyPy (Python type checker)
+  entry: mypy
+  language: python
+  types: [python]
+  require_serial: false
+
+# JavaScript/TypeScript/Node.js linting
+- id: eslint
+  name: ESLint (JavaScript/TypeScript linter)
+  entry: hooks/eslint.sh
+  language: script
+  files: \.(js|jsx|ts|tsx)$
+  require_serial: false
+
+- id: prettier
+  name: Prettier (Code formatter)
+  entry: hooks/prettier.sh
+  language: script
+  files: \.(js|jsx|ts|tsx|json|css|scss|md|html)$
+  require_serial: false
+
+- id: typescript-check
+  name: TypeScript compiler check
+  entry: hooks/tsc-check.sh
+  language: script
+  files: \.tsx?$
+  require_serial: false
+
+# Angular specific
+- id: angular-lint
+  name: Angular linting
+  entry: hooks/angular-lint.sh
+  language: script
+  files: \.(ts|html|scss|css)$
+  pass_filenames: false
+  require_serial: false
+
+# Java linting
+- id: java-checkstyle
+  name: Java Checkstyle
+  entry: hooks/java-checkstyle.sh
+  language: script
+  files: \.java$
+  require_serial: false
+
+- id: java-spotbugs
+  name: Java SpotBugs
+  entry: hooks/java-spotbugs.sh
+  language: script
+  files: \.java$
+  require_serial: false
+
+# Infrastructure as Code
+- id: terraform-fmt
+  name: Terraform format
+  entry: terraform fmt
+  language: system
+  files: \.tf$
+  require_serial: false
+
+- id: terraform-validate
+  name: Terraform validate
+  entry: hooks/terraform-validate.sh
+  language: script
+  files: \.tf$
+  require_serial: false
+
+- id: terraform-tflint
+  name: TFLint (Terraform linter)
+  entry: tflint
+  language: system
+  files: \.tf$
+  require_serial: false
+
+- id: cloudformation-validate
+  name: CloudFormation template validation
+  entry: hooks/cfn-validate.sh
+  language: script
+  files: \.(yaml|yml|json)$
+  require_serial: false
+
+# =============================================================================
+# SECURITY SCANNING HOOKS
+# =============================================================================
+
+# Secret scanning
+- id: detect-secrets
+  name: Detect secrets
+  entry: detect-secrets-hook
+  language: python
+  types: [text]
+  require_serial: false
+
+- id: truffhog
+  name: TruffleHog secret scanner
+  entry: hooks/truffhog.sh
+  language: script
+  types: [text]
+  require_serial: false
+
+# Custom security checks for GenAI code
+- id: hardcoded-urls
+  name: Detect hardcoded URLs
+  entry: hooks/detect-hardcoded-urls.py
+  language: python
+  types: [text]
+  require_serial: false
+
+- id: hardcoded-credentials
+  name: Detect hardcoded credentials
+  entry: hooks/detect-hardcoded-credentials.py
+  language: python
+  types: [text]
+  require_serial: false
+
+- id: genai-security-check
+  name: GenAI-specific security validation
+  entry: hooks/genai-security-check.py
+  language: python
+  types: [text]
+  require_serial: false
+
+# Vulnerability scanning
+- id: safety-python
+  name: Safety (Python dependency vulnerability scanner)
+  entry: safety
+  language: python
+  pass_filenames: false
+  files: requirements.*\.txt$
+  require_serial: false
+
+- id: npm-audit
+  name: npm audit (Node.js vulnerability scanner)
+  entry: hooks/npm-audit.sh
+  language: script
+  files: package\.json$
+  pass_filenames: false
+  require_serial: false
+
+- id: yarn-audit
+  name: Yarn audit (Node.js vulnerability scanner)
+  entry: hooks/yarn-audit.sh
+  language: script
+  files: package\.json$
+  pass_filenames: false
+  require_serial: false
+
+# SAST scanning
+- id: bandit
+  name: Bandit (Python security linter)
+  entry: bandit
+  language: python
+  types: [python]
+  args: ['-r', '.']
+  require_serial: false
+
+- id: semgrep
+  name: Semgrep (Multi-language SAST)
+  entry: hooks/semgrep.sh
+  language: script
+  types: [text]
+  require_serial: false
+
+# =============================================================================
+# GENERAL VALIDATION HOOKS
+# =============================================================================
+
+# File format validation
+- id: check-yaml
+  name: Check YAML syntax
+  entry: check-yaml
+  language: python
+  types: [yaml]
+
+- id: check-json
+  name: Check JSON syntax
+  entry: check-json
+  language: python
+  types: [json]
+
+- id: check-xml
+  name: Check XML syntax
+  entry: hooks/check-xml.py
+  language: python
+  files: \.xml$
+
+- id: check-toml
+  name: Check TOML syntax
+  entry: check-toml
+  language: python
+  types: [toml]
+
+# File hygiene
+- id: trailing-whitespace
+  name: Trim trailing whitespace
+  entry: trailing-whitespace-fixer
+  language: python
+  types: [text]
+
+- id: end-of-file-fixer
+  name: Fix end of files
+  entry: end-of-file-fixer
+  language: python
+  types: [text]
+
+- id: check-merge-conflict
+  name: Check for merge conflicts
+  entry: check-merge-conflict
+  language: python
+  types: [text]
+
+- id: mixed-line-ending
+  name: Check for mixed line endings
+  entry: mixed-line-ending
+  language: python
+  types: [text]
+
+# License and copyright validation
+- id: check-license
+  name: Check for license headers
+  entry: hooks/check-license.py
+  language: python
+  types: [text]
+  require_serial: false
+
+# Large file detection
+- id: check-large-files
+  name: Check for large files
+  entry: check-added-large-files
+  language: python
+  args: [--maxkb=1000]
+
+# Docker security
+- id: dockerfile-lint
+  name: Dockerfile linting
+  entry: hooks/dockerfile-lint.sh
+  language: script
+  files: Dockerfile

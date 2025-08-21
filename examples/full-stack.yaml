@@ -1,0 +1,176 @@
+# Full Stack Project Configuration
+# Comprehensive setup for projects with multiple languages and technologies
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.0.0  # Use the latest version
+    hooks:
+      # Security hooks (essential for ALL GenAI projects)
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        name: "Detect secrets using Yelp's detect-secrets"
+      
+      - id: truffhog
+        name: "TruffleHog secret scanner"
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+        exclude: ^(tests/|test/|spec/|__tests__/)
+      
+      - id: hardcoded-urls
+        name: "Detect hardcoded URLs"
+        exclude: ^(tests/|test/|spec/|__tests__/|docs/|node_modules/|target/|build/)
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+        exclude: ^(node_modules/|target/|build/|\.git/)
+      
+      - id: semgrep
+        name: "Multi-language SAST scanner"
+        args: ['--config=p/security-audit', '--config=p/secrets', '--config=p/owasp-top-ten']
+      
+      # Python security and quality
+      - id: bandit
+        name: "Python security linter"
+        files: \.py$
+        args: ['-r', '.', '-x', 'tests/,test/']
+      
+      - id: safety-python
+        name: "Python dependency vulnerability scanner"
+        files: requirements.*\.txt$
+      
+      - id: python-black
+        name: "Black Python formatter"
+        files: \.py$
+      
+      - id: python-flake8
+        name: "Python linter"
+        files: \.py$
+        args: ['--max-line-length=88']
+      
+      - id: python-isort
+        name: "Sort Python imports"
+        files: \.py$
+        args: ['--profile', 'black']
+      
+      # JavaScript/TypeScript security and quality
+      - id: npm-audit
+        name: "npm vulnerability scanner"
+        files: package\.json$
+      
+      - id: eslint
+        name: "ESLint JavaScript/TypeScript linter"
+        files: \.(js|jsx|ts|tsx)$
+        exclude: ^(node_modules/|build/|dist/|target/)
+      
+      - id: prettier
+        name: "Prettier code formatter"
+        files: \.(js|jsx|ts|tsx|json|css|scss|md|html)$
+        exclude: ^(node_modules/|build/|dist/|target/)
+      
+      - id: typescript-check
+        name: "TypeScript compiler check"
+        files: \.tsx?$
+        exclude: ^(node_modules/|build/|dist/)
+      
+      # Java security and quality
+      - id: java-checkstyle
+        name: "Java Checkstyle"
+        files: \.java$
+        exclude: ^(target/|build/)
+      
+      - id: java-spotbugs
+        name: "Java SpotBugs"
+        files: \.java$
+        exclude: ^(target/|build/)
+      
+      # Infrastructure as Code
+      - id: terraform-fmt
+        name: "Terraform format"
+        files: \.tf$
+      
+      - id: terraform-validate
+        name: "Terraform validate"
+        files: \.tf$
+      
+      - id: cloudformation-validate
+        name: "CloudFormation validation"
+        files: \.(yaml|yml|json)$
+      
+      - id: dockerfile-lint
+        name: "Dockerfile linting"
+        files: Dockerfile.*
+      
+      # File validation and hygiene
+      - id: check-yaml
+        name: "Check YAML syntax"
+        exclude: ^(node_modules/|\.terraform/|target/|build/)
+      
+      - id: check-json
+        name: "Check JSON syntax"
+        exclude: ^(node_modules/|\.terraform/|target/|build/)
+      
+      - id: check-xml
+        name: "Check XML syntax"
+        files: \.xml$
+      
+      - id: check-toml
+        name: "Check TOML syntax"
+        files: \.toml$
+      
+      - id: trailing-whitespace
+        name: "Remove trailing whitespace"
+        exclude: ^(node_modules/|\.terraform/|target/|build/|\.git/)
+      
+      - id: end-of-file-fixer
+        name: "Ensure files end with newline"
+        exclude: ^(node_modules/|\.terraform/|target/|build/|\.git/)
+      
+      - id: check-merge-conflict
+        name: "Check for merge conflicts"
+      
+      - id: mixed-line-ending
+        name: "Check for mixed line endings"
+        exclude: ^(node_modules/|\.terraform/|target/|build/)
+      
+      - id: check-large-files
+        name: "Check for large files (>1MB)"
+        args: ['--maxkb=1000']
+      
+      - id: check-license
+        name: "Check for license headers"
+        files: \.(py|java|js|ts|jsx|tsx)$
+        exclude: ^(node_modules/|target/|build/|tests?/|__tests__/)
+
+# Project structure this configuration supports:
+# ├── backend/           # Python/Java backend
+# │   ├── src/
+# │   ├── tests/
+# │   ├── requirements.txt
+# │   └── pom.xml or build.gradle
+# ├── frontend/          # React/TypeScript frontend
+# │   ├── src/
+# │   ├── public/
+# │   ├── package.json
+# │   └── tsconfig.json
+# ├── infrastructure/    # Terraform/CloudFormation
+# │   ├── *.tf
+# │   ├── *.yaml
+# │   └── Dockerfile
+# ├── docs/
+# ├── .secrets.baseline
+# ├── .pre-commit-config.yaml
+# └── README.md
+#
+# Setup instructions:
+# 1. Copy this configuration to .pre-commit-config.yaml
+# 2. Install pre-commit: pip install pre-commit
+# 3. Install hooks: pre-commit install
+# 4. Generate secrets baseline: detect-secrets scan --baseline .secrets.baseline
+# 5. Install language-specific tools as needed
+# 6. Run on all files initially: pre-commit run --all-files
+#
+# Environment variables for customization:
+# export NPM_AUDIT_LEVEL=moderate    # npm audit sensitivity
+# export BANDIT_EXCLUDE=tests/       # Bandit exclusions
+# export SEMGREP_RULES=p/security-audit,p/python  # Custom Semgrep rules

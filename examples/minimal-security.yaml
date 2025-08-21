@@ -1,0 +1,31 @@
+# Minimal Security Configuration for GenAI Projects
+# Essential hooks for protecting against accidental credential/secret commits
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.0.0  # Use the latest version
+    hooks:
+      # Critical security hooks for GenAI-generated code
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+      
+      # Prevent large files (models, datasets)
+      - id: check-large-files
+        args: ['--maxkb=1000']
+      
+      # Basic file hygiene
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+
+# Instructions:
+# 1. Copy this file to your project as .pre-commit-config.yaml
+# 2. Run: pre-commit install
+# 3. Generate secrets baseline: detect-secrets scan --baseline .secrets.baseline
+# 4. Add .secrets.baseline to your repository

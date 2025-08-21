@@ -1,0 +1,97 @@
+# Python Project Configuration
+# Comprehensive setup for Python development with security focus
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.0.0  # Use the latest version
+    hooks:
+      # Security hooks (essential for GenAI projects)
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+      
+      - id: hardcoded-urls
+        name: "Detect hardcoded URLs"
+        exclude: ^(tests/|docs/)
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+      
+      - id: bandit
+        name: "Python security linter"
+        args: ['-r', '.', '-x', 'tests/']
+      
+      - id: safety-python
+        name: "Python dependency vulnerability scanner"
+        files: requirements.*\.txt$
+      
+      # Python code quality
+      - id: python-black
+        name: "Black Python formatter"
+        language_version: python3
+      
+      - id: python-isort
+        name: "Sort Python imports"
+        args: ['--profile', 'black']
+      
+      - id: python-flake8
+        name: "Python linter"
+        args: ['--max-line-length=88', '--extend-ignore=E203,W503']
+      
+      - id: python-mypy
+        name: "Python type checker"
+        exclude: ^(tests/|docs/|setup.py)
+        additional_dependencies: [types-requests]
+      
+      # File validation
+      - id: check-yaml
+        name: "Check YAML syntax"
+      
+      - id: check-json
+        name: "Check JSON syntax"
+      
+      - id: check-toml
+        name: "Check TOML syntax"
+      
+      - id: trailing-whitespace
+        name: "Remove trailing whitespace"
+      
+      - id: end-of-file-fixer
+        name: "Ensure files end with newline"
+      
+      - id: check-merge-conflict
+        name: "Check for merge conflicts"
+      
+      - id: check-large-files
+        name: "Check for large files"
+        args: ['--maxkb=1000']
+      
+      - id: check-license
+        name: "Check for license headers"
+        exclude: ^(tests/|docs/|setup.py|__init__.py)
+
+# Additional Python-specific configuration files to create:
+# 
+# .flake8:
+# [flake8]
+# max-line-length = 88
+# extend-ignore = E203, W503
+# exclude = .git,__pycache__,docs/source/conf.py,old,build,dist
+# 
+# pyproject.toml:
+# [tool.black]
+# line-length = 88
+# target-version = ['py38']
+# 
+# [tool.isort]
+# profile = "black"
+# multi_line_output = 3
+# 
+# mypy.ini:
+# [mypy]
+# python_version = 3.8
+# warn_return_any = True
+# warn_unused_configs = True
+# disallow_untyped_defs = True
