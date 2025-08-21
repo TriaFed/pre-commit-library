@@ -235,3 +235,78 @@
   entry: hooks/dockerfile-lint.sh
   language: script
   files: Dockerfile
+
+# =============================================================================
+# .NET HOOKS
+# =============================================================================
+
+- id: dotnet-format
+  name: .NET code formatter
+  entry: hooks/dotnet-format.sh
+  language: script
+  files: \.(cs|vb|fs)$
+  require_serial: false
+
+- id: dotnet-test
+  name: .NET test runner
+  entry: hooks/dotnet-test.sh
+  language: script
+  files: \.(cs|vb|fs|csproj|sln)$
+  require_serial: false
+
+- id: dotnet-security-scan
+  name: .NET security scanner
+  entry: hooks/dotnet-security-scan.py
+  language: python
+  files: \.(cs|vb|fs|config|json)$
+  require_serial: false
+
+# =============================================================================
+# GO HOOKS
+# =============================================================================
+
+- id: go-fmt
+  name: Go code formatter
+  entry: hooks/go-fmt.sh
+  language: script
+  files: \.go$
+  require_serial: false
+
+- id: go-lint
+  name: Go linter with security checks
+  entry: hooks/go-lint.sh
+  language: script
+  files: \.go$
+  require_serial: false
+
+- id: go-security-scan
+  name: Go security scanner
+  entry: hooks/go-security-scan.sh
+  language: script
+  files: \.go$
+  require_serial: false
+
+# =============================================================================
+# ANSIBLE HOOKS
+# =============================================================================
+
+- id: ansible-lint
+  name: Ansible linting
+  entry: hooks/ansible-lint.sh
+  language: script
+  files: \.(yml|yaml)$
+  require_serial: false
+
+- id: ansible-syntax-check
+  name: Ansible syntax validation
+  entry: hooks/ansible-syntax-check.sh
+  language: script
+  files: \.(yml|yaml)$
+  require_serial: false
+
+- id: ansible-security-scan
+  name: Ansible security scanner
+  entry: hooks/ansible-security-scan.py
+  language: python
+  files: \.(yml|yaml|cfg)$
+  require_serial: false

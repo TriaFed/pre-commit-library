@@ -1,0 +1,97 @@
+# Go Project Configuration
+# Setup for Go development with security focus
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.0  # Use the latest version
+    hooks:
+      # Security hooks (essential for GenAI projects)
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+      
+      - id: go-security-scan
+        name: "Go security scanner with gosec"
+      
+      # Code Quality
+      - id: go-fmt
+        name: "Go code formatter"
+      
+      - id: go-lint
+        name: "Go linter with security checks"
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # File Validation
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+
+# Additional Go-specific configuration files to consider:
+#
+# .golangci.yml:
+# run:
+#   timeout: 5m
+#   tests: true
+#   skip-dirs:
+#     - vendor
+#
+# linters:
+#   enable:
+#     - errcheck
+#     - gosimple
+#     - govet
+#     - ineffassign
+#     - staticcheck
+#     - typecheck
+#     - unused
+#     - gosec
+#     - misspell
+#     - gofmt
+#     - goimports
+#     - gocritic
+#     - revive
+#     - unparam
+#
+# linters-settings:
+#   gosec:
+#     excludes:
+#       - G104 # Audit errors not checked
+#   gocritic:
+#     enabled-tags:
+#       - diagnostic
+#       - experimental
+#       - opinionated
+#       - performance
+#       - style
+#
+# .gosec.json:
+# {
+#     "severity": "medium",
+#     "confidence": "medium",
+#     "exclude": {
+#         "G104": "Audit errors not checked can be noisy in some contexts"
+#     },
+#     "exclude-generated": true,
+#     "tests": false
+# }
+
+# Security considerations for Go projects:
+# 1. Use go mod tidy to ensure clean dependencies
+# 2. Run go mod verify to verify dependency integrity
+# 3. Use context.Context for timeouts and cancellation
+# 4. Validate all user inputs
+# 5. Use crypto/rand for random number generation
+# 6. Implement proper error handling
+# 7. Use prepared statements for database queries
+# 8. Enable security-focused linters (gosec, etc.)
+# 9. Regular dependency updates with go get -u
+# 10. Use HTTPS for all external communications

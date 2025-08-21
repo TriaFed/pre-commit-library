@@ -27,23 +27,33 @@ This library provides pre-commit hooks specifically designed to:
 - **Node.js** - npm/yarn audit for vulnerabilities
 - **Angular** - Angular CLI linting
 - **Java** - Checkstyle, SpotBugs
+- **.NET** - dotnet format, dotnet test, security scanning (C#, VB.NET, F#)
+- **Go** - gofmt, golangci-lint, gosec security scanning
+- **Ansible** - ansible-lint, syntax checking, security validation
 - **Terraform** - Format, validate, TFLint
 - **CloudFormation** - Template validation
 - **Docker** - Dockerfile linting with hadolint
 
 ## 🚀 Quick Start
 
-### 1. Install pre-commit
+### 1. Install dependencies
 
+**Quick setup for macOS:**
 ```bash
-# Using pip
+curl -fsSL https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-macos.sh | bash
+```
+
+**Quick setup for Windows:**
+```powershell
+irm https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-windows.ps1 | iex
+```
+
+**Manual installation:**
+```bash
+# Install pre-commit
 pip install pre-commit
 
-# Using Homebrew (macOS)
-brew install pre-commit
-
-# Using conda
-conda install -c conda-forge pre-commit
+# See DEPENDENCIES.md for complete installation guide
 ```
 
 ### 2. Add to your project
@@ -53,7 +63,7 @@ Create a `.pre-commit-config.yaml` file in your project root:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       # Security hooks (recommended for all projects)
       - id: detect-secrets
@@ -105,6 +115,9 @@ pre-commit run --all-files
 | `npm-audit` | Node.js vulnerability scanner | Node.js |
 | `yarn-audit` | Yarn vulnerability scanner | Node.js |
 | `semgrep` | Multi-language SAST scanner | All |
+| `dotnet-security-scan` | .NET security scanner | C#/VB.NET/F# |
+| `go-security-scan` | Go security scanner | Go |
+| `ansible-security-scan` | Ansible security scanner | Ansible |
 
 ### 🎨 Code Quality Hooks
 
@@ -120,6 +133,12 @@ pre-commit run --all-files
 | `angular-lint` | Angular linting | Angular |
 | `java-checkstyle` | Java style checker | Java |
 | `java-spotbugs` | Java bug detector | Java |
+| `dotnet-format` | .NET code formatter | C#/VB.NET/F# |
+| `dotnet-test` | .NET test runner | C#/VB.NET/F# |
+| `go-fmt` | Go code formatter | Go |
+| `go-lint` | Go linter with security checks | Go |
+| `ansible-lint` | Ansible linting | Ansible |
+| `ansible-syntax-check` | Ansible syntax validation | Ansible |
 
 ### 🏗️ Infrastructure Hooks
 
@@ -149,7 +168,7 @@ For projects using GenAI tools, start with these essential security hooks:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       - id: detect-secrets
       - id: hardcoded-credentials
@@ -166,7 +185,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       # Security
       - id: detect-secrets
@@ -196,7 +215,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       # Security
       - id: detect-secrets
@@ -224,7 +243,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       # Security
       - id: detect-secrets
@@ -253,7 +272,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       # Security
       - id: detect-secrets
@@ -281,7 +300,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       # Security (essential for GenAI projects)
       - id: detect-secrets
@@ -459,7 +478,7 @@ For large repositories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.0.2
+    rev: v1.1.0
     hooks:
       - id: detect-secrets
         exclude: ^(docs/|tests/fixtures/)

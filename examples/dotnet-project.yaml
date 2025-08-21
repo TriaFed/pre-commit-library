@@ -1,0 +1,81 @@
+# .NET Project Configuration
+# Setup for C#, VB.NET, and F# development with security focus
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.0  # Use the latest version
+    hooks:
+      # Security hooks (essential for GenAI projects)
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+      
+      - id: dotnet-security-scan
+        name: ".NET security scanner"
+      
+      # Code Quality
+      - id: dotnet-format
+        name: ".NET code formatter"
+      
+      - id: dotnet-test
+        name: ".NET test runner"
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # File Validation
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+
+# Additional .NET-specific configuration files to consider:
+#
+# .editorconfig:
+# root = true
+#
+# [*]
+# charset = utf-8
+# end_of_line = crlf
+# indent_style = space
+# indent_size = 4
+# insert_final_newline = true
+# trim_trailing_whitespace = true
+#
+# [*.{cs,vb,fs}]
+# dotnet_sort_system_directives_first = true
+# dotnet_separate_import_directive_groups = false
+#
+# [*.cs]
+# csharp_new_line_before_open_brace = all
+# csharp_new_line_before_else = true
+# csharp_new_line_before_catch = true
+# csharp_new_line_before_finally = true
+#
+# Directory.Build.props:
+# <Project>
+#   <PropertyGroup>
+#     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+#     <WarningsAsErrors />
+#     <WarningsNotAsErrors>NU1605</WarningsNotAsErrors>
+#     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+#   </PropertyGroup>
+# </Project>
+
+# Security considerations for .NET projects:
+# 1. Use secure coding practices for ASP.NET Core
+# 2. Enable nullable reference types in C# 8+
+# 3. Use [ValidateAntiForgeryToken] for POST actions
+# 4. Implement proper authentication and authorization
+# 5. Use HTTPS and secure headers
+# 6. Validate all user inputs
+# 7. Use parameterized queries for database access
+# 8. Store secrets in Azure Key Vault or similar
+# 9. Enable security headers in ASP.NET Core
+# 10. Regular security scanning of NuGet packages

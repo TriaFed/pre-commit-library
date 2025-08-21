@@ -1,0 +1,91 @@
+# Ansible Project Configuration
+# Setup for Ansible playbooks and roles with security focus
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.0  # Use the latest version
+    hooks:
+      # Security hooks (essential for GenAI projects)
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+      
+      - id: hardcoded-credentials
+        name: "Detect hardcoded passwords and API keys"
+      
+      - id: genai-security-check
+        name: "GenAI-specific security validation"
+      
+      - id: ansible-security-scan
+        name: "Ansible security scanner"
+      
+      # Ansible-specific validation
+      - id: ansible-lint
+        name: "Ansible linting"
+      
+      - id: ansible-syntax-check
+        name: "Ansible syntax validation"
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # File Validation
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+
+# Additional Ansible-specific configuration files to consider:
+#
+# .ansible-lint:
+# ---
+# skip_list:
+#   - yaml[line-length]  # Allow longer lines in YAML
+#   - name[casing]       # Allow different naming conventions
+#
+# exclude_paths:
+#   - .cache/
+#   - .github/
+#   - molecule/
+#   - venv/
+#
+# warn_list:
+#   - yaml[comments]
+#   - yaml[line-length]
+#   - name[template]
+#   - risky-file-permissions
+#
+# ansible.cfg:
+# [defaults]
+# host_key_checking = False
+# retry_files_enabled = False
+# inventory = inventory/hosts
+# roles_path = roles
+# 
+# [ssh_connection]
+# ssh_args = -o ControlMaster=auto -o ControlPersist=60s
+# pipelining = True
+
+# Security considerations for Ansible projects:
+# 1. Use ansible-vault for sensitive data
+# 2. Never commit unencrypted secrets or passwords
+# 3. Use no_log: true for sensitive tasks
+# 4. Validate file permissions (avoid 777, 666)
+# 5. Use HTTPS instead of HTTP for downloads
+# 6. Implement proper privilege escalation
+# 7. Use parameterized queries for database operations
+# 8. Validate all user inputs and variables
+# 9. Use secure defaults for service configurations
+# 10. Regular updates of Ansible and community collections
+#
+# Example vault usage:
+# ansible-vault create group_vars/production/vault.yml
+# ansible-vault edit group_vars/production/vault.yml
+# ansible-playbook site.yml --ask-vault-pass
+#
+# Example secure task:
+# - name: Create user with secure password
+#   user:
+#     name: "{{ username }}"
+#     password: "{{ user_password | password_hash('sha512') }}"
+#     state: present
+#   no_log: true
