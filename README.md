@@ -267,6 +267,86 @@ repos:
       - id: end-of-file-fixer
 ```
 
+### .NET Project
+
+```yaml
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.0
+    hooks:
+      # Security
+      - id: detect-secrets
+      - id: hardcoded-credentials
+      - id: genai-security-check
+      - id: dotnet-security-scan
+      
+      # Code Quality
+      - id: dotnet-format
+      - id: dotnet-test
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # File Validation
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+```
+
+### Go Project
+
+```yaml
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.0
+    hooks:
+      # Security
+      - id: detect-secrets
+      - id: hardcoded-credentials
+      - id: genai-security-check
+      - id: go-security-scan
+      
+      # Code Quality
+      - id: go-fmt
+      - id: go-lint
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # File Validation
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+```
+
+### Ansible Project
+
+```yaml
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.0
+    hooks:
+      # Security
+      - id: detect-secrets
+      - id: hardcoded-credentials
+      - id: genai-security-check
+      - id: ansible-security-scan
+      
+      # Ansible Validation
+      - id: ansible-lint
+      - id: ansible-syntax-check
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # File Validation
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+```
+
 ### Infrastructure as Code
 
 ```yaml
@@ -320,6 +400,25 @@ repos:
       - id: eslint
       - id: prettier
       - id: npm-audit
+      
+      # .NET
+      - id: dotnet-format
+      - id: dotnet-test
+      - id: dotnet-security-scan
+      
+      # Go
+      - id: go-fmt
+      - id: go-lint
+      - id: go-security-scan
+      
+      # Java
+      - id: java-checkstyle
+      - id: java-spotbugs
+      
+      # Ansible
+      - id: ansible-lint
+      - id: ansible-syntax-check
+      - id: ansible-security-scan
       
       # Infrastructure
       - id: terraform-validate
@@ -421,15 +520,78 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))  # Parameterized
 
 ## 🛠️ Installation Requirements
 
-### Required Tools
+### Quick Setup (Recommended)
 
-The hooks will automatically check for required tools and provide installation instructions:
+**macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-macos.sh | bash
+```
 
-- **Python**: `pip install black flake8 isort mypy bandit safety detect-secrets`
-- **Node.js**: `npm install -g eslint prettier @angular/cli`
-- **Java**: Maven/Gradle with appropriate plugins
-- **Security**: `pip install semgrep`, `brew install trufflehog`
-- **Infrastructure**: `brew install terraform tflint hadolint`
+**Windows:**
+```powershell
+irm https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-windows.ps1 | iex
+```
+
+### Manual Installation by Language
+
+**Python:**
+```bash
+pip install black flake8 isort mypy bandit safety detect-secrets
+```
+
+**JavaScript/TypeScript/Node.js:**
+```bash
+npm install -g eslint prettier typescript @angular/cli
+```
+
+**.NET:**
+```bash
+# Download from: https://dotnet.microsoft.com/download
+# macOS: brew install --cask dotnet
+# Windows: winget install Microsoft.DotNet.SDK.8
+```
+
+**Go:**
+```bash
+# Install Go: https://golang.org/dl/
+# macOS: brew install go
+# Windows: winget install GoLang.Go
+
+# Install Go tools:
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+```
+
+**Java:**
+```bash
+# Install JDK 17+
+# macOS: brew install openjdk@17
+# Windows: winget install Microsoft.OpenJDK.17
+
+# Build tools:
+# Maven: brew install maven / winget install Apache.Maven
+# Gradle: brew install gradle / winget install Gradle.Gradle
+```
+
+**Ansible:**
+```bash
+pip install ansible ansible-lint
+```
+
+**Infrastructure Tools:**
+```bash
+# Terraform: brew install terraform / winget install Hashicorp.Terraform
+# TFLint: brew install tflint / choco install tflint
+# Hadolint: brew install hadolint / winget install Hadolint.Hadolint
+```
+
+**Security Tools:**
+```bash
+pip install semgrep
+# TruffleHog: brew install trufflehog / winget install trufflesecurity.trufflehog
+```
+
+📋 **Complete installation guide:** [DEPENDENCIES.md](DEPENDENCIES.md)
 
 ### Optional Tools
 
