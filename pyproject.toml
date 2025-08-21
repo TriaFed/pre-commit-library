@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pre-commit-hooks-genai"
-version = "1.0.0"
+version = "1.0.1"
 description = "Pre-commit hooks library for GenAI code validation and security"
 readme = "README.md"
 license = {text = "MIT"}
