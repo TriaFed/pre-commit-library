@@ -135,15 +135,10 @@ pre-commit run --all-files
 
 | Hook ID | Description | File Types |
 |---------|-------------|------------|
-| `check-yaml` | YAML syntax validation | .yaml, .yml |
-| `check-json` | JSON syntax validation | .json |
 | `check-xml` | XML syntax validation | .xml |
-| `check-toml` | TOML syntax validation | .toml |
-| `trailing-whitespace` | Remove trailing whitespace | All text |
-| `end-of-file-fixer` | Ensure files end with newline | All text |
-| `check-merge-conflict` | Check for merge conflicts | All text |
-| `check-large-files` | Prevent large files | All |
 | `check-license` | Check for license headers | Source files |
+
+**Note:** For standard file validation hooks like `check-yaml`, `check-json`, `trailing-whitespace`, `end-of-file-fixer`, `check-merge-conflict`, `check-added-large-files`, and `check-toml`, use the official [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) repository alongside our security-focused hooks.
 
 ## 🔧 Configuration Examples
 
@@ -159,7 +154,11 @@ repos:
       - id: detect-secrets
       - id: hardcoded-credentials
       - id: genai-security-check
-      - id: check-large-files
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
 ```
 
 ### Python Project
@@ -181,7 +180,10 @@ repos:
       - id: python-flake8
       - id: python-isort
       - id: python-mypy
-      
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
       # File Validation
       - id: check-yaml
       - id: check-json
@@ -206,7 +208,10 @@ repos:
       - id: eslint
       - id: prettier
       - id: typescript-check
-      
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
       # File Validation
       - id: check-json
       - id: check-yaml
@@ -231,8 +236,13 @@ repos:
       - id: java-checkstyle
       - id: java-spotbugs
       
-      # File Validation
+      # Custom File Validation
       - id: check-xml
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # Standard File Validation
       - id: check-yaml
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -256,7 +266,10 @@ repos:
       - id: terraform-tflint
       - id: cloudformation-validate
       - id: dockerfile-lint
-      
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
       # File Validation
       - id: check-yaml
       - id: check-json
@@ -293,14 +306,19 @@ repos:
       - id: terraform-validate
       - id: dockerfile-lint
       
-      # File Validation
+      # Custom File Validation
+      - id: check-xml
+      - id: check-license
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # Standard File Validation
       - id: check-yaml
       - id: check-json
-      - id: check-xml
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      - id: check-large-files
-      - id: check-license
+      - id: check-added-large-files
 ```
 
 ## 🎛️ Hook Configuration
