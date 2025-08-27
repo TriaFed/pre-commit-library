@@ -255,7 +255,7 @@ def check_verbose_flags(file_path: str) -> List[Tuple[int, str, str, str]]:
                         
                         issues.append((
                             line_num,
-                            line.strip(),
+                            stripped_line,
                             pattern_name,
                             pattern_info['description']
                         ))
