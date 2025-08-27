@@ -241,7 +241,8 @@ def check_verbose_flags(file_path: str) -> List[Tuple[int, str, str, str]]:
             lines = content.split('\n')
         
         for line_num, line in enumerate(lines, 1):
-            if not line.strip() or line.strip().startswith('#'):
+            stripped_line = line.strip()
+            if not stripped_line or stripped_line.startswith('#'):
                 continue
             
             # Check each pattern type
