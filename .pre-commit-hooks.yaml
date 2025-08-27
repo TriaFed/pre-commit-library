@@ -150,6 +150,13 @@
   types: [text]
   require_serial: false
 
+- id: detect-verbose-flags
+  name: Detect verbose flags and debug logging
+  entry: hooks/detect-verbose-flags.py
+  language: python
+  types: [text]
+  require_serial: false
+
 # Vulnerability scanning
 - id: safety-python
   name: Safety (Python dependency vulnerability scanner)

@@ -63,13 +63,14 @@ Create a `.pre-commit-config.yaml` file in your project root:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security hooks (recommended for all projects)
       - id: detect-secrets
       - id: hardcoded-urls
       - id: hardcoded-credentials
       - id: genai-security-check
+      - id: detect-verbose-flags
       
       # Language-specific hooks
       - id: python-black
@@ -118,6 +119,7 @@ pre-commit run --all-files
 | `dotnet-security-scan` | .NET security scanner | C#/VB.NET/F# |
 | `go-security-scan` | Go security scanner | Go |
 | `ansible-security-scan` | Ansible security scanner | Ansible |
+| `detect-verbose-flags` | Detect verbose flags and debug logging | All |
 
 ### 🎨 Code Quality Hooks
 
@@ -168,7 +170,7 @@ For projects using GenAI tools, start with these essential security hooks:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       - id: detect-secrets
       - id: hardcoded-credentials
@@ -185,7 +187,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security
       - id: detect-secrets
@@ -215,7 +217,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security
       - id: detect-secrets
@@ -243,7 +245,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security
       - id: detect-secrets
@@ -272,7 +274,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security
       - id: detect-secrets
@@ -299,7 +301,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security
       - id: detect-secrets
@@ -326,7 +328,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security
       - id: detect-secrets
@@ -352,7 +354,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security
       - id: detect-secrets
@@ -380,7 +382,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       # Security (essential for GenAI projects)
       - id: detect-secrets
@@ -388,6 +390,7 @@ repos:
       - id: hardcoded-urls
       - id: hardcoded-credentials
       - id: genai-security-check
+      - id: detect-verbose-flags
       - id: semgrep
       
       # Python
@@ -633,6 +636,19 @@ const problematicCode = "value";
 potentially_flagged_code()
 ```
 
+#### Verbose Flags Detection
+```python
+# ❌ Will be flagged
+logging.basicConfig(level=logging.DEBUG)
+debug = True
+console.log("DEBUG: " + data)
+
+# ✅ Better alternatives
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+debug = os.getenv("DEBUG", "false").lower() == "true"
+logger.debug("Processing data: %s", data)
+```
+
 ### Performance Optimization
 
 For large repositories:
@@ -640,7 +656,7 @@ For large repositories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.0
+    rev: v1.1.1
     hooks:
       - id: detect-secrets
         exclude: ^(docs/|tests/fixtures/)
