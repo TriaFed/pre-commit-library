@@ -248,15 +248,15 @@ verify_tools() {
             HAS_ERRORS=1
             echo "❌ $tool (not available)"
         fi
-
-        if [ $HAS_ERRORS -eq 1 ]; then
-            echo ""
-            echo "❗ Some tools are missing. Please check the errors above."
-            echo "💡 You may need to add some tools to your PATH manually."
-            echo "For Go tools, ensure $(go env GOPATH)/bin is in your PATH."
-            echo "For Python tools like pre-commit, black, terraform, or ansible. Make sure $(python3 -m site --user-base)/bin is in your PATH."
-        fi 
     done
+
+    if [ $HAS_ERRORS -eq 1 ]; then
+        echo ""
+        echo "❗ Some tools are missing. Please check the errors above."
+        echo "💡 You may need to add some tools to your PATH manually."
+        echo "For Go tools, ensure $(go env GOPATH)/bin is in your PATH."
+        echo "For Python tools like pre-commit, black, terraform, or ansible. Make sure $(python3 -m site --user-base)/bin is in your PATH."
+    fi 
 }
 
 # Add PATH exports to shell profile
