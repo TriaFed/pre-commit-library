@@ -22,13 +22,13 @@ check_gosec() {
     
     echo "❌ gosec not found. Please install it:"
     echo "  # Using go install:"
-    echo "  go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest"
+    echo "  go install github.com/securego/gosec/v2/cmd/gosec@latest"
     echo ""
     echo "  # Using Homebrew (macOS):"
     echo "  brew install gosec"
     echo ""
     echo "  # Using Docker:"
-    echo "  docker run --rm -it -v \$(pwd):/src securecodewarrior/gosec /src"
+    echo "  docker run --rm -it -v \$(pwd):/src securego/gosec /src"
     return 1
 }
 
