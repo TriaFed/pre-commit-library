@@ -63,7 +63,7 @@ install_core_deps() {
     # Install pre-commit
     if ! command_exists pre-commit; then
         echo "🪝 Installing pre-commit..."
-        pip3 install pre-commit
+        pip3 install --user pre-commit
     else
         echo "✅ pre-commit already installed"
     fi
@@ -75,7 +75,7 @@ install_python_tools() {
     echo "🐍 Installing Python development tools..."
     
     pip3 install --upgrade pip
-    pip3 install black flake8 isort mypy bandit safety detect-secrets semgrep
+    pip3 install --user black flake8 isort mypy bandit safety detect-secrets semgrep
     
     echo "✅ Python tools installed"
 }
@@ -189,7 +189,7 @@ install_ansible() {
     echo ""
     echo "📋 Installing Ansible..."
     
-    pip3 install ansible ansible-lint
+    pip3 install --user ansible ansible-lint
     
     echo "✅ Ansible installed"
 }
@@ -209,13 +209,13 @@ install_security_tools() {
     # AWS CLI (optional)
     if ! command_exists aws; then
         echo "☁️ Installing AWS CLI..."
-        pip3 install awscli
+        pip3 install --user awscli
     else
         echo "✅ AWS CLI already installed"
     fi
     
     # CloudFormation tools
-    pip3 install cfn-lint
+    pip3 install --user cfn-lint
     
     echo "✅ Security tools installed"
 }
@@ -232,20 +232,31 @@ verify_tools() {
         "pre-commit --version"
         "black --version"
         "eslint --version"
-        "dotnet --version"
+        "dotnet --info"
         "go version"
-        "java --version"
+        "java -version"
         "terraform --version"
         "ansible --version"
     )
+
+    HAS_ERRORS=0
     
     for tool in "${tools[@]}"; do
         if $tool >/dev/null 2>&1; then
             echo "✅ $tool"
         else
+            HAS_ERRORS=1
             echo "❌ $tool (not available)"
         fi
     done
+
+    if [ $HAS_ERRORS -eq 1 ]; then
+        echo ""
+        echo "❗ Some tools are missing. Please check the errors above."
+        echo "💡 You may need to add some tools to your PATH manually."
+        echo "For Go tools, ensure $(go env GOPATH)/bin is in your PATH."
+        echo "For Python tools like pre-commit, black, terraform, or ansible. Make sure $(python3 -m site --user-base)/bin is in your PATH."
+    fi 
 }
 
 # Add PATH exports to shell profile
