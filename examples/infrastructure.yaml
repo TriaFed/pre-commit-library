@@ -3,70 +3,69 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.1  # Use the latest version
+    rev: v1.1.2 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-      
+
       - id: hardcoded-credentials
-        name: "Detect hardcoded passwords and API keys"
-      
+        name: 'Detect hardcoded passwords and API keys'
+
       - id: hardcoded-urls
-        name: "Detect hardcoded URLs"
+        name: 'Detect hardcoded URLs'
         exclude: ^(\.terraform/|terraform\.tfstate)
-      
+
       - id: genai-security-check
-        name: "GenAI-specific security validation"
-      
+        name: 'GenAI-specific security validation'
+
       # Terraform
       - id: terraform-fmt
-        name: "Terraform format"
+        name: 'Terraform format'
         files: \.tf$
-      
+
       - id: terraform-validate
-        name: "Terraform validate"
+        name: 'Terraform validate'
         files: \.tf$
-      
+
       - id: terraform-tflint
-        name: "TFLint Terraform linter"
+        name: 'TFLint Terraform linter'
         files: \.tf$
-      
+
       # CloudFormation
       - id: cloudformation-validate
-        name: "CloudFormation template validation"
+        name: 'CloudFormation template validation'
         files: \.(yaml|yml|json)$
         # Only run on files that contain CloudFormation keywords
-      
+
       # Docker
       - id: dockerfile-lint
-        name: "Dockerfile linting"
+        name: 'Dockerfile linting'
         files: Dockerfile.*
-      
+
       # File validation
       - id: check-yaml
-        name: "Check YAML syntax"
+        name: 'Check YAML syntax'
         exclude: ^(\.terraform/)
-      
-      - id: check-json
-        name: "Check JSON syntax"
-        exclude: ^(\.terraform/|terraform\.tfstate)
-      
-      - id: trailing-whitespace
-        name: "Remove trailing whitespace"
-        exclude: ^(\.terraform/)
-      
-      - id: end-of-file-fixer
-        name: "Ensure files end with newline"
-        exclude: ^(\.terraform/)
-      
-      - id: check-merge-conflict
-        name: "Check for merge conflicts"
-      
-      - id: check-large-files
-        name: "Check for large files"
-        args: ['--maxkb=2000']
 
+      - id: check-json
+        name: 'Check JSON syntax'
+        exclude: ^(\.terraform/|terraform\.tfstate)
+
+      - id: trailing-whitespace
+        name: 'Remove trailing whitespace'
+        exclude: ^(\.terraform/)
+
+      - id: end-of-file-fixer
+        name: 'Ensure files end with newline'
+        exclude: ^(\.terraform/)
+
+      - id: check-merge-conflict
+        name: 'Check for merge conflicts'
+
+      - id: check-large-files
+        name: 'Check for large files'
+        args: ['--maxkb=2000']
 # Additional Infrastructure-specific configuration files to create:
 #
 # .tflint.hcl:

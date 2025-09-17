@@ -3,19 +3,18 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.1  # Use the latest version
+    rev: v1.1.2 # Use the latest version
     hooks:
       # Critical security hooks for GenAI-generated code
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-      
+
       - id: hardcoded-credentials
-        name: "Detect hardcoded passwords and API keys"
-      
+        name: 'Detect hardcoded passwords and API keys'
+
       - id: genai-security-check
-        name: "GenAI-specific security validation"
-      
-  
+        name: 'GenAI-specific security validation'
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -23,11 +22,10 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-merge-conflict
-      
+
       # Prevent large files (models, datasets)
       - id: check-added-large-files
         args: ['--maxkb=1000']
-
 # Instructions:
 # 1. Copy this file to your project as .pre-commit-config.yaml
 # 2. Run: pre-commit install
