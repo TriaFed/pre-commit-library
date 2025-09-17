@@ -6,28 +6,28 @@
 # =============================================================================
 
 # Python linting and formatting
-- id: python-black
+- id: python_black
   name: Black (Python formatter)
   entry: black
   language: python
   types: [python]
   require_serial: false
 
-- id: python-flake8
+- id: python_flake8
   name: Flake8 (Python linter)
   entry: flake8
   language: python
   types: [python]
   require_serial: false
 
-- id: python-isort
+- id: python_isort
   name: isort (Python import sorter)
   entry: isort
   language: python
   types: [python]
   require_serial: false
 
-- id: python-mypy
+- id: python_mypy
   name: MyPy (Python type checker)
   entry: mypy
   language: python
@@ -49,62 +49,62 @@
   files: \.(js|jsx|ts|tsx|json|css|scss|md|html)$
   require_serial: false
 
-- id: typescript-check
+- id: typescript_check
   name: TypeScript compiler check
-  entry: hooks/tsc-check.sh
+  entry: hooks/tsc_check.sh
   language: script
   files: \.tsx?$
   require_serial: false
 
 # Angular specific
-- id: angular-lint
+- id: angular_lint
   name: Angular linting
-  entry: hooks/angular-lint.sh
+  entry: hooks/angular_lint.sh
   language: script
   files: \.(ts|html|scss|css)$
   pass_filenames: false
   require_serial: false
 
 # Java linting
-- id: java-checkstyle
+- id: java_checkstyle
   name: Java Checkstyle
-  entry: hooks/java-checkstyle.sh
+  entry: hooks/java_checkstyle.sh
   language: script
   files: \.java$
   require_serial: false
 
-- id: java-spotbugs
+- id: java_spotbugs
   name: Java SpotBugs
-  entry: hooks/java-spotbugs.sh
+  entry: hooks/java_spotbugs.sh
   language: script
   files: \.java$
   require_serial: false
 
 # Infrastructure as Code
-- id: terraform-fmt
+- id: terraform_fmt
   name: Terraform format
   entry: terraform fmt
   language: system
   files: \.tf$
   require_serial: false
 
-- id: terraform-validate
+- id: terraform_validate
   name: Terraform validate
-  entry: hooks/terraform-validate.sh
+  entry: hooks/terraform_validate.sh
   language: script
   files: \.tf$
   require_serial: false
 
-- id: terraform-tflint
+- id: terraform_tflint
   name: TFLint (Terraform linter)
   entry: tflint
   language: system
   files: \.tf$
   require_serial: false
 
-- id: cloudformation-validate
+- id: cloudformation_validate
   name: CloudFormation template validation
-  entry: hooks/cfn-validate.sh
+  entry: hooks/cfn_validate.sh
   language: script
   files: \.(yaml|yml|json)$
   require_serial: false
@@ -114,7 +114,7 @@
 # =============================================================================
 
 # Secret scanning
-- id: detect-secrets
+- id: detect_secrets
   name: Detect secrets
   entry: detect-secrets-hook
   language: python
@@ -129,36 +129,36 @@
   require_serial: false
 
 # Custom security checks for GenAI code
-- id: hardcoded-urls
+- id: hardcoded_urls
   name: Detect hardcoded URLs
-  entry: hooks/detect-hardcoded-urls.py
+  entry: hooks/detect_hardcoded_urls.py
   language: python
   types: [text]
   require_serial: false
 
-- id: hardcoded-credentials
+- id: hardcoded_credentials
   name: Detect hardcoded credentials
-  entry: hooks/detect-hardcoded-credentials.py
+  entry: hooks/detect_hardcoded_credentials.py
   language: python
   types: [text]
   require_serial: false
 
-- id: genai-security-check
+- id: genai_security_check
   name: GenAI-specific security validation
-  entry: hooks/genai-security-check.py
+  entry: hooks/genai_security_check.py
   language: python
   types: [text]
   require_serial: false
 
-- id: detect-verbose-flags
+- id: detect_verbose_flags
   name: Detect verbose flags and debug logging
-  entry: hooks/detect-verbose-flags.py
+  entry: hooks/detect_verbose_flags.py
   language: python
   types: [text]
   require_serial: false
 
 # Vulnerability scanning
-- id: safety-python
+- id: safety_python
   name: Safety (Python dependency vulnerability scanner)
   entry: safety
   language: python
@@ -166,17 +166,17 @@
   files: requirements.*\.txt$
   require_serial: false
 
-- id: npm-audit
+- id: npm_audit
   name: npm audit (Node.js vulnerability scanner)
-  entry: hooks/npm-audit.sh
+  entry: hooks/npm_audit.sh
   language: script
   files: package\.json$
   pass_filenames: false
   require_serial: false
 
-- id: yarn-audit
+- id: yarn_audit
   name: Yarn audit (Node.js vulnerability scanner)
-  entry: hooks/yarn-audit.sh
+  entry: hooks/yarn_audit.sh
   language: script
   files: package\.json$
   pass_filenames: false
@@ -203,9 +203,9 @@
 # =============================================================================
 
 # File format validation
-- id: check-xml
+- id: check_xml
   name: Check XML syntax
-  entry: hooks/check-xml.py
+  entry: hooks/check_xml.py
   language: python
   files: \.xml$
 
@@ -216,30 +216,30 @@
 #   - repo: https://github.com/pre-commit/pre-commit-hooks
 #     rev: v4.4.0
 #     hooks:
-#       - id: check-yaml
-#       - id: check-json
-#       - id: trailing-whitespace
-#       - id: end-of-file-fixer
-#       - id: check-merge-conflict
-#       - id: mixed-line-ending
-#       - id: check-toml
+#       - id: check_yaml
+#       - id: check_json
+#       - id: trailing_whitespace
+#       - id: end_of_file_fixer
+#       - id: check_merge_conflict
+#       - id: mixed_line_ending
+#       - id: check_toml
 
 # License and copyright validation
-- id: check-license
+- id: check_license
   name: Check for license headers
-  entry: hooks/check-license.py
+  entry: hooks/check_license.py
   language: python
   types: [text]
   require_serial: false
 
 # Note: For large file detection, use the official pre-commit-hooks:
-# - id: check-added-large-files
+# - id: check_added_large_files
 #   args: [--maxkb=1000]
 
 # Docker security
-- id: dockerfile-lint
+- id: dockerfile_lint
   name: Dockerfile linting
-  entry: hooks/dockerfile-lint.sh
+  entry: hooks/dockerfile_lint.sh
   language: script
   files: Dockerfile
 
@@ -247,23 +247,23 @@
 # .NET HOOKS
 # =============================================================================
 
-- id: dotnet-format
+- id: dotnet_format
   name: .NET code formatter
-  entry: hooks/dotnet-format.sh
+  entry: hooks/dotnet_format.sh
   language: script
   files: \.(cs|vb|fs)$
   require_serial: false
 
-- id: dotnet-test
+- id: dotnet_test
   name: .NET test runner
-  entry: hooks/dotnet-test.sh
+  entry: hooks/dotnet_test.sh
   language: script
   files: \.(cs|vb|fs|csproj|sln)$
   require_serial: false
 
-- id: dotnet-security-scan
+- id: dotnet_security_scan
   name: .NET security scanner
-  entry: hooks/dotnet-security-scan.py
+  entry: hooks/dotnet_security_scan.py
   language: python
   files: \.(cs|vb|fs|config|json)$
   require_serial: false
@@ -272,23 +272,23 @@
 # GO HOOKS
 # =============================================================================
 
-- id: go-fmt
+- id: go_fmt
   name: Go code formatter
-  entry: hooks/go-fmt.sh
+  entry: hooks/go_fmt.sh
   language: script
   files: \.go$
   require_serial: false
 
-- id: go-lint
+- id: go_lint
   name: Go linter with security checks
-  entry: hooks/go-lint.sh
+  entry: hooks/go_lint.sh
   language: script
   files: \.go$
   require_serial: false
 
-- id: go-security-scan
+- id: go_security_scan
   name: Go security scanner
-  entry: hooks/go-security-scan.sh
+  entry: hooks/go_security_scan.sh
   language: script
   files: \.go$
   require_serial: false
@@ -297,23 +297,23 @@
 # ANSIBLE HOOKS
 # =============================================================================
 
-- id: ansible-lint
+- id: ansible_lint
   name: Ansible linting
-  entry: hooks/ansible-lint.sh
+  entry: hooks/ansible_lint.sh
   language: script
   files: \.(yml|yaml)$
   require_serial: false
 
-- id: ansible-syntax-check
+- id: ansible_syntax_check
   name: Ansible syntax validation
-  entry: hooks/ansible-syntax-check.sh
+  entry: hooks/ansible_syntax_check.sh
   language: script
   files: \.(yml|yaml)$
   require_serial: false
 
-- id: ansible-security-scan
+- id: ansible_security_scan
   name: Ansible security scanner
-  entry: hooks/ansible-security-scan.py
+  entry: hooks/ansible_security_scan.py
   language: python
   files: \.(yml|yaml|cfg)$
   require_serial: false

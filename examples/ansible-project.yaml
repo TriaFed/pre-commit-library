@@ -3,39 +3,39 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2 # Use the latest version
+    rev: v1.1.3 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
-      - id: detect-secrets
+      - id: detect_secrets
         args: ['--baseline', '.secrets.baseline']
 
-      - id: hardcoded-credentials
+      - id: hardcoded_credentials
         name: 'Detect hardcoded passwords and API keys'
 
-      - id: genai-security-check
+      - id: genai_security_check
         name: 'GenAI-specific security validation'
 
-      - id: ansible-security-scan
+      - id: ansible_security_scan
         name: 'Ansible security scanner'
 
       # Ansible-specific validation
-      - id: ansible-lint
+      - id: ansible_lint
         name: 'Ansible linting'
 
-      - id: ansible-syntax-check
+      - id: ansible_syntax_check
         name: 'Ansible syntax validation'
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-yaml
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-merge-conflict
+      - id: check_yaml
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
+      - id: check_merge_conflict
 # Additional Ansible-specific configuration files to consider:
 #
-# .ansible-lint:
+# .ansible_lint:
 # ---
 # skip_list:
 #   - yaml[line-length]  # Allow longer lines in YAML

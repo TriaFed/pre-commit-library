@@ -3,25 +3,25 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2 # Use the latest version
+    rev: v1.1.3 # Use the latest version
     hooks:
       # Security hooks (essential for ALL GenAI projects)
-      - id: detect-secrets
+      - id: detect_secrets
         args: ['--baseline', '.secrets.baseline']
-        name: "Detect secrets using Yelp's detect-secrets"
+        name: "Detect secrets using Yelp's detect_secrets"
 
       - id: truffhog
         name: 'TruffleHog secret scanner'
 
-      - id: hardcoded-credentials
+      - id: hardcoded_credentials
         name: 'Detect hardcoded passwords and API keys'
         exclude: ^(tests/|test/|spec/|__tests__/)
 
-      - id: hardcoded-urls
+      - id: hardcoded_urls
         name: 'Detect hardcoded URLs'
         exclude: ^(tests/|test/|spec/|__tests__/|docs/|node_modules/|target/|build/)
 
-      - id: genai-security-check
+      - id: genai_security_check
         name: 'GenAI-specific security validation'
         exclude: ^(node_modules/|target/|build/|\.git/)
 
@@ -35,26 +35,26 @@ repos:
         files: \.py$
         args: ['-r', '.', '-x', 'tests/,test/']
 
-      - id: safety-python
+      - id: safety_python
         name: 'Python dependency vulnerability scanner'
         files: requirements.*\.txt$
 
-      - id: python-black
+      - id: python_black
         name: 'Black Python formatter'
         files: \.py$
 
-      - id: python-flake8
+      - id: python_flake8
         name: 'Python linter'
         files: \.py$
         args: ['--max-line-length=88']
 
-      - id: python-isort
+      - id: python_isort
         name: 'Sort Python imports'
         files: \.py$
         args: ['--profile', 'black']
 
       # JavaScript/TypeScript security and quality
-      - id: npm-audit
+      - id: npm_audit
         name: 'npm vulnerability scanner'
         files: package\.json$
 
@@ -68,68 +68,68 @@ repos:
         files: \.(js|jsx|ts|tsx|json|css|scss|md|html)$
         exclude: ^(node_modules/|build/|dist/|target/)
 
-      - id: typescript-check
+      - id: typescript_check
         name: 'TypeScript compiler check'
         files: \.tsx?$
         exclude: ^(node_modules/|build/|dist/)
 
       # Java security and quality
-      - id: java-checkstyle
+      - id: java_checkstyle
         name: 'Java Checkstyle'
         files: \.java$
         exclude: ^(target/|build/)
 
-      - id: java-spotbugs
+      - id: java_spotbugs
         name: 'Java SpotBugs'
         files: \.java$
         exclude: ^(target/|build/)
 
       # Infrastructure as Code
-      - id: terraform-fmt
+      - id: terraform_fmt
         name: 'Terraform format'
         files: \.tf$
 
-      - id: terraform-validate
+      - id: terraform_validate
         name: 'Terraform validate'
         files: \.tf$
 
-      - id: cloudformation-validate
+      - id: cloudformation_validate
         name: 'CloudFormation validation'
         files: \.(yaml|yml|json)$
 
-      - id: dockerfile-lint
+      - id: dockerfile_lint
         name: 'Dockerfile linting'
         files: Dockerfile.*
 
       # File validation and hygiene
-      - id: check-yaml
+      - id: check_yaml
         name: 'Check YAML syntax'
         exclude: ^(node_modules/|\.terraform/|target/|build/)
 
-      - id: check-json
+      - id: check_json
         name: 'Check JSON syntax'
         exclude: ^(node_modules/|\.terraform/|target/|build/)
 
-      - id: check-xml
+      - id: check_xml
         name: 'Check XML syntax'
         files: \.xml$
 
-      - id: check-toml
+      - id: check_toml
         name: 'Check TOML syntax'
         files: \.toml$
 
-      - id: trailing-whitespace
+      - id: trailing_whitespace
         name: 'Remove trailing whitespace'
         exclude: ^(node_modules/|\.terraform/|target/|build/|\.git/)
 
-      - id: end-of-file-fixer
+      - id: end_of_file_fixer
         name: 'Ensure files end with newline'
         exclude: ^(node_modules/|\.terraform/|target/|build/|\.git/)
 
-      - id: check-merge-conflict
+      - id: check_merge_conflict
         name: 'Check for merge conflicts'
 
-      - id: mixed-line-ending
+      - id: mixed_line_ending
         name: 'Check for mixed line endings'
         exclude: ^(node_modules/|\.terraform/|target/|build/)
 
@@ -137,7 +137,7 @@ repos:
         name: 'Check for large files (>1MB)'
         args: ['--maxkb=1000']
 
-      - id: check-license
+      - id: check_license
         name: 'Check for license headers'
         files: \.(py|java|js|ts|jsx|tsx)$
         exclude: ^(node_modules/|target/|build/|tests?/|__tests__/)
@@ -165,7 +165,7 @@ repos:
 # 1. Copy this configuration to .pre-commit-config.yaml
 # 2. Install pre-commit: pip install pre-commit
 # 3. Install hooks: pre-commit install
-# 4. Generate secrets baseline: detect-secrets scan --baseline .secrets.baseline
+# 4. Generate secrets baseline: detect_secrets scan --baseline .secrets.baseline
 # 5. Install language-specific tools as needed
 # 6. Run on all files initially: pre-commit run --all-files
 #

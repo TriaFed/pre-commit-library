@@ -72,7 +72,7 @@ pipx install pre-commit
 #### Python Development
 **Both platforms:**
 ```bash
-pip install black flake8 isort mypy bandit safety detect-secrets
+pip install black flake8 isort mypy bandit safety detect_secrets
 ```
 
 #### JavaScript/TypeScript/Node.js
@@ -210,11 +210,11 @@ choco install terraform tflint
 **Both platforms:**
 ```bash
 # Using pip
-pip install ansible ansible-lint
+pip install ansible ansible_lint
 
 # Using pipx (recommended)
 pipx install ansible
-pipx install ansible-lint
+pipx install ansible_lint
 ```
 
 ### Security Scanning Tools
@@ -319,7 +319,7 @@ docker run --rm -v $(pwd):/app -w /app python:3.11 pip install black && black --
 
 ### Security-Only Setup (Minimal)
 - Python 3.8+
-- pip packages: `detect-secrets bandit safety semgrep`
+- pip packages: `detect_secrets bandit safety semgrep`
 
 ### Full Stack Development
 - All language runtimes (.NET, Go, Node.js, Python, Java)
@@ -362,7 +362,7 @@ source ~/.bashrc  # or ~/.zshrc
 
 If primary tools aren't available, hooks will suggest alternatives:
 - **golangci-lint** → falls back to `go vet` + `staticcheck`
-- **ansible-lint** → falls back to `ansible-playbook --syntax-check`
+- **ansible_lint** → falls back to `ansible-playbook --syntax-check`
 - **hadolint** → falls back to basic Dockerfile checks
 
 ## 📱 IDE Integration

@@ -3,64 +3,64 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2 # Use the latest version
+    rev: v1.1.3 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
-      - id: detect-secrets
+      - id: detect_secrets
         args: ['--baseline', '.secrets.baseline']
 
-      - id: hardcoded-credentials
+      - id: hardcoded_credentials
         name: 'Detect hardcoded passwords and API keys'
 
-      - id: hardcoded-urls
+      - id: hardcoded_urls
         name: 'Detect hardcoded URLs'
         exclude: ^(\.terraform/|terraform\.tfstate)
 
-      - id: genai-security-check
+      - id: genai_security_check
         name: 'GenAI-specific security validation'
 
       # Terraform
-      - id: terraform-fmt
+      - id: terraform_fmt
         name: 'Terraform format'
         files: \.tf$
 
-      - id: terraform-validate
+      - id: terraform_validate
         name: 'Terraform validate'
         files: \.tf$
 
-      - id: terraform-tflint
+      - id: terraform_tflint
         name: 'TFLint Terraform linter'
         files: \.tf$
 
       # CloudFormation
-      - id: cloudformation-validate
+      - id: cloudformation_validate
         name: 'CloudFormation template validation'
         files: \.(yaml|yml|json)$
         # Only run on files that contain CloudFormation keywords
 
       # Docker
-      - id: dockerfile-lint
+      - id: dockerfile_lint
         name: 'Dockerfile linting'
         files: Dockerfile.*
 
       # File validation
-      - id: check-yaml
+      - id: check_yaml
         name: 'Check YAML syntax'
         exclude: ^(\.terraform/)
 
-      - id: check-json
+      - id: check_json
         name: 'Check JSON syntax'
         exclude: ^(\.terraform/|terraform\.tfstate)
 
-      - id: trailing-whitespace
+      - id: trailing_whitespace
         name: 'Remove trailing whitespace'
         exclude: ^(\.terraform/)
 
-      - id: end-of-file-fixer
+      - id: end_of_file_fixer
         name: 'Ensure files end with newline'
         exclude: ^(\.terraform/)
 
-      - id: check-merge-conflict
+      - id: check_merge_conflict
         name: 'Check for merge conflicts'
 
       - id: check-large-files
@@ -117,7 +117,7 @@ repos:
 # **/node_modules
 #
 # Example .secrets.baseline for infrastructure:
-# Run: detect-secrets scan --baseline .secrets.baseline
+# Run: detect_secrets scan --baseline .secrets.baseline
 # This will create a baseline file that tracks known "secrets" that are actually
 # safe (like example values, test data, etc.)
 #

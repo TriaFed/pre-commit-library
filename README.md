@@ -20,7 +20,7 @@ This library provides pre-commit hooks specifically designed to:
 - **Hardcoded URL detection** - Finds URLs that shouldn't be committed
 - **Credential scanning** - Detects passwords, API keys, tokens
 - **GenAI security patterns** - Identifies common AI code vulnerabilities
-- **Secret scanning** with TruffleHog and detect-secrets
+- **Secret scanning** with TruffleHog and detect_secrets
 - **SAST scanning** with Semgrep for security vulnerabilities
 
 ### Language Support
@@ -32,7 +32,7 @@ This library provides pre-commit hooks specifically designed to:
 - **Java** - Checkstyle, SpotBugs
 - **.NET** - dotnet format, dotnet test, security scanning (C#, VB.NET, F#)
 - **Go** - gofmt, golangci-lint, gosec security scanning
-- **Ansible** - ansible-lint, syntax checking, security validation
+- **Ansible** - ansible_lint, syntax checking, security validation
 - **Terraform** - Format, validate, TFLint
 - **CloudFormation** - Template validation
 - **Docker** - Dockerfile linting with hadolint
@@ -69,18 +69,18 @@ Create a `.pre-commit-config.yaml` file in your project root:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security hooks (recommended for all projects)
-      - id: detect-secrets
-      - id: hardcoded-urls
-      - id: hardcoded-credentials
-      - id: genai-security-check
-      - id: detect-verbose-flags
+      - id: detect_secrets
+      - id: hardcoded_urls
+      - id: hardcoded_credentials
+      - id: genai_security_check
+      - id: detect_verbose_flags
 
       # Language-specific hooks
-      - id: python-black
-      - id: python-flake8
+      - id: python_black
+      - id: python_flake8
       - id: eslint
       - id: prettier
 
@@ -88,10 +88,10 @@ repos:
     rev: v4.4.0
     hooks:
       # Standard file validation
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
+      - id: check_yaml
+      - id: check_json
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
 ```
 
 ### 3. Install the hooks
@@ -112,60 +112,60 @@ pre-commit run --all-files
 
 | Hook ID                 | Description                                | Languages    |
 | ----------------------- | ------------------------------------------ | ------------ |
-| `detect-secrets`        | Detect secrets using Yelp's detect-secrets | All          |
+| `detect_secrets`        | Detect secrets using Yelp's detect_secrets | All          |
 | `truffhog`              | Secret scanning with TruffleHog            | All          |
-| `hardcoded-urls`        | Detect hardcoded URLs                      | All          |
-| `hardcoded-credentials` | Detect hardcoded passwords/keys            | All          |
-| `genai-security-check`  | GenAI-specific security validation         | All          |
+| `hardcoded_urls`        | Detect hardcoded URLs                      | All          |
+| `hardcoded_credentials` | Detect hardcoded passwords/keys            | All          |
+| `genai_security_check`  | GenAI-specific security validation         | All          |
 | `bandit`                | Python security linter                     | Python       |
-| `safety-python`         | Python dependency vulnerability scanner    | Python       |
-| `npm-audit`             | Node.js vulnerability scanner              | Node.js      |
-| `yarn-audit`            | Yarn vulnerability scanner                 | Node.js      |
+| `safety_python`         | Python dependency vulnerability scanner    | Python       |
+| `npm_audit`             | Node.js vulnerability scanner              | Node.js      |
+| `yarn_audit`            | Yarn vulnerability scanner                 | Node.js      |
 | `semgrep`               | Multi-language SAST scanner                | All          |
-| `dotnet-security-scan`  | .NET security scanner                      | C#/VB.NET/F# |
-| `go-security-scan`      | Go security scanner                        | Go           |
-| `ansible-security-scan` | Ansible security scanner                   | Ansible      |
-| `detect-verbose-flags`  | Detect verbose flags and debug logging     | All          |
+| `dotnet_security_scan`  | .NET security scanner                      | C#/VB.NET/F# |
+| `go_security_scan`      | Go security scanner                        | Go           |
+| `ansible_security_scan` | Ansible security scanner                   | Ansible      |
+| `detect_verbose_flags`  | Detect verbose flags and debug logging     | All          |
 
 ### 🎨 Code Quality Hooks
 
 | Hook ID                | Description                    | Languages         |
 | ---------------------- | ------------------------------ | ----------------- |
-| `python-black`         | Python code formatter          | Python            |
-| `python-flake8`        | Python linter                  | Python            |
-| `python-isort`         | Python import sorter           | Python            |
-| `python-mypy`          | Python type checker            | Python            |
+| `python_black`         | Python code formatter          | Python            |
+| `python_flake8`        | Python linter                  | Python            |
+| `python_isort`         | Python import sorter           | Python            |
+| `python_mypy`          | Python type checker            | Python            |
 | `eslint`               | JavaScript/TypeScript linter   | JS/TS             |
 | `prettier`             | Code formatter                 | JS/TS/JSON/CSS/MD |
-| `typescript-check`     | TypeScript compiler check      | TypeScript        |
-| `angular-lint`         | Angular linting                | Angular           |
-| `java-checkstyle`      | Java style checker             | Java              |
-| `java-spotbugs`        | Java bug detector              | Java              |
-| `dotnet-format`        | .NET code formatter            | C#/VB.NET/F#      |
-| `dotnet-test`          | .NET test runner               | C#/VB.NET/F#      |
-| `go-fmt`               | Go code formatter              | Go                |
-| `go-lint`              | Go linter with security checks | Go                |
-| `ansible-lint`         | Ansible linting                | Ansible           |
-| `ansible-syntax-check` | Ansible syntax validation      | Ansible           |
+| `typescript_check`     | TypeScript compiler check      | TypeScript        |
+| `angular_lint`         | Angular linting                | Angular           |
+| `java_checkstyle`      | Java style checker             | Java              |
+| `java_spotbugs`        | Java bug detector              | Java              |
+| `dotnet_format`        | .NET code formatter            | C#/VB.NET/F#      |
+| `dotnet_test`          | .NET test runner               | C#/VB.NET/F#      |
+| `go_fmt`               | Go code formatter              | Go                |
+| `go_lint`              | Go linter with security checks | Go                |
+| `ansible_lint`         | Ansible linting                | Ansible           |
+| `ansible_syntax_check` | Ansible syntax validation      | Ansible           |
 
 ### 🏗️ Infrastructure Hooks
 
 | Hook ID                   | Description               | Languages      |
 | ------------------------- | ------------------------- | -------------- |
-| `terraform-fmt`           | Terraform formatter       | Terraform      |
-| `terraform-validate`      | Terraform validation      | Terraform      |
-| `terraform-tflint`        | Terraform linter          | Terraform      |
-| `cloudformation-validate` | CloudFormation validation | CloudFormation |
-| `dockerfile-lint`         | Dockerfile linting        | Docker         |
+| `terraform_fmt`           | Terraform formatter       | Terraform      |
+| `terraform_validate`      | Terraform validation      | Terraform      |
+| `terraform_tflint`        | Terraform linter          | Terraform      |
+| `cloudformation_validate` | CloudFormation validation | CloudFormation |
+| `dockerfile_lint`         | Dockerfile linting        | Docker         |
 
 ### 📁 File Validation Hooks
 
 | Hook ID         | Description               | File Types   |
 | --------------- | ------------------------- | ------------ |
-| `check-xml`     | XML syntax validation     | .xml         |
-| `check-license` | Check for license headers | Source files |
+| `check_xml`     | XML syntax validation     | .xml         |
+| `check_license` | Check for license headers | Source files |
 
-**Note:** For standard file validation hooks like `check-yaml`, `check-json`, `trailing-whitespace`, `end-of-file-fixer`, `check-merge-conflict`, `check-added-large-files`, and `check-toml`, use the official [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) repository alongside our security-focused hooks.
+**Note:** For standard file validation hooks like `check_yaml`, `check_json`, `trailing_whitespace`, `end_of_file_fixer`, `check_merge_conflict`, `check_added_large_files`, and `check_toml`, use the official [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) repository alongside our security-focused hooks.
 
 ## 🔧 Configuration Examples
 
@@ -176,16 +176,16 @@ For projects using GenAI tools, start with these essential security hooks:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
-      - id: check-added-large-files
+      - id: check_added_large_files
 ```
 
 ### Python Project
@@ -193,29 +193,29 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
       - id: bandit
-      - id: safety-python
+      - id: safety_python
 
       # Code Quality
-      - id: python-black
-      - id: python-flake8
-      - id: python-isort
-      - id: python-mypy
+      - id: python_black
+      - id: python_flake8
+      - id: python_isort
+      - id: python_mypy
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
+      - id: check_yaml
+      - id: check_json
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
 ```
 
 ### Node.js/React Project
@@ -223,27 +223,27 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
-      - id: npm-audit
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
+      - id: npm_audit
 
       # Code Quality
       - id: eslint
       - id: prettier
-      - id: typescript-check
+      - id: typescript_check
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-json
-      - id: check-yaml
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
+      - id: check_json
+      - id: check_yaml
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
 ```
 
 ### Java Project
@@ -251,28 +251,28 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
       - id: semgrep
 
       # Code Quality
-      - id: java-checkstyle
-      - id: java-spotbugs
+      - id: java_checkstyle
+      - id: java_spotbugs
 
       # Custom File Validation
-      - id: check-xml
+      - id: check_xml
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # Standard File Validation
-      - id: check-yaml
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
+      - id: check_yaml
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
 ```
 
 ### .NET Project
@@ -280,26 +280,26 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
-      - id: dotnet-security-scan
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
+      - id: dotnet_security_scan
 
       # Code Quality
-      - id: dotnet-format
-      - id: dotnet-test
+      - id: dotnet_format
+      - id: dotnet_test
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
+      - id: check_yaml
+      - id: check_json
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
 ```
 
 ### Go Project
@@ -307,26 +307,26 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
-      - id: go-security-scan
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
+      - id: go_security_scan
 
       # Code Quality
-      - id: go-fmt
-      - id: go-lint
+      - id: go_fmt
+      - id: go_lint
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
+      - id: check_yaml
+      - id: check_json
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
 ```
 
 ### Ansible Project
@@ -334,25 +334,25 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
-      - id: ansible-security-scan
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
+      - id: ansible_security_scan
 
       # Ansible Validation
-      - id: ansible-lint
-      - id: ansible-syntax-check
+      - id: ansible_lint
+      - id: ansible_syntax_check
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-yaml
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
+      - id: check_yaml
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
 ```
 
 ### Infrastructure as Code
@@ -360,27 +360,27 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security
-      - id: detect-secrets
-      - id: hardcoded-credentials
-      - id: genai-security-check
+      - id: detect_secrets
+      - id: hardcoded_credentials
+      - id: genai_security_check
 
       # Infrastructure
-      - id: terraform-fmt
-      - id: terraform-validate
-      - id: terraform-tflint
-      - id: cloudformation-validate
-      - id: dockerfile-lint
+      - id: terraform_fmt
+      - id: terraform_validate
+      - id: terraform_tflint
+      - id: cloudformation_validate
+      - id: dockerfile_lint
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
+      - id: check_yaml
+      - id: check_json
+      - id: trailing_whitespace
 ```
 
 ### Full Stack Project
@@ -388,64 +388,64 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
       # Security (essential for GenAI projects)
-      - id: detect-secrets
+      - id: detect_secrets
       - id: truffhog
-      - id: hardcoded-urls
-      - id: hardcoded-credentials
-      - id: genai-security-check
-      - id: detect-verbose-flags
+      - id: hardcoded_urls
+      - id: hardcoded_credentials
+      - id: genai_security_check
+      - id: detect_verbose_flags
       - id: semgrep
 
       # Python
-      - id: python-black
-      - id: python-flake8
+      - id: python_black
+      - id: python_flake8
       - id: bandit
-      - id: safety-python
+      - id: safety_python
 
       # JavaScript/TypeScript
       - id: eslint
       - id: prettier
-      - id: npm-audit
+      - id: npm_audit
 
       # .NET
-      - id: dotnet-format
-      - id: dotnet-test
-      - id: dotnet-security-scan
+      - id: dotnet_format
+      - id: dotnet_test
+      - id: dotnet_security_scan
 
       # Go
-      - id: go-fmt
-      - id: go-lint
-      - id: go-security-scan
+      - id: go_fmt
+      - id: go_lint
+      - id: go_security_scan
 
       # Java
-      - id: java-checkstyle
-      - id: java-spotbugs
+      - id: java_checkstyle
+      - id: java_spotbugs
 
       # Ansible
-      - id: ansible-lint
-      - id: ansible-syntax-check
-      - id: ansible-security-scan
+      - id: ansible_lint
+      - id: ansible_syntax_check
+      - id: ansible_security_scan
 
       # Infrastructure
-      - id: terraform-validate
-      - id: dockerfile-lint
+      - id: terraform_validate
+      - id: dockerfile_lint
 
       # Custom File Validation
-      - id: check-xml
-      - id: check-license
+      - id: check_xml
+      - id: check_license
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # Standard File Validation
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-added-large-files
+      - id: check_yaml
+      - id: check_json
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
+      - id: check_added_large_files
 ```
 
 ## 🎛️ Hook Configuration
@@ -472,7 +472,7 @@ Many hooks support configuration files:
 - **ESLint**: `.eslintrc.js`, `.eslintrc.json`
 - **Prettier**: `.prettierrc`, `.prettierrc.json`
 - **Checkstyle**: `checkstyle.xml`
-- **detect-secrets**: `.secrets.baseline`
+- **detect_secrets**: `.secrets.baseline`
 - **Semgrep**: `.semgrep.yml`
 
 ## 🔍 GenAI Security Features
@@ -548,7 +548,7 @@ irm https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-wi
 **Python:**
 
 ```bash
-pip install black flake8 isort mypy bandit safety detect-secrets
+pip install black flake8 isort mypy bandit safety detect_secrets
 ```
 
 **JavaScript/TypeScript/Node.js:**
@@ -592,7 +592,7 @@ go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
 **Ansible:**
 
 ```bash
-pip install ansible ansible-lint
+pip install ansible ansible_lint
 ```
 
 **Infrastructure Tools:**
@@ -632,14 +632,14 @@ Some tools provide enhanced functionality:
 
 ### Ignoring False Positives
 
-#### detect-secrets
+#### detect_secrets
 
 ```bash
 # Generate baseline
-detect-secrets scan --baseline .secrets.baseline
+detect_secrets scan --baseline .secrets.baseline
 
 # Update baseline
-detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins
+detect_secrets scan --baseline .secrets.baseline --force-use-all-plugins
 ```
 
 #### ESLint
@@ -677,9 +677,9 @@ For large repositories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2
+    rev: v1.1.3
     hooks:
-      - id: detect-secrets
+      - id: detect_secrets
         exclude: ^(docs/|tests/fixtures/)
       - id: eslint
         files: \.(js|jsx|ts|tsx)$
@@ -708,7 +708,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Related Tools
 
 - [pre-commit](https://pre-commit.com/) - The pre-commit framework
-- [detect-secrets](https://github.com/Yelp/detect-secrets) - Secret detection
+- [detect_secrets](https://github.com/Yelp/detect_secrets) - Secret detection
 - [TruffleHog](https://github.com/trufflesecurity/trufflehog) - Secret scanning
 - [Semgrep](https://semgrep.dev/) - Static analysis
 - [Bandit](https://bandit.readthedocs.io/) - Python security linting
