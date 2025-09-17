@@ -3,37 +3,37 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2 # Use the latest version
+    rev: v1.1.3 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
-      - id: detect-secrets
+      - id: detect_secrets
         args: ['--baseline', '.secrets.baseline']
 
-      - id: hardcoded-credentials
+      - id: hardcoded_credentials
         name: 'Detect hardcoded passwords and API keys'
 
-      - id: genai-security-check
+      - id: genai_security_check
         name: 'GenAI-specific security validation'
 
-      - id: go-security-scan
+      - id: go_security_scan
         name: 'Go security scanner with gosec'
 
       # Code Quality
-      - id: go-fmt
+      - id: go_fmt
         name: 'Go code formatter'
 
-      - id: go-lint
+      - id: go_lint
         name: 'Go linter with security checks'
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-merge-conflict
+      - id: check_yaml
+      - id: check_json
+      - id: trailing_whitespace
+      - id: end_of_file_fixer
+      - id: check_merge_conflict
 # Additional Go-specific configuration files to consider:
 #
 # .golangci.yml:

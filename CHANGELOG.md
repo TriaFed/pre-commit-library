@@ -17,53 +17,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive linting and formatting hooks
 - Vulnerability scanning with npm audit, Safety, Bandit
 - SAST scanning with Semgrep
-- Secret scanning with detect-secrets and TruffleHog
+- Secret scanning with detect_secrets and TruffleHog
 - Infrastructure as Code validation (Terraform, CloudFormation, Docker)
 - Example configurations for different project types
 - Comprehensive documentation and setup guides
 
 ### Security Hooks
-- `detect-secrets` - Yelp's secret detection tool
+- `detect_secrets` - Yelp's secret detection tool
 - `truffhog` - Advanced secret scanning
-- `hardcoded-urls` - Custom URL detection for GenAI code
-- `hardcoded-credentials` - Custom credential detection
-- `genai-security-check` - GenAI-specific security patterns
+- `hardcoded_urls` - Custom URL detection for GenAI code
+- `hardcoded_credentials` - Custom credential detection
+- `genai_security_check` - GenAI-specific security patterns
 - `bandit` - Python security linter
-- `safety-python` - Python dependency vulnerability scanner
-- `npm-audit` - Node.js vulnerability scanner
-- `yarn-audit` - Yarn vulnerability scanner
+- `safety_python` - Python dependency vulnerability scanner
+- `npm_audit` - Node.js vulnerability scanner
+- `yarn_audit` - Yarn vulnerability scanner
 - `semgrep` - Multi-language SAST scanner
 
 ### Code Quality Hooks
-- `python-black` - Python code formatter
-- `python-flake8` - Python linter
-- `python-isort` - Python import sorter
-- `python-mypy` - Python type checker
+- `python_black` - Python code formatter
+- `python_flake8` - Python linter
+- `python_isort` - Python import sorter
+- `python_mypy` - Python type checker
 - `eslint` - JavaScript/TypeScript linter
 - `prettier` - Code formatter for multiple languages
-- `typescript-check` - TypeScript compiler validation
-- `angular-lint` - Angular-specific linting
-- `java-checkstyle` - Java style checker
-- `java-spotbugs` - Java bug detector
+- `typescript_check` - TypeScript compiler validation
+- `angular_lint` - Angular-specific linting
+- `java_checkstyle` - Java style checker
+- `java_spotbugs` - Java bug detector
 
 ### Infrastructure Hooks
-- `terraform-fmt` - Terraform formatter
-- `terraform-validate` - Terraform validation
-- `terraform-tflint` - Terraform linter
-- `cloudformation-validate` - CloudFormation template validation
-- `dockerfile-lint` - Dockerfile linting and security
+- `terraform_fmt` - Terraform formatter
+- `terraform_validate` - Terraform validation
+- `terraform_tflint` - Terraform linter
+- `cloudformation_validate` - CloudFormation template validation
+- `dockerfile_lint` - Dockerfile linting and security
 
 ### File Validation Hooks
-- `check-yaml` - YAML syntax validation
-- `check-json` - JSON syntax validation
-- `check-xml` - XML syntax validation
-- `check-toml` - TOML syntax validation
-- `trailing-whitespace` - Remove trailing whitespace
-- `end-of-file-fixer` - Ensure files end with newline
-- `check-merge-conflict` - Check for merge conflicts
-- `mixed-line-ending` - Check for mixed line endings
+- `check_yaml` - YAML syntax validation
+- `check_json` - JSON syntax validation
+- `check_xml` - XML syntax validation
+- `check_toml` - TOML syntax validation
+- `trailing_whitespace` - Remove trailing whitespace
+- `end_of_file_fixer` - Ensure files end with newline
+- `check_merge_conflict` - Check for merge conflicts
+- `mixed_line_ending` - Check for mixed line endings
 - `check-large-files` - Prevent large files from being committed
-- `check-license` - Validate license headers in source files
+- `check_license` - Validate license headers in source files
 
 ### Documentation
 - Comprehensive README with installation and usage instructions

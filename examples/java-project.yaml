@@ -3,20 +3,20 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.2 # Use the latest version
+    rev: v1.1.3 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
-      - id: detect-secrets
+      - id: detect_secrets
         args: ['--baseline', '.secrets.baseline']
 
-      - id: hardcoded-credentials
+      - id: hardcoded_credentials
         name: 'Detect hardcoded passwords and API keys'
 
-      - id: hardcoded-urls
+      - id: hardcoded_urls
         name: 'Detect hardcoded URLs'
         exclude: ^(target/|build/|\.gradle/|\.m2/)
 
-      - id: genai-security-check
+      - id: genai_security_check
         name: 'GenAI-specific security validation'
 
       - id: semgrep
@@ -24,43 +24,43 @@ repos:
         args: ['--config=p/java', '--config=p/security-audit']
 
       # Java code quality
-      - id: java-checkstyle
+      - id: java_checkstyle
         name: 'Java Checkstyle'
         files: \.java$
         exclude: ^(target/|build/)
 
-      - id: java-spotbugs
+      - id: java_spotbugs
         name: 'Java SpotBugs'
         files: \.java$
         exclude: ^(target/|build/)
 
       # File validation
-      - id: check-xml
+      - id: check_xml
         name: 'Check XML syntax'
         files: \.(xml|pom)$
 
-      - id: check-yaml
+      - id: check_yaml
         name: 'Check YAML syntax'
 
-      - id: check-json
+      - id: check_json
         name: 'Check JSON syntax'
 
-      - id: trailing-whitespace
+      - id: trailing_whitespace
         name: 'Remove trailing whitespace'
         exclude: ^(target/|build/|\.gradle/)
 
-      - id: end-of-file-fixer
+      - id: end_of_file_fixer
         name: 'Ensure files end with newline'
         exclude: ^(target/|build/|\.gradle/)
 
-      - id: check-merge-conflict
+      - id: check_merge_conflict
         name: 'Check for merge conflicts'
 
       - id: check-large-files
         name: 'Check for large files'
         args: ['--maxkb=1000']
 
-      - id: check-license
+      - id: check_license
         name: 'Check for license headers'
         files: \.java$
         exclude: ^(target/|build/|src/test/)
