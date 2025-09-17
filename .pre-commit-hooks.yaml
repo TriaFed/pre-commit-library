@@ -131,21 +131,21 @@
 # Custom security checks for GenAI code
 - id: hardcoded-urls
   name: Detect hardcoded URLs
-  entry: hooks/detect_hardcoded_urls.py
+  entry: hooks/detect-hardcoded-urls.py
   language: python
   types: [text]
   require_serial: false
 
 - id: hardcoded-credentials
   name: Detect hardcoded credentials
-  entry: hooks/detect_hardcoded_credentials.py
+  entry: hooks/detect-hardcoded-credentials.py
   language: python
   types: [text]
   require_serial: false
 
 - id: genai-security-check
   name: GenAI-specific security validation
-  entry: hooks/genai_security_check.py
+  entry: hooks/genai-security-check.py
   language: python
   types: [text]
   require_serial: false
@@ -205,7 +205,7 @@
 # File format validation
 - id: check-xml
   name: Check XML syntax
-  entry: hooks/check_xml.py
+  entry: hooks/check-xml.py
   language: python
   files: \.xml$
 
@@ -227,7 +227,7 @@
 # License and copyright validation
 - id: check-license
   name: Check for license headers
-  entry: hooks/check_license.py
+  entry: hooks/check-license.py
   language: python
   types: [text]
   require_serial: false

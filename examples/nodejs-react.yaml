@@ -3,70 +3,69 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.1  # Use the latest version
+    rev: v1.1.1 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-      
+
       - id: hardcoded-credentials
-        name: "Detect hardcoded passwords and API keys"
-      
+        name: 'Detect hardcoded passwords and API keys'
+
       - id: hardcoded-urls
-        name: "Detect hardcoded URLs"
+        name: 'Detect hardcoded URLs'
         exclude: ^(node_modules/|build/|dist/|public/)
-      
+
       - id: genai-security-check
-        name: "GenAI-specific security validation"
-      
+        name: 'GenAI-specific security validation'
+
       - id: npm-audit
-        name: "npm vulnerability scanner"
+        name: 'npm vulnerability scanner'
         files: package\.json$
-      
+
       # Alternative for Yarn projects
       # - id: yarn-audit
       #   name: "Yarn vulnerability scanner"
       #   files: package\.json$
-      
+
       # JavaScript/TypeScript code quality
       - id: eslint
-        name: "ESLint JavaScript/TypeScript linter"
+        name: 'ESLint JavaScript/TypeScript linter'
         files: \.(js|jsx|ts|tsx)$
         exclude: ^(node_modules/|build/|dist/)
-      
+
       - id: prettier
-        name: "Prettier code formatter"
+        name: 'Prettier code formatter'
         files: \.(js|jsx|ts|tsx|json|css|scss|md|html)$
         exclude: ^(node_modules/|build/|dist/|package-lock\.json)
-      
+
       - id: typescript-check
-        name: "TypeScript compiler check"
+        name: 'TypeScript compiler check'
         files: \.tsx?$
         exclude: ^(node_modules/|build/|dist/)
-      
+
       # File validation
       - id: check-json
-        name: "Check JSON syntax"
+        name: 'Check JSON syntax'
         exclude: ^(node_modules/)
-      
-      - id: check-yaml
-        name: "Check YAML syntax"
-      
-      - id: trailing-whitespace
-        name: "Remove trailing whitespace"
-        exclude: ^(node_modules/|\.md$)
-      
-      - id: end-of-file-fixer
-        name: "Ensure files end with newline"
-        exclude: ^(node_modules/)
-      
-      - id: check-merge-conflict
-        name: "Check for merge conflicts"
-      
-      - id: check-large-files
-        name: "Check for large files"
-        args: ['--maxkb=500']
 
+      - id: check-yaml
+        name: 'Check YAML syntax'
+
+      - id: trailing-whitespace
+        name: 'Remove trailing whitespace'
+        exclude: ^(node_modules/|\.md$)
+
+      - id: end-of-file-fixer
+        name: 'Ensure files end with newline'
+        exclude: ^(node_modules/)
+
+      - id: check-merge-conflict
+        name: 'Check for merge conflicts'
+
+      - id: check-large-files
+        name: 'Check for large files'
+        args: ['--maxkb=500']
 # Additional Node.js-specific configuration files to create:
 #
 # .eslintrc.js:
