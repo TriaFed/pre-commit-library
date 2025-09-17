@@ -52,11 +52,14 @@ Issues = "https://github.com/TriaFed/pre-commit-library/issues"
 Documentation = "https://github.com/TriaFed/pre-commit-library#readme"
 
 [project.scripts]
-detect-hardcoded-credentials = "hooks.detect_hardcoded_credentials:main"
-detect-hardcoded-urls = "hooks.detect_hardcoded_urls:main"
-genai-security-check = "hooks.genai_security_check:main"
-check-license = "hooks.check_license:main"
-check-xml = "hooks.check_xml:main"
+ansible_security_scan = "hooks.ansible_security_scan:main"
+check_license = "hooks.check_license:main"
+check_xml = "hooks.check_xml:main"
+detect_hardcoded_credentials = "hooks.detect_hardcoded_credentials:main"
+detect_hardcoded_urls = "hooks.detect_hardcoded_urls:main"
+detect_verbose_flags = "hooks.detect_verbose_flags:main"
+dotnet_security_scan = "hooks.dotnet_security_scan:main"
+genai_security_check = "hooks.genai_security_check:main"
 
 [tool.setuptools]
 packages = ["hooks"]
