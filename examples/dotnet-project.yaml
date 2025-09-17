@@ -3,28 +3,28 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.1  # Use the latest version
+    rev: v1.1.2 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-      
+
       - id: hardcoded-credentials
-        name: "Detect hardcoded passwords and API keys"
-      
+        name: 'Detect hardcoded passwords and API keys'
+
       - id: genai-security-check
-        name: "GenAI-specific security validation"
-      
+        name: 'GenAI-specific security validation'
+
       - id: dotnet-security-scan
-        name: ".NET security scanner"
-      
+        name: '.NET security scanner'
+
       # Code Quality
       - id: dotnet-format
-        name: ".NET code formatter"
-      
+        name: '.NET code formatter'
+
       - id: dotnet-test
-        name: ".NET test runner"
-  
+        name: '.NET test runner'
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -34,7 +34,6 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-merge-conflict
-
 # Additional .NET-specific configuration files to consider:
 #
 # .editorconfig:

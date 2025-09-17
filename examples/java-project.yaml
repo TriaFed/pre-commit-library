@@ -3,68 +3,67 @@
 
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.1  # Use the latest version
+    rev: v1.1.2 # Use the latest version
     hooks:
       # Security hooks (essential for GenAI projects)
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-      
+
       - id: hardcoded-credentials
-        name: "Detect hardcoded passwords and API keys"
-      
+        name: 'Detect hardcoded passwords and API keys'
+
       - id: hardcoded-urls
-        name: "Detect hardcoded URLs"
+        name: 'Detect hardcoded URLs'
         exclude: ^(target/|build/|\.gradle/|\.m2/)
-      
+
       - id: genai-security-check
-        name: "GenAI-specific security validation"
-      
+        name: 'GenAI-specific security validation'
+
       - id: semgrep
-        name: "SAST security scanner"
+        name: 'SAST security scanner'
         args: ['--config=p/java', '--config=p/security-audit']
-      
+
       # Java code quality
       - id: java-checkstyle
-        name: "Java Checkstyle"
+        name: 'Java Checkstyle'
         files: \.java$
         exclude: ^(target/|build/)
-      
+
       - id: java-spotbugs
-        name: "Java SpotBugs"
+        name: 'Java SpotBugs'
         files: \.java$
         exclude: ^(target/|build/)
-      
+
       # File validation
       - id: check-xml
-        name: "Check XML syntax"
+        name: 'Check XML syntax'
         files: \.(xml|pom)$
-      
+
       - id: check-yaml
-        name: "Check YAML syntax"
-      
+        name: 'Check YAML syntax'
+
       - id: check-json
-        name: "Check JSON syntax"
-      
+        name: 'Check JSON syntax'
+
       - id: trailing-whitespace
-        name: "Remove trailing whitespace"
+        name: 'Remove trailing whitespace'
         exclude: ^(target/|build/|\.gradle/)
-      
+
       - id: end-of-file-fixer
-        name: "Ensure files end with newline"
+        name: 'Ensure files end with newline'
         exclude: ^(target/|build/|\.gradle/)
-      
+
       - id: check-merge-conflict
-        name: "Check for merge conflicts"
-      
+        name: 'Check for merge conflicts'
+
       - id: check-large-files
-        name: "Check for large files"
+        name: 'Check for large files'
         args: ['--maxkb=1000']
-      
+
       - id: check-license
-        name: "Check for license headers"
+        name: 'Check for license headers'
         files: \.java$
         exclude: ^(target/|build/|src/test/)
-
 # Additional Java-specific configuration files to create:
 #
 # checkstyle.xml (basic security-focused configuration):
@@ -75,7 +74,7 @@ repos:
 # <module name="Checker">
 #     <property name="charset" value="UTF-8"/>
 #     <property name="severity" value="warning"/>
-#     
+#
 #     <module name="TreeWalker">
 #         <!-- Naming Conventions -->
 #         <module name="ConstantName"/>
@@ -87,17 +86,17 @@ repos:
 #         <module name="ParameterName"/>
 #         <module name="StaticVariableName"/>
 #         <module name="TypeName"/>
-#         
+#
 #         <!-- Imports -->
 #         <module name="AvoidStarImport"/>
 #         <module name="IllegalImport"/>
 #         <module name="RedundantImport"/>
 #         <module name="UnusedImports"/>
-#         
+#
 #         <!-- Security-related -->
 #         <module name="IllegalCatch"/>
 #         <module name="IllegalThrows"/>
-#         
+#
 #         <!-- Code Quality -->
 #         <module name="EmptyStatement"/>
 #         <module name="EqualsHashCode"/>
