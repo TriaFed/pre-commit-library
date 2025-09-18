@@ -131,28 +131,28 @@
 # Custom security checks for GenAI code
 - id: hardcoded_urls
   name: Detect hardcoded URLs
-  entry: hooks/detect_hardcoded_urls.py
+  entry: detect_hardcoded_urls
   language: python
   types: [text]
   require_serial: false
 
 - id: hardcoded_credentials
   name: Detect hardcoded credentials
-  entry: hooks/detect_hardcoded_credentials.py
+  entry: detect_hardcoded_credentials
   language: python
   types: [text]
   require_serial: false
 
 - id: genai_security_check
   name: GenAI-specific security validation
-  entry: hooks/genai_security_check.py
+  entry: genai_security_check
   language: python
   types: [text]
   require_serial: false
 
 - id: detect_verbose_flags
   name: Detect verbose flags and debug logging
-  entry: hooks/detect_verbose_flags.py
+  entry: detect_verbose_flags
   language: python
   types: [text]
   require_serial: false
@@ -205,7 +205,7 @@
 # File format validation
 - id: check_xml
   name: Check XML syntax
-  entry: hooks/check_xml.py
+  entry: check_xml
   language: python
   files: \.xml$
 
@@ -227,7 +227,7 @@
 # License and copyright validation
 - id: check_license
   name: Check for license headers
-  entry: hooks/check_license.py
+  entry: check_license
   language: python
   types: [text]
   require_serial: false
@@ -263,7 +263,7 @@
 
 - id: dotnet_security_scan
   name: .NET security scanner
-  entry: hooks/dotnet_security_scan.py
+  entry: dotnet_security_scan
   language: python
   files: \.(cs|vb|fs|config|json)$
   require_serial: false
@@ -313,7 +313,7 @@
 
 - id: ansible_security_scan
   name: Ansible security scanner
-  entry: hooks/ansible_security_scan.py
+  entry: ansible_security_scan
   language: python
   files: \.(yml|yaml|cfg)$
   require_serial: false
