@@ -88,10 +88,10 @@ repos:
     rev: v4.4.0
     hooks:
       # Standard file validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### 3. Install the hooks
@@ -212,10 +212,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Node.js/React Project
@@ -240,10 +240,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_json
-      - id: check_yaml
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-json
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Java Project
@@ -270,9 +270,9 @@ repos:
     rev: v4.4.0
     hooks:
       # Standard File Validation
-      - id: check_yaml
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### .NET Project
@@ -296,10 +296,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Go Project
@@ -323,10 +323,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Ansible Project
@@ -350,9 +350,9 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Infrastructure as Code
@@ -378,9 +378,9 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
 ```
 
 ### Full Stack Project
@@ -441,11 +441,11 @@ repos:
     rev: v4.4.0
     hooks:
       # Standard File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
-      - id: check_added_large_files
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
 ```
 
 ## 🎛️ Hook Configuration
