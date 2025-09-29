@@ -35,6 +35,7 @@ SAFE_URL_PATTERNS = [
     r'https?://.*\.localhost',
     # Common documentation URLs
     r'https?://github\.com/.*',
+    r'https?://github\.cms\.gov/.*',
     r'https?://docs\..*',
     r'https?://www\.w3\.org/.*',
     r'https?://tools\.ietf\.org/.*',
