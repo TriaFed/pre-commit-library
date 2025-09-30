@@ -2,6 +2,30 @@
 """
 Detect hardcoded URLs in code files.
 Specifically designed to catch URLs that might be accidentally included by GenAI tools.
+
+Suppression:
+Lines can be suppressed using inline comments with language-appropriate syntax:
+
+Python/Shell/Ruby (#):
+  url = "https://api.example.com"  # nosec
+  endpoint = "https://prod.api.com"  # urls-ignore
+  api_url = "https://internal.com"   # nosec[hardcoded_url]
+
+JavaScript/Java/C++ (//):
+  String url = "https://api.example.com";  // nosec
+  var endpoint = "https://prod.api.com";   // urls-ignore
+
+CSS/SQL (/* */):
+  url: "https://api.example.com";  /* nosec */
+  endpoint = "https://prod.api.com";  /* urls-ignore */
+
+HTML/XML (<!-- -->):
+  <!-- nosec --> <endpoint>https://api.example.com</endpoint>
+  <!-- urls-ignore --> <url>https://prod.api.com</url>
+
+SQL (--):
+  endpoint = 'https://api.example.com'  -- nosec
+  url = 'https://prod.api.com'          -- urls-ignore
 """
 
 import re
@@ -58,6 +82,79 @@ COMMENT_PATTERNS = [
     r'^\s*<!--',  # HTML comments
 ]
 
+# Inline comment patterns for suppression (supporting multiple languages)
+SUPPRESSION_PATTERNS = [
+    # Python, Shell, Ruby, Perl, R comments (#)
+    r'#\s*nosec\b',
+    r'#\s*urls-ignore\b',
+    r'#\s*url-ignore\b',
+    
+    # JavaScript, Java, C/C++, C#, Go, Scala, PHP comments (//)
+    r'//\s*nosec\b',
+    r'//\s*urls-ignore\b',
+    r'//\s*url-ignore\b',
+    
+    # CSS, SQL comments (/* */)
+    r'/\*\s*nosec\s*\*/',
+    r'/\*\s*urls-ignore\s*\*/',
+    r'/\*\s*url-ignore\s*\*/',
+    
+    # HTML, XML comments (<!-- -->)
+    r'<!--\s*nosec\s*-->',
+    r'<!--\s*urls-ignore\s*-->',
+    r'<!--\s*url-ignore\s*-->',
+    
+    # SQL alternative comments (--)
+    r'--\s*nosec\b',
+    r'--\s*urls-ignore\b',
+    r'--\s*url-ignore\b',
+]
+
+
+def should_suppress_line(line: str, url_type: str = None) -> bool:
+    """
+    Check if a line should be suppressed based on inline comments.
+    
+    Supports multiple comment styles:
+    - Python/Shell/Ruby: # nosec, # urls-ignore
+    - JavaScript/Java/C++: // nosec, // urls-ignore
+    - CSS/SQL: /* nosec */, /* urls-ignore */
+    - HTML/XML: <!-- nosec -->, <!-- urls-ignore -->
+    - SQL: -- nosec, -- urls-ignore
+    
+    Args:
+        line: The line of code to check
+        url_type: Optional specific URL type to check for targeted suppression
+    
+    Returns:
+        True if the line should be suppressed, False otherwise
+    """
+    # Check for general suppression comments
+    for suppression_pattern in SUPPRESSION_PATTERNS:
+        if re.search(suppression_pattern, line, re.IGNORECASE):
+            return True
+    
+    # Check for URL-type-specific suppression (e.g., hardcoded_url)
+    if url_type:
+        specific_patterns = [
+            # Python, Shell, Ruby style: # nosec[hardcoded_url]
+            rf'#\s*(?:nosec|urls-ignore|url-ignore)\s*\[\s*{re.escape(url_type)}\s*\]',
+            # JavaScript, Java, C++ style: // nosec[hardcoded_url]
+            rf'//\s*(?:nosec|urls-ignore|url-ignore)\s*\[\s*{re.escape(url_type)}\s*\]',
+            # CSS, SQL style: /* nosec[hardcoded_url] */
+            rf'/\*\s*(?:nosec|urls-ignore|url-ignore)\s*\[\s*{re.escape(url_type)}\s*\]\s*\*/',
+            # HTML, XML style: <!-- nosec[hardcoded_url] -->
+            rf'<!--\s*(?:nosec|urls-ignore|url-ignore)\s*\[\s*{re.escape(url_type)}\s*\]\s*-->',
+            # SQL style: -- nosec[hardcoded_url]
+            rf'--\s*(?:nosec|urls-ignore|url-ignore)\s*\[\s*{re.escape(url_type)}\s*\]',
+        ]
+        
+        for specific_pattern in specific_patterns:
+            if re.search(specific_pattern, line, re.IGNORECASE):
+                return True
+    
+    return False
+
 
 def is_in_comment(line: str) -> bool:
     """Check if the line appears to be a comment."""
@@ -95,6 +192,10 @@ def find_hardcoded_urls(file_path: str) -> List[Tuple[int, str, str]]:
                         
                         # Skip safe URLs
                         if is_safe_url(url):
+                            continue
+                        
+                        # Check if this line should be suppressed
+                        if should_suppress_line(line, 'hardcoded_url'):
                             continue
                         
                         # Be more lenient with URLs in comments/documentation
@@ -138,6 +239,7 @@ def main():
         print(f"\n❌ Found {total_issues} hardcoded URL(s)")
         print("💡 Consider using environment variables or configuration files for URLs")
         print("💡 If these URLs are intentional, add them to the safe patterns or use comments")
+        print("💡 Use nosec or urls-ignore comments to suppress false positives (supports #, //, /*, --, <!-- -->)")
     else:
         print("✅ No hardcoded URLs detected")
     

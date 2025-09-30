@@ -2,6 +2,30 @@
 """
 Detect hardcoded credentials and sensitive information in code files.
 Enhanced for GenAI-generated code which might accidentally include credentials.
+
+Suppression:
+Lines can be suppressed using inline comments with language-appropriate syntax:
+
+Python/Shell/Ruby (#):
+  password = "secret123"  # nosec
+  api_key = "key123"     # creds-ignore
+  token = "abc"          # nosec[api_key]
+
+JavaScript/Java/C++ (//):
+  String password = "secret123";  // nosec
+  var apiKey = "key123";          // creds-ignore
+
+CSS/SQL (/* */):
+  password: "secret123";  /* nosec */
+  key = "abc123";         /* creds-ignore[private_key] */
+
+HTML/XML (<!-- -->):
+  <!-- nosec --> <config password="secret123"/>
+  <!-- creds-ignore --> <key>abc123</key>
+
+SQL (--):
+  password = 'secret123'  -- nosec
+  api_key = 'key123'      -- creds-ignore
 """
 
 import re
@@ -80,6 +104,79 @@ SAFE_CONTEXT_PATTERNS = [
     r'placeholder.*',
     r'.*placeholder.*',
 ]
+
+# Inline comment patterns for suppression (supporting multiple languages)
+SUPPRESSION_PATTERNS = [
+    # Python, Shell, Ruby, Perl, R comments (#)
+    r'#\s*nosec\b',
+    r'#\s*creds-ignore\b',
+    r'#\s*credentials-ignore\b',
+    
+    # JavaScript, Java, C/C++, C#, Go, Scala, PHP comments (//)
+    r'//\s*nosec\b',
+    r'//\s*creds-ignore\b',
+    r'//\s*credentials-ignore\b',
+    
+    # CSS, SQL comments (/* */)
+    r'/\*\s*nosec\s*\*/',
+    r'/\*\s*creds-ignore\s*\*/',
+    r'/\*\s*credentials-ignore\s*\*/',
+    
+    # HTML, XML comments (<!-- -->)
+    r'<!--\s*nosec\s*-->',
+    r'<!--\s*creds-ignore\s*-->',
+    r'<!--\s*credentials-ignore\s*-->',
+    
+    # SQL alternative comments (--)
+    r'--\s*nosec\b',
+    r'--\s*creds-ignore\b',
+    r'--\s*credentials-ignore\b',
+]
+
+
+def should_suppress_line(line: str, credential_type: str = None) -> bool:
+    """
+    Check if a line should be suppressed based on inline comments.
+    
+    Supports multiple comment styles:
+    - Python/Shell/Ruby: # nosec, # creds-ignore
+    - JavaScript/Java/C++: // nosec, // creds-ignore
+    - CSS/SQL: /* nosec */, /* creds-ignore */
+    - HTML/XML: <!-- nosec -->, <!-- creds-ignore -->
+    - SQL: -- nosec, -- creds-ignore
+    
+    Args:
+        line: The line of code to check
+        credential_type: Optional specific credential type to check for targeted suppression
+    
+    Returns:
+        True if the line should be suppressed, False otherwise
+    """
+    # Check for general suppression comments
+    for suppression_pattern in SUPPRESSION_PATTERNS:
+        if re.search(suppression_pattern, line, re.IGNORECASE):
+            return True
+    
+    # Check for credential-type-specific suppression
+    if credential_type:
+        specific_patterns = [
+            # Python, Shell, Ruby style: # nosec[credential_type]
+            rf'#\s*(?:nosec|creds-ignore|credentials-ignore)\s*\[\s*{re.escape(credential_type)}\s*\]',
+            # JavaScript, Java, C++ style: // nosec[credential_type]
+            rf'//\s*(?:nosec|creds-ignore|credentials-ignore)\s*\[\s*{re.escape(credential_type)}\s*\]',
+            # CSS, SQL style: /* nosec[credential_type] */
+            rf'/\*\s*(?:nosec|creds-ignore|credentials-ignore)\s*\[\s*{re.escape(credential_type)}\s*\]\s*\*/',
+            # HTML, XML style: <!-- nosec[credential_type] -->
+            rf'<!--\s*(?:nosec|creds-ignore|credentials-ignore)\s*\[\s*{re.escape(credential_type)}\s*\]\s*-->',
+            # SQL style: -- nosec[credential_type]
+            rf'--\s*(?:nosec|creds-ignore|credentials-ignore)\s*\[\s*{re.escape(credential_type)}\s*\]',
+        ]
+        
+        for specific_pattern in specific_patterns:
+            if re.search(specific_pattern, line, re.IGNORECASE):
+                return True
+    
+    return False
 
 
 def is_safe_context(line: str, file_path: str) -> bool:
@@ -181,6 +278,10 @@ def find_hardcoded_credentials(file_path: str) -> List[Tuple[int, str, str, str]
                             if is_safe_value(credential_value):
                                 continue
                             
+                            # Check if this line should be suppressed
+                            if should_suppress_line(line, cred_type):
+                                continue
+                            
                             # Be more lenient in safe contexts (tests, examples, comments)
                             if is_safe_context(line, file_path):
                                 # Only flag very suspicious patterns in safe contexts
@@ -226,6 +327,7 @@ def main():
         print("💡 Use environment variables or secure vaults for credentials")
         print("💡 Never commit real credentials to version control")
         print("💡 Consider using tools like .env files with .gitignore")
+        print("💡 Use nosec or creds-ignore comments to suppress false positives (supports #, //, /*, --, <!-- -->)")
     else:
         print("✅ No hardcoded credentials detected")
     
