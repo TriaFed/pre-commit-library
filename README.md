@@ -69,7 +69,7 @@ Create a `.pre-commit-config.yaml` file in your project root:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security hooks (recommended for all projects)
       - id: detect_secrets
@@ -88,10 +88,10 @@ repos:
     rev: v4.4.0
     hooks:
       # Standard file validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### 3. Install the hooks
@@ -176,7 +176,7 @@ For projects using GenAI tools, start with these essential security hooks:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       - id: detect_secrets
       - id: hardcoded_credentials
@@ -193,7 +193,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security
       - id: detect_secrets
@@ -212,10 +212,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Node.js/React Project
@@ -223,7 +223,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security
       - id: detect_secrets
@@ -240,10 +240,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_json
-      - id: check_yaml
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-json
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Java Project
@@ -251,7 +251,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security
       - id: detect_secrets
@@ -270,9 +270,9 @@ repos:
     rev: v4.4.0
     hooks:
       # Standard File Validation
-      - id: check_yaml
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### .NET Project
@@ -280,7 +280,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security
       - id: detect_secrets
@@ -296,10 +296,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Go Project
@@ -307,7 +307,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security
       - id: detect_secrets
@@ -323,10 +323,10 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Ansible Project
@@ -334,7 +334,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security
       - id: detect_secrets
@@ -350,9 +350,9 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
+      - id: check-yaml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
 ```
 
 ### Infrastructure as Code
@@ -360,7 +360,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security
       - id: detect_secrets
@@ -378,9 +378,9 @@ repos:
     rev: v4.4.0
     hooks:
       # File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
 ```
 
 ### Full Stack Project
@@ -388,7 +388,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       # Security (essential for GenAI projects)
       - id: detect_secrets
@@ -441,11 +441,11 @@ repos:
     rev: v4.4.0
     hooks:
       # Standard File Validation
-      - id: check_yaml
-      - id: check_json
-      - id: trailing_whitespace
-      - id: end_of_file_fixer
-      - id: check_added_large_files
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
 ```
 
 ## 🎛️ Hook Configuration
@@ -677,7 +677,7 @@ For large repositories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.1.5
     hooks:
       - id: detect_secrets
         exclude: ^(docs/|tests/fixtures/)
