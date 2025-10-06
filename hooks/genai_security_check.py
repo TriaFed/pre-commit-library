@@ -216,8 +216,29 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
                 if not line.strip():
                     continue
                 
+                # Check if line is an import statement
+                stripped_line = line.strip()
+                is_import_line = (
+                    stripped_line.startswith('import ') or
+                    stripped_line.startswith('from ') or
+                    re.match(r'^\s*import\s+', line) or
+                    re.match(r'^\s*from\s+', line) or
+                    re.match(r'^\s*#include\s*<', line) or  # C/C++
+                    re.match(r'^\s*#include\s*"', line) or  # C/C++
+                    re.match(r'^\s*using\s+', line) or     # C#/Java
+                    re.match(r'^\s*require\s*\(', line) or # JavaScript/Node.js
+                    re.match(r'^\s*const\s+.*\s*=\s*require\s*\(', line) or  # JavaScript/Node.js
+                    re.match(r'^\s*let\s+.*\s*=\s*require\s*\(', line) or    # JavaScript/Node.js
+                    re.match(r'^\s*var\s+.*\s*=\s*require\s*\(', line) or    # JavaScript/Node.js
+                    re.match(r'^\s*import\s+.*\s+from\s+', line)  # ES6 imports
+                )
+                
                 # Check security patterns
                 for pattern_name, pattern_info in GENAI_SECURITY_PATTERNS.items():
+                    # Skip path traversal checks for import lines
+                    if pattern_name == 'path_traversal' and is_import_line:
+                        continue
+                        
                     for pattern in pattern_info['patterns']:
                         if re.search(pattern, line, re.IGNORECASE):
                             issues.append((
