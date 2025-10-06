@@ -97,7 +97,7 @@ GENAI_SECURITY_PATTERNS = {
         'patterns': [
             r'MD5',
             r'SHA1\b',
-            r'DES\b',
+            r'\bDES\b',
             r'RC4',
             r'\.md5\(',
             r'\.sha1\(',
