@@ -59,10 +59,10 @@ GENAI_SECURITY_PATTERNS = {
     },
     'weak_crypto': {
         'patterns': [
-            r'MD5',
-            r'SHA1\b',
-            r'DES\b',
-            r'RC4',
+            r'\bMD5\b',
+            r'\bSHA1\b',
+            r'\bDES\b',
+            r'\bRC4\b',
             r'\.md5\(',
             r'\.sha1\(',
             r'createHash\(["\']md5["\']',
@@ -220,9 +220,9 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
                 stripped_line = line.strip()
                 is_import_line = (
                     stripped_line.startswith('import ') or
-                    stripped_line.startswith('from ') or
+                    stripp*ed_line.startswith('from ') or
                     re.match(r'^\s*import\s+', line) or
-                    re.match(r'^\s*from\s+', line) or
+                    re.match(r'^\s*}?\s*from\s+', line) or
                     re.match(r'^\s*#include\s*<', line) or  # C/C++
                     re.match(r'^\s*#include\s*"', line) or  # C/C++
                     re.match(r'^\s*using\s+', line) or     # C#/Java
