@@ -359,7 +359,7 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
                 ast_issues = analyze_python_ast(file_path, content)
                 for line_num, issue_type, description in ast_issues:
                     # Check if this line should be suppressed (get the actual line for checking)
-                    if line_num <= len(lines):
+                    if line_num < len(lines):
                         actual_line = lines[line_num - 1]
                         if should_suppress_line(actual_line, issue_type):
                             continue
