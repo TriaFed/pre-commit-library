@@ -140,7 +140,7 @@ def resolve_plan(
     # Optional tools adjustments
     removed_optional: Dict[str, List[str]] = {}
     if "core" in profiles:
-        if "truffhog" not in hook_ids:
+        if "trufflehog" not in hook_ids:
             # Remove trufflehog from plan if not explicitly used
             if os_name == "darwin":
                 brew_list = tool_plan.get("brew", [])
