@@ -25,8 +25,8 @@ To avoid installing unnecessary tools, use the profile-aware installers which pa
 macOS:
 
 ```bash
-# Auto-detect from config
-bash install-macos.sh --auto --config /abs/path/to/.pre-commit-config.yaml
+# Auto-detect from default config in current directory
+bash install-macos.sh
 
 # Force profiles (comma-separated) and optionally exclude
 bash install-macos.sh --profiles python,node --exclude java
@@ -38,14 +38,14 @@ bash install-macos.sh --auto --config /abs/path/to/.pre-commit-config.yaml --dry
 Windows (PowerShell):
 
 ```powershell
-# Auto-detect from config
-./install-windows.ps1 -Auto -Config "C:\path\to\.pre-commit-config.yaml"
+# Auto-detect from default config in current directory
+./install-windows.ps1
 
 # Force profiles (comma-separated) and optionally exclude
 ./install-windows.ps1 -Profiles python,node -Exclude java
 
 # Dry run to preview the plan
-./install-windows.ps1 -Auto -Config "C:\path\to\.pre-commit-config.yaml" -DryRun
+./install-windows.ps1 -DryRun
 ```
 
 Profiles: `core, python, node, dotnet, go, java, ansible, infrastructure`.
