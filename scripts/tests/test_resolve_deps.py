@@ -450,7 +450,7 @@ repos:
     rev: v1.2.0
     hooks:
       - id: detect_secrets
-      - id: truffhog
+      - id: trufflehog
 """
     path = write_tmp_config(cfg)
     try:
