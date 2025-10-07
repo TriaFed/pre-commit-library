@@ -11,7 +11,7 @@ EXPLICIT_PROFILES=""
 EXCLUDE_PROFILES=""
 DRY_RUN=0
 ASSUME_YES=0
-SCRIPT_DIR="/Users/Brett.Mayen/work/tria-labs/pre-commit-library/scripts"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 print_usage() {
     echo "Usage: install-macos.sh [--no-auto] [--config /abs/path/.pre-commit-config.yaml] [--profiles p1,p2] [--exclude p3] [--dry-run] [--assume-yes]"
