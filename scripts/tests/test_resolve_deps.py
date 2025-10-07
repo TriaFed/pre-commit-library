@@ -369,7 +369,7 @@ def test_malformed_repos_and_hooks_are_ignored(tmp_path: Path):
 repos:
   - not-a-dict
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - not-a-dict
 """
@@ -397,7 +397,7 @@ def test_unknown_manager_keys_are_ignored_in_mapping(tmp_path: Path):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: eslint
 """
@@ -414,7 +414,7 @@ def test_node_pm_detection_without_yarn_lock(tmp_path: Path):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: eslint
 """
@@ -431,7 +431,7 @@ def test_node_pm_detection_with_yarn_lock(tmp_path: Path):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: eslint
 """
@@ -447,7 +447,7 @@ def test_trufflehog_retained_when_hook_present_both_platforms(tmp_path: Path):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: detect_secrets
       - id: truffhog
@@ -469,7 +469,7 @@ def test_optional_block_not_entered_when_core_not_selected():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: eslint
 """
@@ -488,7 +488,7 @@ def test_python_profile_tools_darwin():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: python_black
       - id: bandit
@@ -508,7 +508,7 @@ def test_go_profile_tools_darwin():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: go_lint
       - id: go_security_scan
@@ -531,7 +531,7 @@ def test_java_profile_tools_darwin():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: java_checkstyle
 """
@@ -551,7 +551,7 @@ def test_ansible_profile_tools_darwin():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: ansible_lint
 """
@@ -570,7 +570,7 @@ def test_semgrep_in_core_without_trufflehog():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: semgrep
 """
@@ -600,7 +600,7 @@ def test_missing_profile_mapping_is_graceful(tmp_path: Path):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: python_black
 """

@@ -26,7 +26,7 @@ def test_macos_installer_dry_run_node_only(monkeypatch):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: detect_secrets
       - id: genai_security_check
@@ -96,7 +96,7 @@ def test_windows_installer_dry_run_infra_only(monkeypatch):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.2.0
     hooks:
       - id: detect_secrets
       - id: genai_security_check
