@@ -52,12 +52,12 @@
       "darwin": {
         "pip": ["detect-secrets", "bandit", "safety", "semgrep"],
         "brew": ["trufflehog"],
-        "notes": ["trufflehog is optional; install only if truffhog hook present"]
+        "notes": ["trufflehog is optional; install only if trufflehog hook present"]
       },
       "windows": {
         "pip": ["detect-secrets", "bandit", "safety", "semgrep"],
         "winget": ["trufflesecurity.trufflehog"],
-        "notes": ["trufflehog optional; install only if truffhog hook present"]
+        "notes": ["trufflehog optional; install only if trufflehog hook present"]
       }
     },
     "python": {
