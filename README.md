@@ -543,6 +543,45 @@ curl -fsSL https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/ins
 irm https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-windows.ps1 | iex
 ```
 
+### Selective, profile-aware installation (recommended)
+
+Install only what your `.pre-commit-config.yaml` actually uses.
+
+macOS:
+
+```bash
+# Auto-detect profiles from your .pre-commit-config.yaml by default (in current directory)
+bash install-macos.sh
+
+# Specify an explicit config path if not using the default name/location
+bash install-macos.sh --config /abs/path/to/.pre-commit-config.yaml
+
+# Force specific profiles (comma-separated), optionally exclude others
+bash install-macos.sh --profiles python,node,infrastructure --exclude java
+
+# Preview plan without installing
+bash install-macos.sh --auto --config /abs/path/to/.pre-commit-config.yaml --dry-run
+```
+
+Windows (PowerShell):
+
+```powershell
+# Auto-detect profiles from your .pre-commit-config.yaml by default (in current directory)
+./install-windows.ps1
+
+# Specify an explicit config path if not using the default name/location
+./install-windows.ps1 -Config "C:\path\to\.pre-commit-config.yaml"
+
+# Force specific profiles (comma-separated), optionally exclude others
+./install-windows.ps1 -Profiles python,node,infrastructure -Exclude java
+
+# Preview plan without installing
+./install-windows.ps1 -Auto -Config "C:\path\to\.pre-commit-config.yaml" -DryRun
+```
+
+Profiles supported: `core, python, node, dotnet, go, java, ansible, infrastructure`.
+The installer uses `scripts/resolve_deps.py` to parse your `.pre-commit-config.yaml`, map hook IDs to profiles, and install only required tools. Optional tools (e.g., `trufflehog`) are installed only if the corresponding hook is present.
+
 ### Manual Installation by Language
 
 **Python:**
@@ -745,3 +784,31 @@ This library helps ensure compliance with:
 ---
 
 **Made with ❤️ for safer GenAI development**
+
+## 🧪 Testing and Coverage
+
+Quick run (macOS/Linux):
+
+```bash
+bash scripts/run-tests.sh
+```
+
+Quick run (Windows PowerShell):
+
+```powershell
+./scripts/run-tests.ps1
+```
+
+Manually with pytest-cov:
+
+```bash
+python3 -m pip install -U pytest pytest-cov pyyaml
+python3 -m pytest scripts/tests --cov=scripts --cov-report=term-missing -q
+```
+
+HTML coverage report:
+
+```bash
+python3 -m pytest scripts/tests --cov=scripts --cov-report=html -q
+# Then open htmlcov/index.html
+```
