@@ -220,7 +220,7 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
                 stripped_line = line.strip()
                 is_import_line = (
                     stripped_line.startswith('import ') or
-                    stripp*ed_line.startswith('from ') or
+                    stripped_line.startswith('from ') or
                     re.match(r'^\s*import\s+', line) or
                     re.match(r'^\s*}?\s*from\s+', line) or
                     re.match(r'^\s*#include\s*<', line) or  # C/C++
