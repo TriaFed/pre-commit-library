@@ -2,8 +2,8 @@
 # Essential hooks for protecting against accidental credential/secret commits
 
 repos:
-  - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5 # Use the latest version
+  - repo: https://github.com/david-parker-softrams/pre-commit-library
+    rev: v1.1.6 # Use the latest version
     hooks:
       # Critical security hooks for GenAI-generated code
       - id: detect_secrets
