@@ -49,7 +49,7 @@ SAFE_URL_PATTERNS = [
 ]
 
 # File extensions to skip
-SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz' '.md'}
+SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz', '.md'}
 
 # Patterns that suggest this might be in a comment or documentation
 COMMENT_PATTERNS = [
