@@ -25,22 +25,22 @@ URL_PATTERNS = [
 
 # URLs that are typically safe to ignore
 SAFE_URL_PATTERNS = [
-    r'https?://localhost',
-    r'https?://127\.0\.0\.1',
-    r'https?://0\.0\.0\.0',
-    r'https?://example\.com',
-    r'https?://example\.org',
-    r'https?://example\.net',
-    r'https?://.*\.example\.com',
-    r'https?://.*\.test',
-    r'https?://.*\.local',
-    r'https?://.*\.localhost',
+    r'https?://localhost(?:[:/].*)?',
+    r'https?://127\.0\.0\.1(?:[:/].*)?',
+    r'https?://0\.0\.0\.0(?:[:/].*)?',
+    r'https?://example\.com(?:[/?#].*)?',
+    r'https?://example\.org(?:[/?#].*)?',
+    r'https?://example\.net(?:[/?#].*)?',
+    r'https?://.*\.example\.com(?:[/?#].*)?',
+    r'https?://.*\.test(?:[/?#].*)?',
+    r'https?://.*\.local(?:[/?#].*)?',
+    r'https?://.*\.localhost(?:[/?#].*)?',
     r'https?://mock-host/.*',
     # Common documentation URLs
-    r'https?://(?:www\.)?github\.com(?:/.*)?',
+    r'https?://(?:www\.)?github\.com(?:[/?#].*)?',
     r'https?://docs\..*',
-    r'https?://www\.w3\.org(?:/.*)?',
-    r'https?://tools\.ietf\.org(?:/.*)?',
+    r'https?://www\.w3\.org(?:[/?#].*)?',
+    r'https?://tools\.ietf\.org(?:[/?#].*)?',
     r'https?://schemas\..*',
     # Package registries
     r'https?://registry\.npmjs\.org/.*',
@@ -68,7 +68,7 @@ def is_in_comment(line: str) -> bool:
 
 def is_safe_url(url: str) -> bool:
     """Check if URL matches safe patterns."""
-    return any(re.fullmatch(pattern, url, re.IGNORECASE) for pattern in SAFE_URL_PATTERNS)
+    return any(re.match(pattern + r'$', url, re.IGNORECASE) for pattern in SAFE_URL_PATTERNS)
 
 
 def find_hardcoded_urls(file_path: str) -> List[Tuple[int, str, str]]:
