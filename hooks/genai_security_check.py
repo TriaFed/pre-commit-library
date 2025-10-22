@@ -59,17 +59,10 @@ GENAI_SECURITY_PATTERNS = {
     },
     'weak_crypto': {
         'patterns': [
-<<<<<<< HEAD
-            r'MD5',
-            r'SHA1\b',
-            r'\bDES\b',
-            r'RC4',
-=======
             r'\bMD5\b',
             r'\bSHA1\b',
             r'\bDES\b',
             r'\bRC4\b',
->>>>>>> ef03289 (Adding support for javascript multi-line import{...}from syntax)
             r'\.md5\(',
             r'\.sha1\(',
             r'createHash\(["\']md5["\']',
