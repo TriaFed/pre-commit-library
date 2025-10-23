@@ -186,7 +186,7 @@ console.error('Login failed:', user.password);  // Don't do this!
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.1.6
     hooks:
       # Security with baselines and exclusions
       - id: detect-secrets
