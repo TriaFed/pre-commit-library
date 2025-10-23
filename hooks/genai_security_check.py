@@ -27,10 +27,10 @@ GENAI_SECURITY_PATTERNS = {
     'sql_injection': {
         'patterns': [
             # Only flag direct string concatenation in SQL contexts, not parameterized queries
-            r'SELECT.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
-            r'INSERT.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
-            r'UPDATE.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
-            r'DELETE.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
+            r'SELECT.*[\"\\\'].*\+.*',
+            r'INSERT.*[\"\\\'].*\+.*',
+            r'UPDATE.*[\"\\\'].*\+.*',
+            r'DELETE.*[\"\\\'].*\+.*',
             # Flag obvious string concatenation with user input, but not parameterized queries
             r'query\s*=\s*["\'][^"\']*["\'].*\+.*',  # Flag any concatenation in query assignment
             r'executeQuery\(["\'][^"\']*["\'].*\+.*[^)]*\)',
