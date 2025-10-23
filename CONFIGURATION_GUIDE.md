@@ -103,7 +103,7 @@ Exclude entire files or directories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.5
+    rev: v1.1.6
     hooks:
       - id: genai-security-check
         exclude: '^(tests/|spec/|__tests__/|\.test\.|\.spec\.)'
