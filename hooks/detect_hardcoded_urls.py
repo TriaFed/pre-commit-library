@@ -17,27 +17,30 @@ URL_PATTERNS = [
     r'ftp://[^\s\'">\]]+',
     # Database connection strings with URLs
     r'(?:jdbc|mongodb|mysql|postgresql)://[^\s\'">\]]+',
-    # API endpoints patterns
-    r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\]]*)?',
+    # API endpoints patterns (more specific to avoid overlap with documentation URLs)
+    r'api\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\]]*)?',
+    # Suspicious www domains (exclude common safe ones)
+    r'www\.(?!(?:w3\.org|github\.com|docs\.|example\.(?:com|org|net)|.*\.example\.(?:com|org|net)))[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\]]*)?',
 ]
 
 # URLs that are typically safe to ignore
 SAFE_URL_PATTERNS = [
-    r'https?://localhost',
-    r'https?://127\.0\.0\.1',
-    r'https?://0\.0\.0\.0',
-    r'https?://example\.com',
-    r'https?://example\.org',
-    r'https?://example\.net',
-    r'https?://.*\.example\.com',
-    r'https?://.*\.test',
-    r'https?://.*\.local',
-    r'https?://.*\.localhost',
+    r'https?://localhost(?:[:/].*)?',
+    r'https?://127\.0\.0\.1(?:[:/].*)?',
+    r'https?://0\.0\.0\.0(?:[:/].*)?',
+    r'https?://example\.com(?:[/?#].*)?',
+    r'https?://example\.org(?:[/?#].*)?',
+    r'https?://example\.net(?:[/?#].*)?',
+    r'https?://.*\.example\.com(?:[/?#].*)?',
+    r'https?://.*\.test(?:[/?#].*)?',
+    r'https?://.*\.local(?:[/?#].*)?',
+    r'https?://.*\.localhost(?:[/?#].*)?',
+    r'https?://mock-host/.*',
     # Common documentation URLs
-    r'https?://github\.com/.*',
+    r'https?://(?:www\.)?github\.com(?:[/?#].*)?',
     r'https?://docs\..*',
-    r'https?://www\.w3\.org/.*',
-    r'https?://tools\.ietf\.org/.*',
+    r'https?://www\.w3\.org(?:[/?#].*)?',
+    r'https?://tools\.ietf\.org(?:[/?#].*)?',
     r'https?://schemas\..*',
     # Package registries
     r'https?://registry\.npmjs\.org/.*',
@@ -46,7 +49,7 @@ SAFE_URL_PATTERNS = [
 ]
 
 # File extensions to skip
-SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz'}
+SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz', '.md'}
 
 # Patterns that suggest this might be in a comment or documentation
 COMMENT_PATTERNS = [
@@ -65,7 +68,7 @@ def is_in_comment(line: str) -> bool:
 
 def is_safe_url(url: str) -> bool:
     """Check if URL matches safe patterns."""
-    return any(re.match(pattern, url, re.IGNORECASE) for pattern in SAFE_URL_PATTERNS)
+    return any(re.match(pattern + r'$', url, re.IGNORECASE) for pattern in SAFE_URL_PATTERNS)
 
 
 def find_hardcoded_urls(file_path: str) -> List[Tuple[int, str, str]]:
