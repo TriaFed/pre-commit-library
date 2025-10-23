@@ -179,7 +179,7 @@ EXCLUSION_PATTERNS = [
     # Parameterized queries (not SQL injection)
     r'query.*:[\w]+',  # Named parameters
     r'query.*\$\d+',   # Positional parameters
-    r'query.*\?',      # Question mark parameters
+    r'query.*[\'"][^\'"]*\?[^\'"]*[\'"]',      # Question mark parameters inside quotes
     # Configuration and development contexts
     r'#.*genai:ignore',
     r'//.*genai:ignore',
