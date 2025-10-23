@@ -56,6 +56,10 @@ GENAI_SECURITY_PATTERNS = {
             r'["\'][^"\']*\.\.\\[^"\']*["\']',  # Actual ..\ in strings
             r'path.*\+.*\.\.',  # Path concatenation with ..
             r'File\([^)]*\+[^)]*\.\.[^)]*\)',  # File constructor with .. concatenation
+            # Detect concatenation of '..' or '..\\' outside of quotes
+            r'\+\s*[\'"]?\.\./[\'"]?',  # Concatenation with ../ (optionally quoted)
+            r'\+\s*[\'"]?\.\.\\\\[\'"]?',  # Concatenation with ..\ (optionally quoted, double-escaped for regex)
+            r'\+\s*[\'"]?\.\.\\[\'"]?',  # Concatenation with ..\ (single backslash, for some languages)
         ],
         'description': 'Potential path traversal vulnerability - validate file paths',
         'severity': 'high'
