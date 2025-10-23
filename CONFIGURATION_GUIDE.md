@@ -92,8 +92,8 @@ console.error('Error creating email:', emailInput.status);
 
 Available levels:
 - `low`: All vulnerabilities (very strict)
-- `moderate`: Moderate and above (default)
-- `high`: High and critical only (recommended)
+- `moderate`: Moderate and above (previous default)
+- `high`: High and critical only (default, recommended)
 - `critical`: Only critical vulnerabilities
 
 ### 4. File-specific Exclusions
