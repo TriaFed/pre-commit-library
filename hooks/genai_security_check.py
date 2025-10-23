@@ -39,7 +39,8 @@ GENAI_SECURITY_PATTERNS = {
             r'executeQuery\(["\'][^"\']*["\'].*\+.*[^)]*\)',
         ],
         'description': 'Potential SQL injection vulnerability - use parameterized queries',
-        'severity': 'high'
+        'severity': 'high',
+        'requires_param_check': True  # Flag to enable parameter placeholder filtering
     },
     'command_injection': {
         'patterns': [
@@ -216,6 +217,38 @@ def should_exclude_line(line: str) -> bool:
     return False
 
 
+def has_parameter_placeholders(line: str) -> bool:
+    """
+    Check if a line contains SQL parameter placeholders.
+    This is more efficient than using negative lookaheads in regex patterns.
+    
+    Supported parameter formats:
+    - :param (named parameters - SQLAlchemy, Oracle, etc.)
+    - $1, $2, etc. (positional - PostgreSQL, Go)
+    - ? (question marks - JDBC, PDO, etc.)
+    - @param (SQL Server)
+    - #{param} (MyBatis)
+    """
+    # Quick check: if there's no concatenation with quotes, skip
+    if '+' not in line or ('"' not in line and "'" not in line):
+        return False
+    
+    # Check for common parameter placeholder patterns
+    param_patterns = [
+        r':\w+',           # :param_name
+        r'\$\d+',          # $1, $2, etc.
+        r'\?',             # ? placeholder
+        r'@\w+',           # @param
+        r'#\{\w+\}',       # #{param}
+    ]
+    
+    for pattern in param_patterns:
+        if re.search(pattern, line):
+            return True
+    
+    return False
+
+
 def analyze_python_ast(file_path: str, content: str) -> List[Tuple[int, str, str]]:
     """Analyze Python AST for security issues."""
     issues = []
@@ -294,6 +327,11 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
                     
                     for pattern in pattern_info['patterns']:
                         if re.search(pattern, line, re.IGNORECASE):
+                            # Special handling for SQL injection - skip if parameterized
+                            if pattern_info.get('requires_param_check', False):
+                                if has_parameter_placeholders(line):
+                                    continue  # Skip this match - it's a parameterized query
+                            
                             issues.append((
                                 line_num,
                                 stripped_line,
