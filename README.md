@@ -39,6 +39,26 @@ This library provides pre-commit hooks specifically designed to:
 
 ## 🚀 Quick Start
 
+### For Real-World Projects (Recommended)
+
+If you're implementing this in a production codebase and want to minimize false positives, start with our practical configuration:
+
+```bash
+# Copy the practical configuration
+curl -o .pre-commit-config.yaml https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/practical-security.yaml
+
+# Install pre-commit
+pip install pre-commit
+
+# Install the hooks
+pre-commit install
+
+# Create a secrets baseline to exclude known false positives
+detect-secrets scan --baseline .secrets.baseline
+```
+
+See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for detailed guidance on handling false positives.
+
 ### 1. Install dependencies
 
 **Quick setup for macOS:**

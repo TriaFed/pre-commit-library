@@ -36,7 +36,8 @@ echo "📦 Running npm audit..."
 # moderate: fail on moderate and above
 # high: fail on high and above  
 # critical: fail only on critical
-AUDIT_LEVEL="${NPM_AUDIT_LEVEL:-moderate}"
+# Default to 'high' to reduce false positives while still catching serious issues
+AUDIT_LEVEL="${NPM_AUDIT_LEVEL:-high}"
 
 if npm audit --audit-level="$AUDIT_LEVEL"; then
     echo "✅ npm audit passed - no vulnerabilities found at $AUDIT_LEVEL level or above"

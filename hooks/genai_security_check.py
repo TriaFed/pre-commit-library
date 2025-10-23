@@ -26,12 +26,14 @@ GENAI_SECURITY_PATTERNS = {
     },
     'sql_injection': {
         'patterns': [
-            r'SELECT.*\+.*',
-            r'INSERT.*\+.*',
-            r'UPDATE.*\+.*',
-            r'DELETE.*\+.*',
-            r'query\s*\+\s*',
-            r'executeQuery\([^)]*\+[^)]*\)',
+            # Only flag direct string concatenation in SQL contexts, not parameterized queries
+            r'SELECT.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
+            r'INSERT.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
+            r'UPDATE.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
+            r'DELETE.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
+            # Flag obvious string concatenation with user input, but not parameterized queries
+            r'query\s*=\s*["\'][^"\']*["\'].*\+.*(?!.*:[\w]+)',  # Exclude parameterized queries with :param
+            r'executeQuery\(["\'][^"\']*["\'].*\+.*[^)]*\)',
         ],
         'description': 'Potential SQL injection vulnerability - use parameterized queries',
         'severity': 'high'
@@ -49,10 +51,11 @@ GENAI_SECURITY_PATTERNS = {
     },
     'path_traversal': {
         'patterns': [
-            r'\.\./',
-            r'\.\.\\',
-            r'path.*\+.*',
-            r'File\([^)]*\+[^)]*\)',
+            # Only flag actual path traversal attempts, not relative imports
+            r'["\'][^"\']*\.\./[^"\']*["\']',  # Actual ../ in strings
+            r'["\'][^"\']*\.\.\\[^"\']*["\']',  # Actual ..\ in strings
+            r'path.*\+.*\.\.',  # Path concatenation with ..
+            r'File\([^)]*\+[^)]*\.\.[^)]*\)',  # File constructor with .. concatenation
         ],
         'description': 'Potential path traversal vulnerability - validate file paths',
         'severity': 'high'
@@ -116,13 +119,18 @@ GENAI_SECURITY_PATTERNS = {
     'information_disclosure': {
         'patterns': [
             r'printStackTrace\(\)',
-            r'console\.error\([^)]*error[^)]*\)',
-            r'print\([^)]*exception[^)]*\)',
-            r'echo.*\$.*error',
-            r'response\.write\([^)]*error[^)]*\)',
+            # Only flag console.error with actual sensitive data patterns, not general error logging
+            r'console\.error\([^)]*password[^)]*\)',
+            r'console\.error\([^)]*token[^)]*\)',
+            r'console\.error\([^)]*secret[^)]*\)',
+            r'console\.error\([^)]*key[^)]*\)',
+            r'print\([^)]*password[^)]*\)',
+            r'print\([^)]*token[^)]*\)',
+            r'echo.*\$.*password',
+            r'response\.write\([^)]*password[^)]*\)',
         ],
-        'description': 'Potential information disclosure - avoid exposing stack traces',
-        'severity': 'low'
+        'description': 'Potential information disclosure - avoid exposing sensitive data in logs',
+        'severity': 'medium'
     },
     'csrf_missing': {
         'patterns': [
@@ -152,6 +160,41 @@ SUSPICIOUS_COMMENT_PATTERNS = [
 
 # File extensions to analyze
 SUPPORTED_EXTENSIONS = {'.py', '.js', '.ts', '.java', '.php', '.cs', '.cpp', '.c', '.go', '.rb', '.scala'}
+
+# Safe contexts where security rules should be more lenient
+SAFE_CONTEXTS = [
+    'test', 'spec', 'mock', 'fixture', 'example', 'demo', 'dev', 'development',
+    'local', 'docker', 'compose', 'setup', 'migration', 'seed'
+]
+
+# Exclusion patterns for common false positives
+EXCLUSION_PATTERNS = [
+    # Import statements (not path traversal)
+    r'import\s+.*from\s+["\'][^"\']*\.\./[^"\']*["\']',
+    r'require\(["\'][^"\']*\.\./[^"\']*["\']\)',
+    # Parameterized queries (not SQL injection)
+    r'query.*:[\w]+',  # Named parameters
+    r'query.*\$\d+',   # Positional parameters
+    r'query.*\?',      # Question mark parameters
+    # Configuration and development contexts
+    r'#.*genai:ignore',
+    r'//.*genai:ignore',
+    r'/\*.*genai:ignore.*\*/',
+]
+
+
+def is_safe_context(file_path: str) -> bool:
+    """Check if file is in a safe context where rules should be more lenient."""
+    file_path_lower = file_path.lower()
+    return any(context in file_path_lower for context in SAFE_CONTEXTS)
+
+
+def should_exclude_line(line: str) -> bool:
+    """Check if a line should be excluded from security checks."""
+    for pattern in EXCLUSION_PATTERNS:
+        if re.search(pattern, line, re.IGNORECASE):
+            return True
+    return False
 
 
 def analyze_python_ast(file_path: str, content: str) -> List[Tuple[int, str, str]]:
@@ -206,6 +249,9 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
     if not any(file_path.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
         return issues
     
+    # Check if file is in a safe context
+    in_safe_context = is_safe_context(file_path)
+    
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
@@ -213,16 +259,25 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
             
             # Pattern-based analysis
             for line_num, line in enumerate(lines, 1):
-                if not line.strip():
+                stripped_line = line.strip()
+                if not stripped_line:
+                    continue
+                
+                # Skip excluded lines
+                if should_exclude_line(line):
                     continue
                 
                 # Check security patterns
                 for pattern_name, pattern_info in GENAI_SECURITY_PATTERNS.items():
+                    # In safe contexts, only report high severity issues
+                    if in_safe_context and pattern_info['severity'] == 'low':
+                        continue
+                    
                     for pattern in pattern_info['patterns']:
                         if re.search(pattern, line, re.IGNORECASE):
                             issues.append((
                                 line_num,
-                                line.strip(),
+                                stripped_line,
                                 pattern_name,
                                 pattern_info['description']
                             ))

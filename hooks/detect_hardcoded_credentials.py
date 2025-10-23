@@ -200,12 +200,23 @@ def main():
     parser.add_argument('files', nargs='*', help='Files to check')
     parser.add_argument('--show-values', action='store_true',
                         help='Show the actual credential values (use with caution)')
+    parser.add_argument('--exclude-patterns', type=str,
+                        help='Comma-separated list of patterns to exclude (e.g., "test,demo,local")')
     args = parser.parse_args()
     
     exit_code = 0
     total_issues = 0
     
+    # Parse exclusion patterns
+    exclude_patterns = []
+    if args.exclude_patterns:
+        exclude_patterns = [p.strip().lower() for p in args.exclude_patterns.split(',')]
+    
     for file_path in args.files:
+        # Skip files matching exclusion patterns
+        if exclude_patterns and any(pattern in file_path.lower() for pattern in exclude_patterns):
+            continue
+            
         issues = find_hardcoded_credentials(file_path)
         
         if issues:
