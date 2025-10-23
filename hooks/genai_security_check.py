@@ -32,7 +32,7 @@ GENAI_SECURITY_PATTERNS = {
             r'UPDATE.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
             r'DELETE.*["\'][^"\']*["\'].*\+.*["\'][^"\']*["\']',
             # Flag obvious string concatenation with user input, but not parameterized queries
-            r'query\s*=\s*["\'][^"\']*["\'].*\+.*(?!.*:[\w]+)',  # Exclude parameterized queries with :param
+            r'query\s*=\s*["\'][^"\']*["\'].*\+.*',  # Flag any concatenation in query assignment
             r'executeQuery\(["\'][^"\']*["\'].*\+.*[^)]*\)',
         ],
         'description': 'Potential SQL injection vulnerability - use parameterized queries',
