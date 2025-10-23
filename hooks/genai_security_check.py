@@ -16,10 +16,13 @@ from pathlib import Path
 GENAI_SECURITY_PATTERNS = {
     'insecure_random': {
         'patterns': [
-            r'Math\.random\(\)',
-            r'random\.random\(\)',
-            r'new Random\(\)',
-            r'rand\(\)',
+            # Only flag Math.random() in security-sensitive contexts
+            r'(?:token|key|password|secret|id|uuid|nonce|salt|session).*Math\.random\(\)',
+            r'Math\.random\(\).*(?:token|key|password|secret|id|uuid|nonce|salt|session)',
+            r'random\.random\(\).*(?:token|key|password|secret|id|uuid|nonce|salt)',
+            r'(?:token|key|password|secret|id|uuid|nonce|salt).*random\.random\(\)',
+            r'new Random\(\).*(?:token|key|password|secret|id|uuid|nonce|salt)',
+            r'(?:token|key|password|secret|id|uuid|nonce|salt).*new Random\(\)',
         ],
         'description': 'Use cryptographically secure random generators for security-sensitive operations',
         'severity': 'medium'
@@ -123,15 +126,17 @@ GENAI_SECURITY_PATTERNS = {
     'information_disclosure': {
         'patterns': [
             r'printStackTrace\(\)',
-            # Only flag console.error with actual sensitive data patterns, not general error logging
-            r'console\.error\([^)]*password[^)]*\)',
-            r'console\.error\([^)]*token[^)]*\)',
-            r'console\.error\([^)]*secret[^)]*\)',
-            r'console\.error\([^)]*key[^)]*\)',
-            r'print\([^)]*password[^)]*\)',
-            r'print\([^)]*token[^)]*\)',
-            r'echo.*\$.*password',
-            r'response\.write\([^)]*password[^)]*\)',
+            # Only flag when logging actual variables/interpolations with sensitive data, not string literals
+            r'console\.error\([^)]*password\s*[,+)]',  # Variable password, not in quotes
+            r'console\.error\([^)]*\$\{.*password.*\}',  # Template literal with password
+            r'console\.error\([^)]*\+.*password',  # Concatenation with password variable
+            r'console\.error\([^)]*secret\s*[,+)]',  # Variable secret
+            r'console\.error\([^)]*\$\{.*secret.*\}',  # Template literal with secret
+            r'console\.error\([^)]*\+.*secret',  # Concatenation with secret variable
+            r'print\([^)]*password\s*[,+)]',  # Python print with password variable
+            r'print\([^)]*\+.*password',  # Python concatenation with password
+            r'echo.*\$password',  # Shell echo with password variable
+            r'response\.write\([^)]*password\s*[,+)]',  # Response write with password variable
         ],
         'description': 'Potential information disclosure - avoid exposing sensitive data in logs',
         'severity': 'medium'
@@ -173,13 +178,23 @@ SAFE_CONTEXTS = [
 
 # Exclusion patterns for common false positives
 EXCLUSION_PATTERNS = [
-    # Import statements (not path traversal)
+    # Import statements (not path traversal) - handles both single-line and multi-line imports
     r'import\s+.*from\s+["\'][^"\']*\.\./[^"\']*["\']',
     r'require\(["\'][^"\']*\.\./[^"\']*["\']\)',
+    r'\}\s*from\s+["\'][^"\']*\.\./[^"\']*["\']',  # Multi-line import closing brace (removed ^ anchor)
+    r'from\s+["\'][^"\']*\.\./[^"\']*["\']',  # Generic 'from' statement
+    r'^\s*from\s+["\'][^"\']*["\']',  # Python-style from imports
+    r'export\s+.*from\s+["\'][^"\']*\.\./[^"\']*["\']',  # Export statements
+    r'import\(["\'][^"\']*\.\./[^"\']*["\']\)',  # Dynamic imports
     # Parameterized queries (not SQL injection)
     r'query.*:[\w]+',  # Named parameters
     r'query.*\$\d+',   # Positional parameters
     r'query.*[\'"][^\'"]*\?[^\'"]*[\'"]',      # Question mark parameters inside quotes
+    # Non-security random usage (timing, delays, jitter, animations)
+    r'(?:delay|wait|timeout|jitter|animation|sleep|interval).*Math\.random\(\)',
+    r'Math\.random\(\).*(?:delay|wait|timeout|jitter|animation|sleep|interval)',
+    r'(?:delay|wait|timeout|jitter).*random\.random\(\)',
+    r'random\.random\(\).*(?:delay|wait|timeout|jitter)',
     # Configuration and development contexts
     r'#.*genai:ignore',
     r'//.*genai:ignore',
