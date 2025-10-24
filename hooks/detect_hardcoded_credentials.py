@@ -21,7 +21,8 @@ CREDENTIAL_PATTERNS = {
     'api_key': [
         r'api[_-]?key\s*[:=]\s*["\'][^"\']{10,}["\']',
         r'apikey\s*[:=]\s*["\'][^"\']{10,}["\']',
-        r'key\s*[:=]\s*["\'][A-Za-z0-9]{20,}["\']',
+        # Match standalone 'key' but not compound words like sourceKey, foreignKey, etc.
+        r'(?<![a-zA-Z])key\s*[:=]\s*["\'][A-Za-z0-9]{20,}["\']',
     ],
     'token': [
         r'token\s*[:=]\s*["\'][^"\']{10,}["\']',
@@ -81,6 +82,17 @@ SAFE_CONTEXT_PATTERNS = [
     r'.*placeholder.*',
 ]
 
+# ORM/Framework patterns that are safe (e.g., Sequelize, TypeORM, etc.)
+SAFE_ORM_PATTERNS = [
+    r'sourcekey\s*:',      # Sequelize sourceKey
+    r'foreignkey\s*:',     # Sequelize foreignKey
+    r'primarykey\s*:',     # ORM primary key definitions
+    r'uniquekey\s*:',      # ORM unique key definitions
+    r'indexkey\s*:',       # ORM index key definitions
+    r'partitionkey\s*:',   # Database partition keys
+    r'sortkey\s*:',        # Database sort keys
+]
+
 
 def is_safe_context(line: str, file_path: str) -> bool:
     """Check if the line/file appears to be in a safe context."""
@@ -90,7 +102,14 @@ def is_safe_context(line: str, file_path: str) -> bool:
         return True
     
     # Check if line appears to be in a safe context
-    return any(re.match(pattern, line.lower()) for pattern in SAFE_CONTEXT_PATTERNS)
+    if any(re.match(pattern, line.lower()) for pattern in SAFE_CONTEXT_PATTERNS):
+        return True
+    
+    # Check if line contains ORM/framework patterns
+    if any(re.search(pattern, line.lower()) for pattern in SAFE_ORM_PATTERNS):
+        return True
+    
+    return False
 
 
 def is_safe_value(value: str) -> bool:
@@ -200,12 +219,23 @@ def main():
     parser.add_argument('files', nargs='*', help='Files to check')
     parser.add_argument('--show-values', action='store_true',
                         help='Show the actual credential values (use with caution)')
+    parser.add_argument('--exclude-patterns', type=str,
+                        help='Comma-separated list of patterns to exclude (e.g., "test,demo,local")')
     args = parser.parse_args()
     
     exit_code = 0
     total_issues = 0
     
+    # Parse exclusion patterns
+    exclude_patterns = []
+    if args.exclude_patterns:
+        exclude_patterns = [p.strip().lower() for p in args.exclude_patterns.split(',')]
+    
     for file_path in args.files:
+        # Skip files matching exclusion patterns
+        if exclude_patterns and any(pattern in file_path.lower() for pattern in exclude_patterns):
+            continue
+            
         issues = find_hardcoded_credentials(file_path)
         
         if issues:

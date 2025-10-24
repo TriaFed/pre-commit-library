@@ -16,25 +16,31 @@ from pathlib import Path
 GENAI_SECURITY_PATTERNS = {
     'insecure_random': {
         'patterns': [
-            r'Math\.random\(\)',
-            r'random\.random\(\)',
-            r'new Random\(\)',
-            r'rand\(\)',
+            # Only flag Math.random() in security-sensitive contexts
+            r'(?:token|key|password|secret|id|uuid|nonce|salt|session).*Math\.random\(\)',
+            r'Math\.random\(\).*(?:token|key|password|secret|id|uuid|nonce|salt|session)',
+            r'random\.random\(\).*(?:token|key|password|secret|id|uuid|nonce|salt)',
+            r'(?:token|key|password|secret|id|uuid|nonce|salt).*random\.random\(\)',
+            r'new Random\(\).*(?:token|key|password|secret|id|uuid|nonce|salt)',
+            r'(?:token|key|password|secret|id|uuid|nonce|salt).*new Random\(\)',
         ],
         'description': 'Use cryptographically secure random generators for security-sensitive operations',
         'severity': 'medium'
     },
     'sql_injection': {
         'patterns': [
-            r'SELECT.*\+.*',
-            r'INSERT.*\+.*',
-            r'UPDATE.*\+.*',
-            r'DELETE.*\+.*',
-            r'query\s*\+\s*',
-            r'executeQuery\([^)]*\+[^)]*\)',
+            # Only flag direct string concatenation in SQL contexts, not parameterized queries
+            r'SELECT.*[\"\\\'].*\+.*',
+            r'INSERT.*[\"\\\'].*\+.*',
+            r'UPDATE.*[\"\\\'].*\+.*',
+            r'DELETE.*[\"\\\'].*\+.*',
+            # Flag obvious string concatenation with user input, but not parameterized queries
+            r'query\s*=\s*["\'][^"\']*["\'].*\+.*',  # Flag any concatenation in query assignment
+            r'executeQuery\(["\'][^"\']*["\'].*\+.*[^)]*\)',
         ],
         'description': 'Potential SQL injection vulnerability - use parameterized queries',
-        'severity': 'high'
+        'severity': 'high',
+        'requires_param_check': True  # Flag to enable parameter placeholder filtering
     },
     'command_injection': {
         'patterns': [
@@ -49,10 +55,15 @@ GENAI_SECURITY_PATTERNS = {
     },
     'path_traversal': {
         'patterns': [
-            r'\.\./',
-            r'\.\.\\',
-            r'path.*\+.*',
-            r'File\([^)]*\+[^)]*\)',
+            # Only flag actual path traversal attempts, not relative imports
+            r'["\'][^"\']*\.\./[^"\']*["\']',  # Actual ../ in strings
+            r'["\'][^"\']*\.\.\\[^"\']*["\']',  # Actual ..\ in strings
+            r'path.*\+.*\.\.',  # Path concatenation with ..
+            r'File\([^)]*\+[^)]*\.\.[^)]*\)',  # File constructor with .. concatenation
+            # Detect concatenation of '..' or '..\\' outside of quotes
+            r'\+\s*[\'"]?\.\./[\'"]?',  # Concatenation with ../ (optionally quoted)
+            r'\+\s*[\'"]?\.\.\\\\[\'"]?',  # Concatenation with ..\\ (two literal backslashes, optionally quoted)
+            r'\+\s*[\'"]?\.\.\\[\'"]?',  # Concatenation with ..\ (single backslash, for some languages)
         ],
         'description': 'Potential path traversal vulnerability - validate file paths',
         'severity': 'high'
@@ -116,13 +127,20 @@ GENAI_SECURITY_PATTERNS = {
     'information_disclosure': {
         'patterns': [
             r'printStackTrace\(\)',
-            r'console\.error\([^)]*error[^)]*\)',
-            r'print\([^)]*exception[^)]*\)',
-            r'echo.*\$.*error',
-            r'response\.write\([^)]*error[^)]*\)',
+            # Only flag when logging actual variables/interpolations with sensitive data, not string literals
+            r'console\.error\([^)]*password\s*[,+)]',  # Variable password, not in quotes
+            r'console\.error\([^)]*\$\{.*password.*\}',  # Template literal with password
+            r'console\.error\([^)]*\+.*password',  # Concatenation with password variable
+            r'console\.error\([^)]*secret\s*[,+)]',  # Variable secret
+            r'console\.error\([^)]*\$\{.*secret.*\}',  # Template literal with secret
+            r'console\.error\([^)]*\+.*secret',  # Concatenation with secret variable
+            r'print\([^)]*password\s*[,+)]',  # Python print with password variable
+            r'print\([^)]*\+.*password',  # Python concatenation with password
+            r'echo.*\$password',  # Shell echo with password variable
+            r'response\.write\([^)]*password\s*[,+)]',  # Response write with password variable
         ],
-        'description': 'Potential information disclosure - avoid exposing stack traces',
-        'severity': 'low'
+        'description': 'Potential information disclosure - avoid exposing sensitive data in logs',
+        'severity': 'medium'
     },
     'csrf_missing': {
         'patterns': [
@@ -152,6 +170,83 @@ SUSPICIOUS_COMMENT_PATTERNS = [
 
 # File extensions to analyze
 SUPPORTED_EXTENSIONS = {'.py', '.js', '.ts', '.java', '.php', '.cs', '.cpp', '.c', '.go', '.rb', '.scala'}
+
+# Safe contexts where security rules should be more lenient
+SAFE_CONTEXTS = [
+    'test', 'spec', 'mock', 'fixture', 'example', 'demo', 'dev', 'development',
+    'local', 'docker', 'compose', 'setup', 'migration', 'seed'
+]
+
+# Exclusion patterns for common false positives
+EXCLUSION_PATTERNS = [
+    # Import statements (not path traversal) - handles both single-line and multi-line imports
+    r'import\s+.*from\s+["\'][^"\']*\.\./[^"\']*["\']',
+    r'require\(["\'][^"\']*\.\./[^"\']*["\']\)',
+    r'\}\s*from\s+["\'][^"\']*\.\./[^"\']*["\']',  # Multi-line import closing brace (removed ^ anchor)
+    r'from\s+["\'][^"\']*\.\./[^"\']*["\']',  # Generic 'from' statement
+    r'^\s*from\s+["\'][^"\']*["\']',  # Python-style from imports
+    r'export\s+.*from\s+["\'][^"\']*\.\./[^"\']*["\']',  # Export statements
+    r'import\(["\'][^"\']*\.\./[^"\']*["\']\)',  # Dynamic imports
+    # Parameterized queries (not SQL injection)
+    r'query.*:[\w]+',  # Named parameters
+    r'query.*\$\d+',   # Positional parameters
+    r'query.*[\'"][^\'"]*\?[^\'"]*[\'"]',      # Question mark parameters inside quotes
+    # Non-security random usage (timing, delays, jitter, animations)
+    r'(?:delay|wait|timeout|jitter|animation|sleep|interval).*Math\.random\(\)',
+    r'Math\.random\(\).*(?:delay|wait|timeout|jitter|animation|sleep|interval)',
+    r'(?:delay|wait|timeout|jitter).*random\.random\(\)',
+    r'random\.random\(\).*(?:delay|wait|timeout|jitter)',
+    # Configuration and development contexts
+    r'#.*genai:ignore',
+    r'//.*genai:ignore',
+    r'/\*.*genai:ignore.*\*/',
+]
+
+
+def is_safe_context(file_path: str) -> bool:
+    """Check if file is in a safe context where rules should be more lenient."""
+    file_path_lower = file_path.lower()
+    return any(context in file_path_lower for context in SAFE_CONTEXTS)
+
+
+def should_exclude_line(line: str) -> bool:
+    """Check if a line should be excluded from security checks."""
+    for pattern in EXCLUSION_PATTERNS:
+        if re.search(pattern, line, re.IGNORECASE):
+            return True
+    return False
+
+
+def has_parameter_placeholders(line: str) -> bool:
+    """
+    Check if a line contains SQL parameter placeholders.
+    This is more efficient than using negative lookaheads in regex patterns.
+    
+    Supported parameter formats:
+    - :param (named parameters - SQLAlchemy, Oracle, etc.)
+    - $1, $2, etc. (positional - PostgreSQL, Go)
+    - ? (question marks - JDBC, PDO, etc.)
+    - @param (SQL Server)
+    - #{param} (MyBatis)
+    """
+    # Quick check: if there's no concatenation with quotes, skip
+    if '+' not in line or ('"' not in line and "'" not in line):
+        return False
+    
+    # Check for common parameter placeholder patterns
+    param_patterns = [
+        r':\w+',           # :param_name
+        r'\$\d+',          # $1, $2, etc.
+        r'\?',             # ? placeholder
+        r'@\w+',           # @param
+        r'#\{\w+\}',       # #{param}
+    ]
+    
+    for pattern in param_patterns:
+        if re.search(pattern, line):
+            return True
+    
+    return False
 
 
 def analyze_python_ast(file_path: str, content: str) -> List[Tuple[int, str, str]]:
@@ -206,6 +301,9 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
     if not any(file_path.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
         return issues
     
+    # Check if file is in a safe context
+    in_safe_context = is_safe_context(file_path)
+    
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
@@ -213,16 +311,30 @@ def check_genai_patterns(file_path: str) -> List[Tuple[int, str, str, str]]:
             
             # Pattern-based analysis
             for line_num, line in enumerate(lines, 1):
-                if not line.strip():
+                stripped_line = line.strip()
+                if not stripped_line:
+                    continue
+                
+                # Skip excluded lines
+                if should_exclude_line(line):
                     continue
                 
                 # Check security patterns
                 for pattern_name, pattern_info in GENAI_SECURITY_PATTERNS.items():
+                    # In safe contexts, only report high severity issues
+                    if in_safe_context and pattern_info['severity'] == 'low':
+                        continue
+                    
                     for pattern in pattern_info['patterns']:
                         if re.search(pattern, line, re.IGNORECASE):
+                            # Special handling for SQL injection - skip if parameterized
+                            if pattern_info.get('requires_param_check', False):
+                                if has_parameter_placeholders(line):
+                                    continue  # Skip this match - it's a parameterized query
+                            
                             issues.append((
                                 line_num,
-                                line.strip(),
+                                stripped_line,
                                 pattern_name,
                                 pattern_info['description']
                             ))
