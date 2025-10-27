@@ -523,7 +523,37 @@ const password = 'mySecretPassword123';
 // ✅ Safe alternatives
 const apiKey = process.env.API_KEY;
 const password = process.env.PASSWORD;
+
+// ✅ For false positives, use inline comments to suppress
+persistState(store, {
+  key: 'AppPreferences', // noqa: credentials
+  storage: sessionStorage,
+});
 ```
+
+**Suppressing False Positives:**
+
+The `hardcoded_credentials` hook supports inline comments to mark false positives:
+
+```python
+# Python example
+config = {
+    "key": "LocalStorageKey"  # noqa: credentials
+}
+```
+
+```javascript
+// JavaScript example
+const settings = {
+  key: 'PreferenceKey', // noqa: credentials
+};
+```
+
+Supported suppression comments:
+- `// noqa: credentials` or `# noqa: credentials`
+- `// ignore: credentials` or `# ignore: credentials`
+- `// pragma: allowlist secret`
+- `// nosec credentials`
 
 ### GenAI Security Patterns
 
@@ -656,11 +686,40 @@ Some tools provide enhanced functionality:
 
 ```bash
 # Generate baseline
-detect_secrets scan --baseline .secrets.baseline
+detect-secrets scan --baseline .secrets.baseline
 
 # Update baseline
-detect_secrets scan --baseline .secrets.baseline --force-use-all-plugins
+detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins
 ```
+
+#### hardcoded_credentials
+
+Use inline comments to suppress false positives:
+
+```python
+# Python
+config = {"key": "PreferenceName"}  # noqa: credentials
+```
+
+```javascript
+// JavaScript/TypeScript
+const config = {
+  key: 'StorageKey', // noqa: credentials
+};
+```
+
+```java
+// Java
+Map<String, String> config = Map.of(
+    "key", "ConfigKey"  // noqa: credentials
+);
+```
+
+Supported comment formats:
+- `noqa: credentials` - Standard suppression
+- `ignore: credentials` - Alternative format
+- `pragma: allowlist secret` - Compatible with detect-secrets
+- `nosec credentials` - Bandit-style suppression
 
 #### ESLint
 

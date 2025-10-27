@@ -2,6 +2,41 @@
 """
 Detect hardcoded credentials and sensitive information in code files.
 Enhanced for GenAI-generated code which might accidentally include credentials.
+
+This hook scans code for hardcoded passwords, API keys, tokens, and other sensitive
+credentials that should be stored in environment variables or secure vaults instead.
+
+Features:
+- Detects passwords, API keys, tokens, private keys, AWS credentials
+- Context-aware scanning (lenient in tests, strict in production code)
+- Support for inline suppression comments for false positives
+- ORM/framework pattern recognition (e.g., Sequelize keys)
+
+Suppressing False Positives:
+Add inline comments to mark false positives:
+  - // noqa: credentials or # noqa: credentials
+  - // ignore: credentials or # ignore: credentials
+  - // pragma: allowlist secret
+  - // nosec credentials
+
+Examples:
+  # Python
+  config = {"key": "StorageKey"}  # noqa: credentials
+  
+  // JavaScript/TypeScript
+  const settings = {
+    key: 'PreferenceName', // noqa: credentials
+  };
+  
+  // Java
+  Map<String, String> config = Map.of(
+      "key", "ConfigKey"  // nosec credentials
+  );
+
+Usage:
+  python detect_hardcoded_credentials.py file1.py file2.js
+  python detect_hardcoded_credentials.py --show-values file.py
+  python detect_hardcoded_credentials.py --exclude-patterns test,demo file.py
 """
 
 import re

@@ -33,10 +33,37 @@ Then add to your `.pre-commit-config.yaml`:
 ```
 
 #### Option B: Use inline comments
-```bash
-# In your code, add this comment:
-DB_PASSWORD="local_dev_password"  # pragma: allowlist secret
+
+Add suppression comments directly in your code for false positives:
+
+```python
+# Python example
+DB_PASSWORD = "local_dev_password"  # noqa: credentials
+api_config = {
+    "key": "AppStorageKey"  # pragma: allowlist secret
+}
 ```
+
+```javascript
+// JavaScript/TypeScript example
+const DB_PASSWORD = 'local_dev_password'; // noqa: credentials
+persistState(store, {
+  key: 'UserPreferences', // ignore: credentials
+});
+```
+
+```java
+// Java example
+String key = "ConfigKey";  // nosec credentials
+```
+
+**Supported suppression formats:**
+- `noqa: credentials` - Standard suppression (recommended)
+- `ignore: credentials` - Alternative format
+- `pragma: allowlist secret` - Compatible with detect-secrets
+- `nosec credentials` - Bandit-style format
+
+These comments work for both `detect-secrets` and `hardcoded-credentials` hooks.
 
 #### Option C: Exclude patterns
 ```yaml
