@@ -82,6 +82,14 @@ SAFE_CONTEXT_PATTERNS = [
     r'.*placeholder.*',
 ]
 
+# Patterns to ignore specific lines (inline comments)
+IGNORE_LINE_PATTERNS = [
+    r'noqa:\s*credentials?',           # # noqa: credentials or // noqa: credential
+    r'ignore:\s*credentials?',         # # ignore: credentials
+    r'allowlist\s+secret',             # pragma: allowlist secret
+    r'nosec\s+credentials?',           # # nosec credentials
+]
+
 # ORM/Framework patterns that are safe (e.g., Sequelize, TypeORM, etc.)
 SAFE_ORM_PATTERNS = [
     r'sourcekey\s*:',      # Sequelize sourceKey
@@ -99,6 +107,10 @@ def is_safe_context(line: str, file_path: str) -> bool:
     # Check if file is a test file
     if any(test_indicator in file_path.lower() for test_indicator in 
            ['test', 'spec', 'mock', 'example', 'sample', 'demo']):
+        return True
+    
+    # Check if line has an ignore comment
+    if any(re.search(pattern, line, re.IGNORECASE) for pattern in IGNORE_LINE_PATTERNS):
         return True
     
     # Check if line appears to be in a safe context
@@ -256,6 +268,7 @@ def main():
         print("💡 Use environment variables or secure vaults for credentials")
         print("💡 Never commit real credentials to version control")
         print("💡 Consider using tools like .env files with .gitignore")
+        print("💡 For false positives, add an inline comment: // noqa: credentials")
     else:
         print("✅ No hardcoded credentials detected")
     
