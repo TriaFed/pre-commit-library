@@ -100,7 +100,7 @@ SAFE_CONTEXT_PATTERNS = [
 
 # Patterns to ignore specific lines (inline comments)
 IGNORE_LINE_PATTERNS = [
-    r'allowlist\s+secret',             # pragma: allowlist secret
+    r'pragma:\s*allowlist\s+secret',   # pragma: allowlist secret
 ]
 
 # ORM/Framework patterns that are safe (e.g., Sequelize, TypeORM, etc.)
