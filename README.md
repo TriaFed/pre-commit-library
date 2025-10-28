@@ -89,7 +89,7 @@ Create a `.pre-commit-config.yaml` file in your project root:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security hooks (recommended for all projects)
       - id: detect_secrets
@@ -196,7 +196,7 @@ For projects using GenAI tools, start with these essential security hooks:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       - id: detect_secrets
       - id: hardcoded_credentials
@@ -213,7 +213,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security
       - id: detect_secrets
@@ -243,7 +243,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security
       - id: detect_secrets
@@ -271,7 +271,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security
       - id: detect_secrets
@@ -300,7 +300,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security
       - id: detect_secrets
@@ -327,7 +327,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security
       - id: detect_secrets
@@ -354,7 +354,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security
       - id: detect_secrets
@@ -380,7 +380,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security
       - id: detect_secrets
@@ -408,7 +408,7 @@ repos:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       # Security (essential for GenAI projects)
       - id: detect_secrets
@@ -523,7 +523,34 @@ const password = 'mySecretPassword123';
 // ✅ Safe alternatives
 const apiKey = process.env.API_KEY;
 const password = process.env.PASSWORD;
+
+// ✅ For false positives, use inline comments to suppress
+persistState(store, {
+  key: 'AppPreferences', // pragma: allowlist secret
+  storage: sessionStorage,
+});
 ```
+
+**Suppressing False Positives:**
+
+The `hardcoded_credentials` hook supports inline comments to mark false positives:
+
+```python
+# Python example
+config = {
+    "key": "LocalStorageKey"  # pragma: allowlist secret
+}
+```
+
+```javascript
+// JavaScript example
+const settings = {
+  key: 'PreferenceKey', // pragma: allowlist secret
+};
+```
+
+Supported suppression comments:
+- `// pragma: allowlist secret`
 
 ### GenAI Security Patterns
 
@@ -656,10 +683,10 @@ Some tools provide enhanced functionality:
 
 ```bash
 # Generate baseline
-detect_secrets scan --baseline .secrets.baseline
+detect-secrets scan --baseline .secrets.baseline
 
 # Update baseline
-detect_secrets scan --baseline .secrets.baseline --force-use-all-plugins
+detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins
 ```
 
 #### ESLint
@@ -697,7 +724,7 @@ For large repositories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.6
+    rev: v1.1.7
     hooks:
       - id: detect_secrets
         exclude: ^(docs/|tests/fixtures/)
