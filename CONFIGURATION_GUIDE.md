@@ -38,7 +38,7 @@ Add suppression comments directly in your code for false positives:
 
 ```python
 # Python example
-DB_PASSWORD = "local_dev_password"  # noqa: credentials
+DB_PASSWORD = "local_dev_password"  # pragma: allowlist secret
 api_config = {
     "key": "AppStorageKey"  # pragma: allowlist secret
 }
@@ -46,22 +46,19 @@ api_config = {
 
 ```javascript
 // JavaScript/TypeScript example
-const DB_PASSWORD = 'local_dev_password'; // noqa: credentials
+const DB_PASSWORD = 'local_dev_password'; // pragma: allowlist secret
 persistState(store, {
-  key: 'UserPreferences', // ignore: credentials
+  key: 'UserPreferences', // pragma: allowlist secret
 });
 ```
 
 ```java
 // Java example
-String key = "ConfigKey";  // nosec credentials
+String key = "ConfigKey";  // pragma: allowlist secret
 ```
 
 **Supported suppression formats:**
-- `noqa: credentials` - Standard suppression (recommended)
-- `ignore: credentials` - Alternative format
-- `pragma: allowlist secret` - Compatible with detect-secrets
-- `nosec credentials` - Bandit-style format
+- `pragma: allowlist secret` - Compatible with detect-secrets & hardcoded-credentials 
 
 These comments work for both `detect-secrets` and `hardcoded-credentials` hooks.
 
