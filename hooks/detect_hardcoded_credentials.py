@@ -13,10 +13,7 @@ Features:
 - ORM/framework pattern recognition (e.g., Sequelize keys)
 
 Suppressing False Positives:
-Add inline comments to mark false positives:
-  - // pragma: allowlist secret
-
-
+Add an inline comment containing: pragma: allowlist secret
 Usage:
   python detect_hardcoded_credentials.py file1.py file2.js
   python detect_hardcoded_credentials.py --show-values file.py
