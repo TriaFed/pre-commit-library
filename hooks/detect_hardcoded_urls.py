@@ -6,6 +6,7 @@ Specifically designed to catch URLs that might be accidentally included by GenAI
 
 import re
 import sys
+import os
 import argparse
 from typing import List, Tuple, Set
 
@@ -33,8 +34,25 @@ SAFE_URL_PATTERNS = [
     r'https?://.*\.test',
     r'https?://.*\.local',
     r'https?://.*\.localhost',
-    # Common documentation URLs
+    # Git URLs (common version control systems)
     r'https?://github\.com/.*',
+    r'https?://gitlab\.com/.*',
+    r'https?://bitbucket\.org/.*',
+    r'https?://.*\.github\.io/.*',
+    r'git://.*',
+    r'ssh://git@.*',
+    # Government domains (cms.gov and related) - HTTP, JDBC, and database protocols
+    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://.*\.cms\.gov(?::\d+)?(?:/.*)?',
+    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://cms\.gov(?::\d+)?(?:/.*)?',
+    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://.*\.cmscloud\.local(?::\d+)?(?:/.*)?',
+    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://cmscloud\.local(?::\d+)?(?:/.*)?',
+    # AWS domains - HTTP, JDBC, and database protocols
+    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://.*\.amazonaws\.com(?::\d+)?(?:/.*)?',
+    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://amazonaws\.com(?::\d+)?(?:/.*)?',
+    # Schema and specification URLs
+    r'https?://adaptivecards\.io/.*',
+    r'https?://.*\.adaptivecards\.io/.*',
+    # Common documentation URLs
     r'https?://docs\..*',
     r'https?://www\.w3\.org/.*',
     r'https?://tools\.ietf\.org/.*',
@@ -63,21 +81,50 @@ def is_in_comment(line: str) -> bool:
     return any(re.match(pattern, line) for pattern in COMMENT_PATTERNS)
 
 
-def is_safe_url(url: str) -> bool:
+def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[str]:
+    """Generate URL patterns for given domains and protocols."""
+    patterns = []
+    protocol_group = f"(?:{'|'.join(protocols)})"
+    
+    for domain in domains:
+        # Escape dots in domain names for regex
+        escaped_domain = domain.replace('.', r'\.')
+        # Pattern for subdomains
+        patterns.append(f"{protocol_group}://.*\\.{escaped_domain}(?::\\d+)?(?:/.*)?")
+        # Pattern for main domain
+        patterns.append(f"{protocol_group}://{escaped_domain}(?::\\d+)?(?:/.*)?")
+    
+    return patterns
+
+
+def is_safe_url(url: str, additional_patterns: List[str] = None) -> bool:
     """Check if URL matches safe patterns."""
-    return any(re.match(pattern, url, re.IGNORECASE) for pattern in SAFE_URL_PATTERNS)
+    all_patterns = SAFE_URL_PATTERNS[:]
+    if additional_patterns:
+        all_patterns.extend(additional_patterns)
+    return any(re.match(pattern, url, re.IGNORECASE) for pattern in all_patterns)
 
 
-def find_hardcoded_urls(file_path: str) -> List[Tuple[int, str, str]]:
+def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_safe_patterns: List[str] = None) -> List[Tuple[int, str, str]]:
     """
     Find hardcoded URLs in a file.
     Returns list of (line_number, line_content, url) tuples.
     """
+    if skip_files is None:
+        skip_files = set()
+    if additional_safe_patterns is None:
+        additional_safe_patterns = []
     issues = []
     
     # Skip binary files and certain extensions
     if any(file_path.endswith(ext) for ext in SKIP_EXTENSIONS):
         return issues
+    
+    # Skip files specified by user
+    if skip_files:
+        filename = os.path.basename(file_path)
+        if filename in skip_files:
+            return issues
     
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -93,7 +140,7 @@ def find_hardcoded_urls(file_path: str) -> List[Tuple[int, str, str]]:
                         url = match.group()
                         
                         # Skip safe URLs
-                        if is_safe_url(url):
+                        if is_safe_url(url, additional_safe_patterns):
                             continue
                         
                         # Be more lenient with URLs in comments/documentation
@@ -118,6 +165,12 @@ def main():
                         help='Exclude URLs found in comments')
     parser.add_argument('--exclude-patterns', type=str,
                         help='Comma-separated list of URL patterns to exclude (e.g., "localhost,127.0.0.1,docker")')
+    parser.add_argument('--exclude-files', type=str,
+                        help='Comma-separated list of filenames to exclude (e.g., "README.md,CHANGELOG.md,docs.txt")')
+    parser.add_argument('--safe-domains', type=str,
+                        help='Comma-separated list of domains to whitelist with all protocols (e.g., "cms.gov,amazonaws.com,github.com")')
+    parser.add_argument('--safe-protocols', type=str, default='https?,jdbc:[^:]+,postgresql,mysql,mongodb',
+                        help='Comma-separated list of protocols to support for safe domains (default: "https?,jdbc:[^:]+,postgresql,mysql,mongodb")')
     args = parser.parse_args()
     
     exit_code = 0
@@ -128,8 +181,20 @@ def main():
     if args.exclude_patterns:
         exclude_patterns = [p.strip().lower() for p in args.exclude_patterns.split(',')]
     
+    # Parse file exclusions
+    exclude_files = set()
+    if args.exclude_files:
+        exclude_files = {f.strip() for f in args.exclude_files.split(',')}
+    
+    # Parse dynamic safe domains and protocols
+    additional_safe_patterns = []
+    if args.safe_domains:
+        safe_domains = [d.strip() for d in args.safe_domains.split(',')]
+        safe_protocols = [p.strip() for p in args.safe_protocols.split(',')]
+        additional_safe_patterns = generate_domain_patterns(safe_domains, safe_protocols)
+    
     for file_path in args.files:
-        issues = find_hardcoded_urls(file_path)
+        issues = find_hardcoded_urls(file_path, exclude_files, additional_safe_patterns)
         
         # Filter out excluded URL patterns
         if exclude_patterns:
