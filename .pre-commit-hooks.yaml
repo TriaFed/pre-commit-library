@@ -115,8 +115,8 @@
 
 - id: ai_commit_check
   name: AI-powered commit validation
-  entry: ai_commit_check
-  language: python
+  entry: hooks/ai_commit_check.py
+  language: script
   pass_filenames: false
   stages: [pre-commit]
   require_serial: true
