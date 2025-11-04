@@ -63,6 +63,40 @@ def main():
 
     serve_process = None
     try:
+        repo_root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
+        
+        opencode_config_path = os.path.join(repo_root, 'opencode.jsonc')
+        if not os.path.exists(opencode_config_path):
+            print("Error: opencode.jsonc configuration file not found in repository root.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("The AI commit check hook requires an opencode.jsonc file to ensure secure operation.", file=sys.stderr)
+            print("This file controls AI permissions and prevents unsafe operations.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("To fix this:", file=sys.stderr)
+            print("  1. Copy the example configuration:", file=sys.stderr)
+            print("     curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("  2. Or create opencode.jsonc with minimum required security settings:", file=sys.stderr)
+            print('     {', file=sys.stderr)
+            print('       "$schema": "https://opencode.ai/config.json",', file=sys.stderr)
+            print('       "permission": {', file=sys.stderr)
+            print('         "webfetch": "deny",', file=sys.stderr)
+            print('         "bash": {', file=sys.stderr)
+            print('           "aws *": "deny",', file=sys.stderr)
+            print('           "az *": "deny",', file=sys.stderr)
+            print('           "gcloud *": "deny",', file=sys.stderr)
+            print('           "terraform *": "deny",', file=sys.stderr)
+            print('           "curl *": "deny",', file=sys.stderr)
+            print('           "wget *": "deny"', file=sys.stderr)
+            print('         }', file=sys.stderr)
+            print('       }', file=sys.stderr)
+            print('     }', file=sys.stderr)
+            print("", file=sys.stderr)
+            print("  3. Review and customize permissions: https://opencode.ai/docs/permissions/", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("  4. Commit the opencode.jsonc file to your repository", file=sys.stderr)
+            return 3
+        
         available_port = find_available_port(OPENCODE_PORT)
         if not available_port:
             print(f"Error: No available ports found starting from port {OPENCODE_PORT}. "
@@ -74,8 +108,6 @@ def main():
 
         OPENCODE_BASE_URL = f'http://127.0.0.1:{OPENCODE_PORT}'
         os.environ['OPENCODE_BASE_URL'] = OPENCODE_BASE_URL
-
-        repo_root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
 
         serve_process = subprocess.Popen(
             ['opencode', 'serve', '--port', str(OPENCODE_PORT)],

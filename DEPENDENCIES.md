@@ -96,6 +96,32 @@ opencode auth login
 # Select: claude-sonnet-4.5
 ```
 
+**⚠️ Required Security Configuration:**
+
+Download the security configuration to your repository root:
+
+```bash
+cd /path/to/your/repo
+curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
+
+# Optional: Initialize AI instructions for your project
+# Run: opencode
+# Then in the opencode window, type: /init
+
+git add opencode.jsonc
+git commit -m "Add opencode security configuration"
+```
+
+The `opencode.jsonc` file is **required** and must deny dangerous operations:
+- `webfetch: "deny"` - Blocks external network requests
+- `aws *: "deny"` - Blocks AWS CLI commands
+- `az *: "deny"` - Blocks Azure CLI commands
+- `gcloud *: "deny"` - Blocks Google Cloud CLI commands
+- `terraform *: "deny"` - Blocks Terraform commands
+- `curl/wget *: "deny"` - Blocks curl and wget
+
+Learn more: [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
+
 **Environment Variables:**
 ```bash
 # Configure AI hook behavior (optional)

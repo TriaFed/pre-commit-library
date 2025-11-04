@@ -503,7 +503,31 @@ opencode auth login
 # Configure the AI model
 # In the opencode interface, enter: /models
 # Select: claude-sonnet-4.5
+
+# REQUIRED: Copy the security configuration to your repository root
+curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
+
+# Optional: Initialize AI instructions for your project
+# Run: opencode
+# Then in the opencode window, type: /init
+
+# Commit the configuration files
+git add opencode.jsonc
+git commit -m "Add AI commit check configuration"
 ```
+
+**⚠️ Security Requirement:**
+
+The hook **requires** an `opencode.jsonc` file in your repository root for security. This file must deny dangerous operations:
+- `webfetch: "deny"` - Prevents external network requests
+- `aws *: "deny"` - Blocks AWS CLI commands
+- `az *: "deny"` - Blocks Azure CLI commands
+- `gcloud *: "deny"` - Blocks Google Cloud CLI commands
+- `terraform *: "deny"` - Blocks Terraform commands
+- `curl *: "deny"` - Blocks curl requests
+- `wget *: "deny"` - Blocks wget requests
+
+See the [OpenCode permissions documentation](https://opencode.ai/docs/permissions/) for details.
 
 **Environment Variables:**
 ```bash
@@ -528,6 +552,66 @@ The hook will:
 - Suggest improvements
 - Block commits with critical issues (starting with "-COMMIT REJECTED-")
 - Provide commands to continue the AI session or auto-fix issues
+
+**Configuring Permissions (Optional):**
+
+The required `opencode.jsonc` file includes safe defaults. You can customize permissions further:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "edit": "allow",      // Allow file edits for auto-fixing
+    "bash": {
+      "*": "deny",        // Deny all commands by default
+      "git status": "allow",
+      "npm run test": "ask"
+    },
+    "webfetch": "deny"    // Required: Must be denied
+  }
+}
+```
+
+Learn more: [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
+
+**Custom Instructions (Optional):**
+
+Provide project-specific context to the AI by creating instruction files:
+
+1. **Initialize default instructions:**
+   ```bash
+   # Start opencode
+   opencode
+   
+   # Then in the opencode window, type:
+   /init
+   ```
+   This creates instruction files (like `CLAUDE.md`) with AI guidelines for your project.
+
+2. **Or create custom instruction files manually:**
+   ```markdown
+   # AGENTS.md - Project-specific AI review guidelines
+   
+   ## Code Standards
+   - Use TypeScript strict mode
+   - Follow React hooks best practices
+   - All API calls must include error handling
+   
+   ## Security Requirements
+   - No hardcoded credentials or API keys
+   - All user input must be validated
+   - Database queries must use parameterized statements
+   ```
+
+3. **Reference instruction files in `opencode.jsonc`:**
+   ```jsonc
+   {
+     "instruction": ["AGENTS.md", "CLAUDE.md", "docs/CODING_STANDARDS.md"]
+   }
+   ```
+
+**Example Files:**
+- See `examples/opencode.jsonc` for recommended permission settings
 
 **Troubleshooting:**
 If the hook fails with authentication errors, ensure you've completed the `opencode auth login` setup above.

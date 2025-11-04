@@ -12,7 +12,42 @@ Use the `examples/practical-security.yaml` configuration for a balanced approach
 
 **Problem**: AI validation may be too slow or strict for all commits
 
-**Solution**: Configure via environment variables
+**Solution**: Configure via environment variables and `opencode.jsonc`
+
+#### Required Setup
+
+**⚠️ Security Requirement:** You must create an `opencode.jsonc` file in your repository root before using this hook.
+
+```bash
+# Download the recommended configuration
+curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
+
+# Or create minimal security config
+cat > opencode.jsonc <<EOF
+{
+  "\$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "webfetch": "deny",
+    "bash": {
+      "aws *": "deny",
+      "az *": "deny",
+      "gcloud *": "deny",
+      "terraform *": "deny",
+      "curl *": "deny",
+      "wget *": "deny"
+    }
+  }
+}
+EOF
+
+# Commit the config file
+git add opencode.jsonc
+git commit -m "Add opencode security configuration"
+```
+
+The hook will fail if `opencode.jsonc` is not present to ensure safe operation.
+
+#### Environment Variables
 
 ```bash
 # Set in your shell profile or CI/CD
@@ -20,6 +55,75 @@ export OPENCODE_PORT=61164              # Port for opencode server
 export OPENCODE_MODEL=claude-sonnet-4.5 # Model selection
 export OPENCODE_PROVIDER=github-copilot # Provider (github-copilot, anthropic, etc.)
 export OPENCODE_TIMEOUT=90              # Timeout in seconds
+```
+
+#### Permissions Configuration
+
+The recommended `opencode.jsonc` includes safe defaults. Customize as needed:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "edit": "allow",      // Allow AI to suggest/apply fixes
+    "bash": {
+      "*": "deny",        // Deny all by default (REQUIRED)
+      "git status": "allow",
+      "git diff": "allow",
+      "npm run test": "ask",
+      "aws *": "deny",    // REQUIRED: Block AWS commands
+      "az *": "deny",     // REQUIRED: Block Azure CLI
+      "gcloud *": "deny", // REQUIRED: Block Google Cloud CLI
+      "terraform *": "deny", // REQUIRED: Block Terraform
+      "curl *": "deny",   // REQUIRED: Block curl
+      "wget *": "deny"    // REQUIRED: Block wget
+    },
+    "webfetch": "deny"    // REQUIRED: Block external requests
+  }
+}
+```
+
+Available permission levels:
+- `"allow"` - Execute without approval
+- `"ask"` - Prompt for approval before execution
+- `"deny"` - Disable the tool entirely
+
+Learn more: [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
+
+#### Custom Instructions
+
+Create instruction files for project-specific AI context:
+
+**Option 1: Use `/init` command (Recommended)**
+```bash
+# Start opencode
+opencode
+
+# Then in the opencode window, type:
+/init
+```
+This generates default AI instruction files for your project.
+
+**Option 2: Create custom instruction files manually**
+```markdown
+# AGENTS.md - Your project-specific guidelines
+
+## Project Standards
+- Follow TypeScript strict mode
+- Use React hooks best practices
+- All functions must have JSDoc comments
+
+## Security Rules
+- No hardcoded credentials
+- All API calls need error handling
+```
+
+Reference instruction files in `opencode.jsonc`:
+
+```jsonc
+{
+  "instruction": ["AGENTS.md", "CLAUDE.md", "docs/CODING_STANDARDS.md"]
+}
 ```
 
 **Usage in .pre-commit-config.yaml:**
