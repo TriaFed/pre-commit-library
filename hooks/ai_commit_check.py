@@ -144,20 +144,32 @@ def main():
 
         new_session_chat = client.session.chat(id=new_session_id, parts=[
             {'type': 'text', 'text': """
-            Please review the currently staged changes for this commit. Evaluate the changes for:
+            Review the staged changes for this commit, focusing on these critical issues:
 
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Security concerns
-            - Performance implications
-            - Test coverage
-            - Documentation needs
-            - Adherence to project conventions
+            **CRITICAL ISSUES TO CHECK:**
+            1. **Unused Variables/Imports/Code**: Variables declared but never used, unused imports, dead code
+            2. **Logic Bugs**: Incorrect implementations, missing null checks, wrong conditions, off-by-one errors
+            3. **Security Issues**: Input validation missing, potential injection vulnerabilities, hardcoded credentials
+            4. **Performance Problems**: Inefficient patterns, potential memory leaks, unnecessary computations
+            5. **Type/Syntax Issues**: Incorrect types, missing error handling, type mismatches
+            6. **Configuration Issues**: Problems in config files (JSON, YAML, Jenkinsfile, package.json, etc.)
+            7. **Build/CI Issues**: Problems with build scripts, pipelines, dependencies
 
-            If there are any critical issues that should prevent this commit, start your response with "-COMMIT REJECTED-"
-            followed by a clear explanation of the blocking issues.
+            **REVIEW INSTRUCTIONS:**
+            - Analyze BOTH the diff changes AND the complete file contents provided
+            - Focus ONLY on code that has actual problems
+            - Pay special attention to variables that are declared but never referenced
+            - Look for imports that aren't used anywhere in the file
+            - Check for functions or code blocks that serve no purpose
+            - Review configuration files thoroughly for syntax and logic issues
+            - Consider how changes in one file might affect other files
+            - If you find unused variables, clearly state which variables are unused and suggest removing them
 
-            If the changes are acceptable, provide constructive feedback and suggestions for improvement.
+            **RESPONSE FORMAT:**
+            - If you find critical issues that should block the commit, start your response with "-COMMIT REJECTED-"
+              followed by a clear explanation of the blocking issues with specific file names and line numbers
+            - If the code has no significant issues, respond with exactly: "✅ **Code looks good!** No significant issues found."
+            - If you have suggestions but no blockers, provide constructive feedback with specific suggestions
              """}
         ], model_id=OPENCODE_MODEL, provider_id=OPENCODE_PROVIDER)
 
