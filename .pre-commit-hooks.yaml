@@ -115,11 +115,12 @@
 
 - id: ai_commit_check
   name: AI-powered commit validation
-  entry: hooks/ai_commit_check.py
-  language: script
+  entry: ai_commit_check
+  language: python
   pass_filenames: false
   stages: [pre-commit]
   require_serial: true
+  additional_dependencies: ['opencode-ai>=0.1.0a36', 'rich>=13.7.0']
 
 # =============================================================================
 # SECURITY SCANNING HOOKS
