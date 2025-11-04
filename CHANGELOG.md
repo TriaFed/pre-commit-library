@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- AI-powered commit validation hook (`ai_commit_check`) using Opencode AI
+  - Reviews staged changes for code quality, security, and best practices
+  - Interactive feedback with suggestions for improvements
+  - Configurable via environment variables (model, provider, timeout)
+- New dependencies: `opencode-ai>=0.1.0a36` and `rich>=13.7.0`
+
 ## [1.0.0] - 2024-01-XX
 
 ### Added

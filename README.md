@@ -128,6 +128,12 @@ pre-commit run --all-files
 
 ## 📋 Available Hooks
 
+### 🤖 AI-Powered Hooks
+
+| Hook ID            | Description                                      | Languages |
+| ------------------ | ------------------------------------------------ | --------- |
+| `ai_commit_check`  | AI-powered commit validation with Opencode AI    | All       |
+
 ### 🔒 Security Hooks
 
 | Hook ID                 | Description                                | Languages    |
@@ -469,6 +475,62 @@ repos:
 ```
 
 ## 🎛️ Hook Configuration
+
+### AI-Powered Commit Validation
+
+The `ai_commit_check` hook uses Opencode AI to review your staged changes before committing:
+
+```yaml
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.7
+    hooks:
+      - id: ai_commit_check
+        stages: [manual]  # Run manually to avoid slowing down every commit
+```
+
+**Setup:**
+```bash
+# Install opencode
+pip install opencode-ai rich
+# or
+npm install -g @sst/opencode
+
+# Authenticate with Opencode
+opencode auth login
+# Select: github-copilot
+
+# Configure the AI model
+# In the opencode interface, enter: /models
+# Select: claude-sonnet-4.5
+```
+
+**Environment Variables:**
+```bash
+export OPENCODE_PORT=61164              # Default: 61164
+export OPENCODE_MODEL=claude-sonnet-4.5 # Default: claude-sonnet-4.5
+export OPENCODE_PROVIDER=github-copilot # Default: github-copilot
+export OPENCODE_TIMEOUT=90              # Default: 90 seconds
+```
+
+**Usage:**
+```bash
+# Run manually
+pre-commit run --hook-stage manual ai_commit_check
+
+# Or configure to run automatically on every commit
+# (Remove the stages: [manual] line from config)
+```
+
+The hook will:
+- Review code quality and best practices
+- Identify potential bugs or security concerns
+- Suggest improvements
+- Block commits with critical issues (starting with "-COMMIT REJECTED-")
+- Provide commands to continue the AI session or auto-fix issues
+
+**Troubleshooting:**
+If the hook fails with authentication errors, ensure you've completed the `opencode auth login` setup above.
 
 ### Environment Variables
 

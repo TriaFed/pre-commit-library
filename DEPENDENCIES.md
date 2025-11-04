@@ -75,6 +75,36 @@ pipx install pre-commit
 pip install black flake8 isort mypy bandit safety detect_secrets
 ```
 
+#### AI-Powered Hooks (Optional)
+**Both platforms:**
+```bash
+# Required for ai_commit_check hook
+pip install opencode-ai rich
+
+# Or install opencode CLI directly
+npm install -g @sst/opencode
+```
+
+**Setup Opencode Authentication:**
+```bash
+# Authenticate with Opencode
+opencode auth login
+# Select: github-copilot
+
+# Configure the AI model
+# In the opencode interface, enter: /models
+# Select: claude-sonnet-4.5
+```
+
+**Environment Variables:**
+```bash
+# Configure AI hook behavior (optional)
+export OPENCODE_PORT=61164          # Port for opencode server (default: 61164)
+export OPENCODE_MODEL=claude-sonnet-4.5  # AI model to use (default: claude-sonnet-4.5)
+export OPENCODE_PROVIDER=github-copilot  # AI provider (default: github-copilot)
+export OPENCODE_TIMEOUT=90          # Server startup timeout in seconds (default: 90)
+```
+
 #### JavaScript/TypeScript/Node.js
 **macOS:**
 ```bash

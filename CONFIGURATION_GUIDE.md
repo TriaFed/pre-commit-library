@@ -6,6 +6,35 @@ This guide helps you configure the pre-commit hooks to minimize false positives 
 
 Use the `examples/practical-security.yaml` configuration for a balanced approach that reduces false positives.
 
+## AI-Powered Commit Validation
+
+### ai_commit_check Configuration
+
+**Problem**: AI validation may be too slow or strict for all commits
+
+**Solution**: Configure via environment variables
+
+```bash
+# Set in your shell profile or CI/CD
+export OPENCODE_PORT=61164              # Port for opencode server
+export OPENCODE_MODEL=claude-sonnet-4.5 # Model selection
+export OPENCODE_PROVIDER=github-copilot # Provider (github-copilot, anthropic, etc.)
+export OPENCODE_TIMEOUT=90              # Timeout in seconds
+```
+
+**Usage in .pre-commit-config.yaml:**
+```yaml
+- id: ai_commit_check
+  # Only run manually or in CI, not on every commit
+  stages: [manual]
+```
+
+Or disable for quick commits:
+```bash
+# Skip AI validation for urgent commits
+git commit --no-verify -m "Quick fix"
+```
+
 ## Common False Positive Issues and Solutions
 
 ### 1. detect-secrets and hardcoded-credentials

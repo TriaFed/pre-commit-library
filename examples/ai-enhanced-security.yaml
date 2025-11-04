@@ -1,0 +1,32 @@
+# AI-Enhanced Security Configuration
+# This configuration combines AI-powered validation with essential security hooks
+# Suitable for teams using GenAI tools and wanting automated code review
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.7
+    hooks:
+      # AI-Powered Validation (runs on manual trigger or CI)
+      - id: ai_commit_check
+        stages: [manual]  # Run with: pre-commit run --hook-stage manual ai_commit_check
+
+      # Essential Security Hooks
+      - id: detect_secrets
+        args: ['--baseline', '.secrets.baseline']
+      - id: hardcoded_credentials
+      - id: genai_security_check
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-yaml
+      - id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+# Usage:
+# 1. Regular commits: Security hooks run automatically
+# 2. AI validation: Run manually with:
+#    pre-commit run --hook-stage manual ai_commit_check
+# 3. Or configure CI to always run AI validation on pull requests

@@ -110,6 +110,18 @@
   require_serial: false
 
 # =============================================================================
+# AI-POWERED VALIDATION HOOKS
+# =============================================================================
+
+- id: ai_commit_check
+  name: AI-powered commit validation
+  entry: ai_commit_check
+  language: python
+  pass_filenames: false
+  stages: [pre-commit]
+  require_serial: true
+
+# =============================================================================
 # SECURITY SCANNING HOOKS
 # =============================================================================
 
