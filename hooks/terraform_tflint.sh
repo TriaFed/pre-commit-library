@@ -4,6 +4,20 @@
 # Remove set -e to handle errors gracefully
 set -o pipefail
 
+# Configuration through environment variables
+# 
+# TFLINT_DISABLED_RULES: Comma-separated list of rules to disable 
+#                        (default: terraform_unused_declarations)
+#                        Examples: 
+#                        - "terraform_unused_declarations"
+#                        - "terraform_unused_declarations,terraform_deprecated_syntax"
+#                        - "" (empty to disable no rules)
+# 
+# TFLINT_TIMEOUT: Timeout in seconds for tflint execution (default: 60)
+#                 Example: export TFLINT_TIMEOUT=120
+TFLINT_DISABLED_RULES="${TFLINT_DISABLED_RULES:-terraform_unused_declarations}"
+TFLINT_TIMEOUT="${TFLINT_TIMEOUT:-60}"
+
 # Function to check if TFLint is available
 check_tflint() {
     if command -v tflint >/dev/null 2>&1; then
@@ -28,7 +42,13 @@ fi
 find_terraform_files() {
     # Find .tf files with reasonable depth limit to avoid hanging
     local all_files=$(find . -maxdepth 10 -name "*.tf" -type f -not -path "./.terraform/*" 2>/dev/null)
-    local file_count=$(echo "$all_files" | grep -c .)
+    
+    # Check if we found any files first
+    if [ -z "$all_files" ]; then
+        return 0  # No files found, return empty
+    fi
+    
+    local file_count=$(echo "$all_files" | wc -l)
     
     # Check if we have too many files and need to limit
     if [ "$file_count" -gt 100 ]; then
@@ -63,7 +83,7 @@ for file in $tf_files; do
     
     # Add to list if not already there
     if [ -n "$abs_dir" ] && [ -d "$abs_dir" ]; then
-        if echo "$terraform_dirs" | grep -q "^$abs_dir$"; then
+        if echo "$terraform_dirs" | grep -qF "$abs_dir"; then
             continue
         else
             if [ -z "$terraform_dirs" ]; then
@@ -82,12 +102,17 @@ if [ -z "$terraform_dirs" ]; then
 fi
 
 # Count directories for better progress reporting
-dir_count=$(echo "$terraform_dirs" | wc -l)
+dir_count=0
+while IFS= read -r line; do
+    [ -n "$line" ] && ((dir_count++))
+done < <(echo "$terraform_dirs")
 echo "📊 Found $dir_count director(ies) with Terraform files"
 
 # Debug: Show directories found
 echo "🔍 Directories to lint:"
-echo "$terraform_dirs" | sed 's/^/  /'
+while IFS= read -r dir; do
+    [ -n "$dir" ] && echo "  $dir"
+done < <(echo "$terraform_dirs")
 
 exit_code=0
 
@@ -116,8 +141,19 @@ while IFS= read -r dir; do
     # Create secure temporary file
     temp_file=$(mktemp)
     
+    # Build tflint command with configurable disabled rules
+    tflint_cmd="tflint --no-color"
+    if [ -n "$TFLINT_DISABLED_RULES" ]; then
+        IFS=',' read -ra disabled_rules <<< "$TFLINT_DISABLED_RULES"
+        for rule in "${disabled_rules[@]}"; do
+            rule=$(echo "$rule" | xargs)  # Trim whitespace
+            [ -n "$rule" ] && tflint_cmd="$tflint_cmd --disable-rule $rule"
+        done
+    fi
+    tflint_cmd="$tflint_cmd ."
+    
     # Add timeout and disable plugin installation to prevent hanging
-    if timeout 60 tflint --no-color --disable-rule terraform_unused_declarations . > "$temp_file" 2>&1; then
+    if timeout "$TFLINT_TIMEOUT" bash -c "$tflint_cmd" > "$temp_file" 2>&1; then
         tflint_output=$(cat "$temp_file")
         if [ -n "$tflint_output" ]; then
             echo "✅ TFLint passed in $dir"
@@ -131,7 +167,7 @@ while IFS= read -r dir; do
         tflint_output=$(cat "$temp_file" 2>/dev/null || echo "No output available")
         
         if [ $tflint_exit_code -eq 124 ]; then
-            echo "⚠️  TFLint timed out in $dir (>60s)"
+            echo "⚠️  TFLint timed out in $dir (>${TFLINT_TIMEOUT}s)"
             echo "  This might indicate TFLint is trying to download plugins or has configuration issues"
         else
             echo "❌ TFLint failed in $dir (exit code: $tflint_exit_code)"

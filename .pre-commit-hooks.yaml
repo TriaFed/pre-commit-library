@@ -140,7 +140,7 @@
   # args: ['--exclude-patterns', 'localhost,127.0.0.1']
   # args: ['--exclude-files', 'README.md,CHANGELOG.md,LICENSE']
   # args: ['--safe-domains', 'cms.gov,amazonaws.com,github.com,yourcompany.com']
-  # args: ['--safe-protocols', 'https?,jdbc:[^:]+,postgresql,mysql,mongodb']
+  # args: ['--safe-protocols', 'https,http,jdbc,postgresql,mysql,mongodb']
 
 - id: hardcoded_credentials
   name: Detect hardcoded credentials
