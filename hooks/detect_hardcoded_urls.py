@@ -82,9 +82,32 @@ def is_in_comment(line: str) -> bool:
 
 
 def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[str]:
-    """Generate URL patterns for given domains and protocols."""
+    """Generate URL patterns for given domains and protocols.
+    
+    Args:
+        domains: List of domain names (e.g., ['cms.gov', 'github.com'])
+        protocols: List of plain protocol names (e.g., ['https', 'http', 'jdbc', 'postgresql'])
+                  Protocol names are automatically escaped for regex safety, except 'jdbc' 
+                  which is treated specially to match 'jdbc:subprotocol' patterns.
+    
+    Returns:
+        List of regex patterns that match URLs with the specified protocols and domains.
+    """
     patterns = []
-    protocol_group = f"(?:{'|'.join(protocols)})"
+    
+    # Convert plain protocol names to regex patterns
+    regex_protocols = []
+    for protocol in protocols:
+        if protocol == 'jdbc':
+            # JDBC URLs have format jdbc:subprotocol://...
+            # Special case: don't escape this pattern as it's intentionally a regex
+            regex_protocols.append('jdbc:[^:]+')
+        else:
+            # For other protocols, escape any special regex characters to treat them as literals
+            escaped_protocol = re.escape(protocol.strip())
+            regex_protocols.append(escaped_protocol)
+    
+    protocol_group = f"(?:{'|'.join(regex_protocols)})"
     
     for domain in domains:
         # Escape dots in domain names for regex
@@ -169,8 +192,8 @@ def main():
                         help='Comma-separated list of filenames to exclude (e.g., "README.md,CHANGELOG.md,docs.txt")')
     parser.add_argument('--safe-domains', type=str,
                         help='Comma-separated list of domains to whitelist with all protocols (e.g., "cms.gov,amazonaws.com,github.com")')
-    parser.add_argument('--safe-protocols', type=str, default='https?,jdbc:[^:]+,postgresql,mysql,mongodb',
-                        help='Comma-separated list of protocols to support for safe domains (default: "https?,jdbc:[^:]+,postgresql,mysql,mongodb")')
+    parser.add_argument('--safe-protocols', type=str, default='https,http,jdbc,postgresql,mysql,mongodb',
+                        help='Comma-separated list of protocol names to support for safe domains (default: "https,http,jdbc,postgresql,mysql,mongodb"). Provide plain protocol names, not regex patterns.')
     args = parser.parse_args()
     
     exit_code = 0

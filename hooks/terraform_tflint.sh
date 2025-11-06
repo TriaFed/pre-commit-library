@@ -24,10 +24,20 @@ if ! check_tflint; then
     exit 1
 fi
 
-# Simplified approach - just use basic commands
+# Function to find Terraform files safely
 find_terraform_files() {
-    # Find .tf files with limited depth to avoid hanging
-    find . -name "*.tf" -type f -not -path "./.terraform/*" 2>/dev/null | head -50
+    # Find .tf files with reasonable depth limit to avoid hanging
+    local all_files=$(find . -maxdepth 10 -name "*.tf" -type f -not -path "./.terraform/*" 2>/dev/null)
+    local file_count=$(echo "$all_files" | grep -c .)
+    
+    # Check if we have too many files and need to limit
+    if [ "$file_count" -gt 100 ]; then
+        echo "⚠️  WARNING: Found $file_count Terraform files, limiting to first 100 for performance." >&2
+        echo "⚠️  Some files may not be linted. Consider running TFLint on specific directories." >&2
+        echo "$all_files" | head -100
+    else
+        echo "$all_files"
+    fi
 }
 
 # Run TFLint
@@ -84,7 +94,7 @@ exit_code=0
 # Store original directory
 original_dir=$(pwd)
 
-echo "$terraform_dirs" | while IFS= read -r dir; do
+while IFS= read -r dir; do
     echo "📁 Linting directory: $dir"
     
     # Basic validation
@@ -103,9 +113,12 @@ echo "$terraform_dirs" | while IFS= read -r dir; do
     # Run TFLint in the current directory with timeout to prevent hanging
     echo "🔍 Running tflint in $(basename "$dir")..."
     
+    # Create secure temporary file
+    temp_file=$(mktemp)
+    
     # Add timeout and disable plugin installation to prevent hanging
-    if timeout 60 tflint --no-color --disable-rule terraform_unused_declarations . > /tmp/tflint_output 2>&1; then
-        tflint_output=$(cat /tmp/tflint_output)
+    if timeout 60 tflint --no-color --disable-rule terraform_unused_declarations . > "$temp_file" 2>&1; then
+        tflint_output=$(cat "$temp_file")
         if [ -n "$tflint_output" ]; then
             echo "✅ TFLint passed in $dir"
             # Show any warnings if present
@@ -115,7 +128,7 @@ echo "$terraform_dirs" | while IFS= read -r dir; do
         fi
     else
         tflint_exit_code=$?
-        tflint_output=$(cat /tmp/tflint_output 2>/dev/null || echo "No output available")
+        tflint_output=$(cat "$temp_file" 2>/dev/null || echo "No output available")
         
         if [ $tflint_exit_code -eq 124 ]; then
             echo "⚠️  TFLint timed out in $dir (>60s)"
@@ -129,11 +142,11 @@ echo "$terraform_dirs" | while IFS= read -r dir; do
     fi
     
     # Clean up temp file
-    rm -f /tmp/tflint_output
+    rm -f "$temp_file"
     
     # Return to original directory
     cd "$original_dir"
-done
+done < <(echo "$terraform_dirs")
 
 if [ $exit_code -eq 0 ]; then
     echo "✅ All TFLint checks passed"
