@@ -127,7 +127,7 @@ Exclude entire files or directories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.7
+    rev: v1.1.8
     hooks:
       - id: genai-security-check
         exclude: '^(tests/|spec/|__tests__/|\.test\.|\.spec\.)'
@@ -210,7 +210,7 @@ console.error('Login failed:', user.password);  // Don't do this!
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.7
+    rev: v1.1.8
     hooks:
       # Security with baselines and exclusions
       - id: detect-secrets
