@@ -22,65 +22,6 @@ URL_PATTERNS = [
     r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\]]*)?',
 ]
 
-# URLs that are typically safe to ignore
-SAFE_URL_PATTERNS = [
-    r'https?://localhost',
-    r'https?://127\.0\.0\.1',
-    r'https?://0\.0\.0\.0',
-    r'https?://example\.com',
-    r'https?://example\.org',
-    r'https?://example\.net',
-    r'https?://.*\.example\.com',
-    r'https?://.*\.test',
-    r'https?://.*\.local',
-    r'https?://.*\.localhost',
-    # Git URLs (common version control systems)
-    r'https?://github\.com/.*',
-    r'https?://gitlab\.com/.*',
-    r'https?://bitbucket\.org/.*',
-    r'https?://.*\.github\.io/.*',
-    r'git://.*',
-    r'ssh://git@.*',
-    # Government domains (cms.gov and related) - HTTP, JDBC, and database protocols
-    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://.*\.cms\.gov(?::\d+)?(?:/.*)?',
-    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://cms\.gov(?::\d+)?(?:/.*)?',
-    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://.*\.cmscloud\.local(?::\d+)?(?:/.*)?',
-    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://cmscloud\.local(?::\d+)?(?:/.*)?',
-    # AWS domains - HTTP, JDBC, and database protocols
-    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://.*\.amazonaws\.com(?::\d+)?(?:/.*)?',
-    r'(?:https?|jdbc:[^:]+|postgresql|mysql|mongodb)://amazonaws\.com(?::\d+)?(?:/.*)?',
-    # Schema and specification URLs
-    r'https?://adaptivecards\.io/.*',
-    r'https?://.*\.adaptivecards\.io/.*',
-    # Common documentation URLs
-    r'https?://docs\..*',
-    r'https?://www\.w3\.org/.*',
-    r'https?://tools\.ietf\.org/.*',
-    r'https?://schemas\..*',
-    # Package registries
-    r'https?://registry\.npmjs\.org/.*',
-    r'https?://pypi\.org/.*',
-    r'https?://central\.maven\.org/.*',
-]
-
-# File extensions to skip
-SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz'}
-
-# Patterns that suggest this might be in a comment or documentation
-COMMENT_PATTERNS = [
-    r'^\s*#',     # Python, shell comments
-    r'^\s*//',    # JavaScript, Java, C++ comments
-    r'^\s*/\*',   # Multi-line comment start
-    r'^\s*\*',    # Multi-line comment continuation
-    r'^\s*<!--',  # HTML comments
-]
-
-
-def is_in_comment(line: str) -> bool:
-    """Check if the line appears to be a comment."""
-    return any(re.match(pattern, line) for pattern in COMMENT_PATTERNS)
-
-
 def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[str]:
     """Generate URL patterns for given domains and protocols.
     
@@ -118,6 +59,73 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
         patterns.append(f"{protocol_group}://{escaped_domain}(?::\\d+)?(?:/.*)?")
     
     return patterns
+
+
+# URLs that are typically safe to ignore
+# Static patterns for common localhost and development URLs
+_STATIC_SAFE_PATTERNS = [
+    r'https?://localhost',
+    r'https?://127\.0\.0\.1',
+    r'https?://0\.0\.0\.0',
+    r'https?://example\.com',
+    r'https?://example\.org',
+    r'https?://example\.net',
+    r'https?://.*\.example\.com',
+    r'https?://.*\.test',
+    r'https?://.*\.local',
+    r'https?://.*\.localhost',
+    # Git URLs (common version control systems)
+    r'https?://github\.com/.*',
+    r'https?://gitlab\.com/.*',
+    r'https?://bitbucket\.org/.*',
+    r'https?://.*\.github\.io/.*',
+    r'git://.*',
+    r'ssh://git@.*',
+    # Schema and specification URLs (HTTP only)
+    r'https?://adaptivecards\.io/.*',
+    r'https?://.*\.adaptivecards\.io/.*',
+    # Common documentation URLs (HTTP only)
+    r'https?://docs\..*',
+    r'https?://www\.w3\.org/.*',
+    r'https?://tools\.ietf\.org/.*',
+    r'https?://schemas\..*',
+    # Package registries
+    r'https?://registry\.npmjs\.org/.*',
+    r'https?://pypi\.org/.*',
+    r'https?://central\.maven\.org/.*',
+]
+
+# Generate dynamic patterns for common domains with multiple protocols
+# This reduces duplication and improves maintainability
+_COMMON_PROTOCOLS = ['https', 'http', 'jdbc', 'postgresql', 'mysql', 'mongodb']
+
+# Government domains (cms.gov and related)
+_GOVERNMENT_DOMAINS = ['cms.gov', 'cmscloud.local']
+
+# AWS domains
+_AWS_DOMAINS = ['amazonaws.com']
+
+# Build the final SAFE_URL_PATTERNS by combining static and dynamic patterns
+SAFE_URL_PATTERNS = _STATIC_SAFE_PATTERNS.copy()
+SAFE_URL_PATTERNS.extend(generate_domain_patterns(_GOVERNMENT_DOMAINS, _COMMON_PROTOCOLS))
+SAFE_URL_PATTERNS.extend(generate_domain_patterns(_AWS_DOMAINS, _COMMON_PROTOCOLS))
+
+# File extensions to skip
+SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz'}
+
+# Patterns that suggest this might be in a comment or documentation
+COMMENT_PATTERNS = [
+    r'^\s*#',     # Python, shell comments
+    r'^\s*//',    # JavaScript, Java, C++ comments
+    r'^\s*/\*',   # Multi-line comment start
+    r'^\s*\*',    # Multi-line comment continuation
+    r'^\s*<!--',  # HTML comments
+]
+
+
+def is_in_comment(line: str) -> bool:
+    """Check if the line appears to be a comment."""
+    return any(re.match(pattern, line) for pattern in COMMENT_PATTERNS)
 
 
 def is_safe_url(url: str, additional_patterns: List[str] = None) -> bool:

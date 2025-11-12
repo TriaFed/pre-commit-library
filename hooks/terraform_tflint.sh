@@ -15,8 +15,19 @@ set -o pipefail
 # 
 # TFLINT_TIMEOUT: Timeout in seconds for tflint execution (default: 60)
 #                 Example: export TFLINT_TIMEOUT=120
+# 
+# TFLINT_MAX_FILES: Maximum number of Terraform files to process (default: 100)
+#                   This limit exists to prevent performance issues in large repositories
+#                   with hundreds/thousands of .tf files. When exceeded, only the first
+#                   N files are processed to maintain reasonable execution times.
+#                   Solutions when limit is reached:
+#                   - Increase limit: export TFLINT_MAX_FILES=500
+#                   - Run on specific directories: cd subdir && tflint
+#                   - Use .tflint.hcl to exclude directories
+#                   Example: export TFLINT_MAX_FILES=200
 TFLINT_DISABLED_RULES="${TFLINT_DISABLED_RULES:-terraform_unused_declarations}"
 TFLINT_TIMEOUT="${TFLINT_TIMEOUT:-60}"
+TFLINT_MAX_FILES="${TFLINT_MAX_FILES:-100}"
 
 # Function to check if TFLint is available
 check_tflint() {
@@ -51,10 +62,14 @@ find_terraform_files() {
     local file_count=$(echo "$all_files" | wc -l)
     
     # Check if we have too many files and need to limit
-    if [ "$file_count" -gt 100 ]; then
-        echo "⚠️  WARNING: Found $file_count Terraform files, limiting to first 100 for performance." >&2
-        echo "⚠️  Some files may not be linted. Consider running TFLint on specific directories." >&2
-        echo "$all_files" | head -100
+    if [ "$file_count" -gt "$TFLINT_MAX_FILES" ]; then
+        echo "⚠️  WARNING: Found $file_count Terraform files, limiting to first $TFLINT_MAX_FILES for performance." >&2
+        echo "⚠️  Reason: Large repositories can cause TFLint to run very slowly or consume excessive memory." >&2
+        echo "⚠️  Solutions:" >&2
+        echo "⚠️    - Increase limit: export TFLINT_MAX_FILES=500" >&2
+        echo "⚠️    - Run on specific directories: cd terraform/modules && tflint" >&2
+        echo "⚠️    - Use .tflint.hcl to exclude large directories" >&2
+        echo "$all_files" | head -"$TFLINT_MAX_FILES"
     else
         echo "$all_files"
     fi
