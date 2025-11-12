@@ -152,10 +152,9 @@ def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_
         return issues
     
     # Skip files specified by user
-    if skip_files:
-        filename = os.path.basename(file_path)
-        if filename in skip_files:
-            return issues
+    filename = os.path.basename(file_path)
+    if filename in skip_files:
+        return issues
     
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:

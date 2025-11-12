@@ -89,52 +89,52 @@ if [ -z "$tf_files" ]; then
 fi
 
 echo "🔍 Extracting directories..."
-# Get unique directories from the files
-terraform_dirs=""
+# Get unique directories from the files using array for robustness
+declare -a terraform_dirs=()
 for file in $tf_files; do
     dir=$(dirname "$file")
     # Convert to absolute path
     abs_dir=$(cd "$dir" 2>/dev/null && pwd || continue)
     
-    # Add to list if not already there
+    # Add to array if not already there and is valid directory
     if [ -n "$abs_dir" ] && [ -d "$abs_dir" ]; then
-        if echo "$terraform_dirs" | grep -qF "$abs_dir"; then
-            continue
-        else
-            if [ -z "$terraform_dirs" ]; then
-                terraform_dirs="$abs_dir"
-            else
-                terraform_dirs="$terraform_dirs
-$abs_dir"
+        # Check if directory already exists in array
+        found=false
+        for existing_dir in "${terraform_dirs[@]}"; do
+            if [ "$existing_dir" = "$abs_dir" ]; then
+                found=true
+                break
             fi
+        done
+        
+        # Add to array if not found
+        if [ "$found" = false ]; then
+            terraform_dirs+=("$abs_dir")
         fi
     fi
 done
 
-if [ -z "$terraform_dirs" ]; then
+if [ ${#terraform_dirs[@]} -eq 0 ]; then
     echo "⚠️  No valid Terraform directories found"
     exit 0
 fi
 
 # Count directories for better progress reporting
-dir_count=0
-while IFS= read -r line; do
-    [ -n "$line" ] && ((dir_count++))
-done < <(echo "$terraform_dirs")
+dir_count=${#terraform_dirs[@]}
 echo "📊 Found $dir_count director(ies) with Terraform files"
 
 # Debug: Show directories found
 echo "🔍 Directories to lint:"
-while IFS= read -r dir; do
-    [ -n "$dir" ] && echo "  $dir"
-done < <(echo "$terraform_dirs")
+for dir in "${terraform_dirs[@]}"; do
+    echo "  $dir"
+done
 
 exit_code=0
 
 # Store original directory
 original_dir=$(pwd)
 
-while IFS= read -r dir; do
+for dir in "${terraform_dirs[@]}"; do
     echo "📁 Linting directory: $dir"
     
     # Basic validation
@@ -197,7 +197,7 @@ while IFS= read -r dir; do
     
     # Return to original directory
     cd "$original_dir"
-done < <(echo "$terraform_dirs")
+done
 
 if [ $exit_code -eq 0 ]; then
     echo "✅ All TFLint checks passed"
