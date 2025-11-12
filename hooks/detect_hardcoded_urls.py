@@ -200,7 +200,7 @@ def main():
     parser.add_argument('--safe-domains', type=str,
                         help='Comma-separated list of domains to whitelist with all protocols (e.g., "cms.gov,amazonaws.com,github.com")')
     parser.add_argument('--safe-protocols', type=str, default='https,http,jdbc,postgresql,mysql,mongodb',
-                        help='Comma-separated list of protocol names to support for safe domains (default: "https,http,jdbc,postgresql,mysql,mongodb"). Provide plain protocol names - the function handles regex conversion internally. Note: "jdbc" is automatically expanded to match "jdbc:subprotocol" patterns.')
+                        help='Comma-separated list of protocol names for safe domains (default: https,http,jdbc,postgresql,mysql,mongodb)')
     args = parser.parse_args()
     
     exit_code = 0
