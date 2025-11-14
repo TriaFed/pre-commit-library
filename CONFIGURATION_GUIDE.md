@@ -16,13 +16,7 @@ The `ai_commit_check` hook intelligently adapts to two modes:
 
 **Problem**: AI validation may be too slow for every commit, or you want comprehensive branch review before pushing
 
-**Solution**: Configure for pre-commit (manual/automatic) or pre-push stages
-
-#### Mode Selection
-
-The hook automatically determines which mode to use:
-1. **Pre-commit mode**: If staged changes exist (`git diff --cached`), reviews only those changes
-2. **Pre-push mode**: If no staged changes, assumes pre-push and compares current branch to `origin/main` or `origin/master`
+**Solution**: Choose the stage that fits your workflow
 
 #### Configuration Options
 
@@ -45,58 +39,23 @@ repos:
     rev: <version>  # Replace with latest release version
     hooks:
       - id: ai_commit_check
-        stages:
-          - pre-push
+        stages: [pre-push]
 ```
 
-**IMPORTANT**: For pre-push mode, you must install the pre-push hooks:
+**IMPORTANT**: For pre-push mode, install the pre-push hooks:
 ```bash
 pre-commit install --hook-type pre-push
 ```
 
 This runs automatically on `git push` and reviews all changes in your branch.
 
-**Option 3: Both modes**
-```yaml
-repos:
-  - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.7
-    hooks:
-      - id: ai_commit_check
-        stages: [pre-commit, pre-push]
-```
-
-Install both hook types:
-```bash
-pre-commit install              # For pre-commit
-pre-commit install --hook-type pre-push  # For pre-push
-```
-
 #### Required Setup
 
-**⚠️ Security Requirement:** You must create an `opencode.jsonc` file in your repository root before using this hook.
+**⚠️ Security Requirement:** You must create an `opencode.jsonc` file in your repository root.
 
 ```bash
 # Download the recommended configuration
 curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
-
-# Or create minimal security config
-cat > opencode.jsonc <<EOF
-{
-  "\$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "webfetch": "deny",
-    "bash": {
-      "aws *": "deny",
-      "az *": "deny",
-      "gcloud *": "deny",
-      "terraform *": "deny",
-      "curl *": "deny",
-      "wget *": "deny"
-    }
-  }
-}
-EOF
 
 # Commit the config file
 git add opencode.jsonc
@@ -105,116 +64,40 @@ git commit -m "Add opencode security configuration"
 
 The hook will fail if `opencode.jsonc` is not present to ensure safe operation.
 
+See `examples/opencode.jsonc` for the full configuration with security defaults.
+
 #### Environment Variables
 
 ```bash
-# Set in your shell profile or CI/CD
-export OPENCODE_PORT=61164              # Port for opencode server
-export OPENCODE_MODEL=claude-sonnet-4.5 # Model selection
-export OPENCODE_PROVIDER=github-copilot # Provider (github-copilot, anthropic, etc.)
-export OPENCODE_TIMEOUT=90              # Timeout in seconds
+export OPENCODE_PORT=61164              # Port for opencode server (default: 61164)
+export OPENCODE_MODEL=claude-sonnet-4.5 # AI model to use
+export OPENCODE_PROVIDER=github-copilot # Provider: github-copilot, anthropic, etc.
+export OPENCODE_TIMEOUT=90              # Timeout in seconds (default: 90)
 ```
 
-#### Permissions Configuration
+#### Permissions and Custom Instructions
 
-The recommended `opencode.jsonc` includes safe defaults. Customize as needed:
+The recommended `opencode.jsonc` includes safe defaults that deny dangerous operations.
 
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "edit": "allow",      // Allow AI to suggest/apply fixes
-    "bash": {
-      "*": "deny",        // Deny all by default (REQUIRED)
-      "git status": "allow",
-      "git diff": "allow",
-      "npm run test": "ask",
-      "aws *": "deny",    // REQUIRED: Block AWS commands
-      "az *": "deny",     // REQUIRED: Block Azure CLI
-      "gcloud *": "deny", // REQUIRED: Block Google Cloud CLI
-      "terraform *": "deny", // REQUIRED: Block Terraform
-      "curl *": "deny",   // REQUIRED: Block curl
-      "wget *": "deny"    // REQUIRED: Block wget
-    },
-    "webfetch": "deny"    // REQUIRED: Block external requests
-  }
-}
-```
+**To customize permissions**: See [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
 
-Available permission levels:
-- `"allow"` - Execute without approval
-- `"ask"` - Prompt for approval before execution
-- `"deny"` - Disable the tool entirely
-
-Learn more: [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
-
-#### Custom Instructions
-
-Create instruction files for project-specific AI context:
-
-**Option 1: Use `/init` command (Recommended)**
+**To add custom AI instructions**:
 ```bash
-# Start opencode
+# Start opencode and use the /init command
 opencode
-
-# Then in the opencode window, type:
-/init
-```
-This generates default AI instruction files for your project.
-
-**Option 2: Create custom instruction files manually**
-```markdown
-# AGENTS.md - Your project-specific guidelines
-
-## Project Standards
-- Follow TypeScript strict mode
-- Use React hooks best practices
-- All functions must have JSDoc comments
-
-## Security Rules
-- No hardcoded credentials
-- All API calls need error handling
+# Then type: /init
 ```
 
-Reference instruction files in `opencode.jsonc`:
+This creates instruction files with project-specific coding standards that the AI will follow during reviews.
 
-```jsonc
-{
-  "instruction": ["AGENTS.md", "CLAUDE.md", "docs/CODING_STANDARDS.md"]
-}
-```
+#### Usage
 
-**Usage in .pre-commit-config.yaml:**
-```yaml
-# Manual pre-commit mode
-- id: ai_commit_check
-  stages: [manual]
-
-# Automatic pre-push mode
-- id: ai_commit_check
-  stages: [pre-push]
-```
-
-**Running the hook:**
-```bash
-# Manual pre-commit
-pre-commit run --hook-stage manual ai_commit_check
-
-# Pre-push (runs automatically on git push)
-git push
-
-# Or run pre-push manually
-pre-commit run --hook-stage pre-push ai_commit_check
-```
-
-Or skip for urgent commits:
-```bash
-# Skip AI validation for urgent commits
-git commit --no-verify -m "Quick fix"
-
-# Skip pre-push validation
-git push --no-verify
-```
+| Mode | Command |
+|------|---------|
+| Manual pre-commit | `pre-commit run --hook-stage manual ai_commit_check` |
+| Pre-push (automatic) | `git push` (runs automatically) |
+| Pre-push (manual) | `pre-commit run --hook-stage pre-push ai_commit_check` |
+| Skip validation | `git commit --no-verify` or `git push --no-verify` |
 
 ## Common False Positive Issues and Solutions
 

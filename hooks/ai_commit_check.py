@@ -288,16 +288,19 @@ def main():
                 console = Console()
                 console.print('\n')
                 console.print(Panel(
-                    f"[bold yellow]To automatically resolve these issues:[/bold yellow]\n"
-                    f"[bold green]{fix_command}[/bold green]\n\n"
-                    f"[bold yellow]To continue chatting with this session:[/bold yellow]\n"
-                    f"[bold cyan]{continue_command}[/bold cyan]",
+                    f"[bold red]Critical issues found that block this commit/push.[/bold red]",
                     border_style='bold red',
                     padding=(1, 2)
                 ))
+                console.print('\n[bold yellow]To automatically resolve these issues:[/bold yellow]')
+                console.print(f'[bold green]{fix_command}[/bold green]\n')
+                console.print('[bold yellow]To continue chatting with this session:[/bold yellow]')
+                console.print(f'[bold cyan]{continue_command}[/bold cyan]')
             else:
                 print('\n' + '='*80)
-                print('To automatically resolve these issues:')
+                print('COMMIT REJECTED - Critical issues found')
+                print('='*80)
+                print('\nTo automatically resolve these issues:')
                 print(f"{fix_command}\n")
                 print('To continue chatting with this session:')
                 print(f"{continue_command}")
@@ -311,16 +314,19 @@ def main():
                 console = Console()
                 console.print('\n')
                 console.print(Panel(
-                    f"[bold yellow]To apply suggested improvements:[/bold yellow]\n"
-                    f"[bold green]{improve_command}[/bold green]\n\n"
-                    f"[bold yellow]To continue chatting with this session:[/bold yellow]\n"
-                    f"[bold cyan]{continue_command}[/bold cyan]",
+                    f"[bold green]✓ No blocking issues found.[/bold green]",
                     border_style='green',
                     padding=(1, 2)
                 ))
+                console.print('\n[bold yellow]To apply suggested improvements:[/bold yellow]')
+                console.print(f'[bold green]{improve_command}[/bold green]\n')
+                console.print('[bold yellow]To continue chatting with this session:[/bold yellow]')
+                console.print(f'[bold cyan]{continue_command}[/bold cyan]')
             else:
                 print('\n' + '='*80)
-                print('To apply suggested improvements:')
+                print('No blocking issues found')
+                print('='*80)
+                print('\nTo apply suggested improvements:')
                 print(f"{improve_command}\n")
                 print('To continue chatting with this session:')
                 print(f"{continue_command}")

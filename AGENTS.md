@@ -108,29 +108,21 @@ exit $?
 
 ### For AI Commit Check Hook
 The `ai_commit_check` hook has special security requirements and dual-mode operation:
-- **Dual Mode Support**: Automatically detects pre-commit (staged changes) or pre-push (branch comparison) mode
+
+**Technical Implementation:**
+- **Mode Detection**: Checks `git diff --cached` for staged changes to determine mode
 - **Pre-commit mode**: Reviews staged changes using `git diff --cached`
 - **Pre-push mode**: Compares current branch to `origin/main` or `origin/master` using `git diff origin/{branch}...HEAD`
-- Requires `opencode.jsonc` configuration file
-- Denies dangerous operations: `webfetch`, cloud CLIs, `curl`, `wget`, `terraform`
-- Only allows read-only git commands and safe tools
-- Blocks commits/pushes with `-COMMIT REJECTED-` prefix
+- **Security**: Requires `opencode.jsonc` configuration file with denied dangerous operations
+- **Exit behavior**: Blocks commits/pushes with `-COMMIT REJECTED-` prefix in response
 
-**Important Setup Note**: When using pre-push mode, users must run:
-```bash
-pre-commit install --hook-type pre-push
-```
+**Key Implementation Details:**
+- Exit codes: 0 (pass), 1 (fail/rejected), 3 (tool missing/error)
+- Denies: `webfetch`, cloud CLIs (`aws`, `az`, `gcloud`), `curl`, `wget`, `terraform`
+- Starts temporary opencode server on available port (default: 61164)
+- Creates AI session with commit context and security review prompt
 
-**Configuration Example**:
-```yaml
-repos:
-  - repo: https://github.com/TriaFed/pre-commit-library
-    rev: <version>  # Replace with latest release version
-    hooks:
-      - id: ai_commit_check
-        stages:
-          - pre-push
-```
+For user-facing configuration and setup instructions, see CONFIGURATION_GUIDE.md and README.md.
 
 ## Testing Approach
 
@@ -207,7 +199,8 @@ r'key\s*[:=]\s*["\'].*["\']'
 
 ## Environment Variables
 
-Hooks respect these environment variables:
+Hooks respect these environment variables (see CONFIGURATION_GUIDE.md for user documentation):
+
 ```bash
 # npm audit
 NPM_AUDIT_LEVEL=high          # low, moderate, high, critical
@@ -227,25 +220,28 @@ OPENCODE_TIMEOUT=90
 
 ## Common False Positives
 
-### Hardcoded Credentials
-- Test fixtures with fake credentials
-- ORM configuration keys (e.g., `foreignKey`, `sourceKey`)
-- Variable names containing "key" or "token"
-- Documentation examples
+When implementing hooks, be aware of these common false positive patterns. For user-facing guidance on handling false positives, see CONFIGURATION_GUIDE.md.
 
-### SQL Injection
-- Parameterized queries (`:param`, `$1`, `?`)
-- ORM query builders
-- String templates for query parts (not values)
+### Technical Patterns to Avoid Flagging
 
-### Path Traversal
-- Relative imports (`../utils`, `../../config`)
-- Framework conventions (e.g., Next.js `@/components`)
+**Hardcoded Credentials:**
+- ORM configuration keys (e.g., `foreignKey`, `sourceKey`, `primaryKey`)
+- Variable names containing "key" or "token" without actual secrets
+- Test fixtures with obviously fake credentials
 
-### Information Disclosure
-- `console.error()` without sensitive data
-- Structured logging without secrets
-- Error messages with sanitized data
+**SQL Injection:**
+- Parameterized query placeholders (`:param`, `$1`, `?`, `@param`)
+- ORM query builders (Sequelize, TypeORM, Entity Framework)
+- String concatenation for table/column names (not values)
+
+**Path Traversal:**
+- Relative imports (`../utils`, `../../config`, `@/components`)
+- Framework-specific conventions (Next.js, Angular path aliases)
+
+**Information Disclosure:**
+- `console.error()` or logging without sensitive keywords
+- Structured logging frameworks
+- Error messages with sanitized/generic data
 
 ## Development Workflow
 
