@@ -109,12 +109,24 @@ def main():
         OPENCODE_BASE_URL = f'http://127.0.0.1:{OPENCODE_PORT}'
         os.environ['OPENCODE_BASE_URL'] = OPENCODE_BASE_URL
 
-        serve_process = subprocess.Popen(
-            ['opencode', 'serve', '--port', str(OPENCODE_PORT)],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=repo_root
-        )
+        try:
+            serve_process = subprocess.Popen(
+                ['opencode', 'serve', '--port', str(OPENCODE_PORT)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=repo_root
+            )
+        except FileNotFoundError:
+            print("Error: opencode is not installed.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("To install opencode:", file=sys.stderr)
+            print("  Visit: https://opencode.ai", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("After installation, authenticate with:", file=sys.stderr)
+            print("  opencode auth login", file=sys.stderr)
+            print("  Select: GitHub Public", file=sys.stderr)
+            print("", file=sys.stderr)
+            return 3
 
         if not wait_for_port(OPENCODE_PORT, timeout=OPENCODE_TIMEOUT):
             stdout, stderr = serve_process.communicate(timeout=5)
@@ -122,8 +134,8 @@ def main():
             print(f"Error: Opencode server failed to start within {OPENCODE_TIMEOUT} seconds.", file=sys.stderr)
             print(f"Server error: {error_msg}", file=sys.stderr)
             print("\nTroubleshooting:", file=sys.stderr)
-            print("  1. Check if opencode is installed: opencode --version", file=sys.stderr)
-            print("  2. Verify authentication: opencode auth login", file=sys.stderr)
+            print("  1. Install opencode: Visit https://opencode.ai", file=sys.stderr)
+            print("  2. Authenticate: opencode auth login (select GitHub Public)", file=sys.stderr)
             print("  3. Increase timeout: export OPENCODE_TIMEOUT=120", file=sys.stderr)
             return 3
 

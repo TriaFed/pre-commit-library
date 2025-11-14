@@ -496,8 +496,8 @@ repos:
 **Pre-push Configuration (Recommended for comprehensive review):**
 ```yaml
 repos:
-  - repo: https://github.com/MattDonnellySoftrams/pre-commit-library
-    rev: 5be00901f2e761de24f46ce97bc8566703e9ee49
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: <version>  # Replace with latest release version
     hooks:
       - id: ai_commit_check
         stages:
