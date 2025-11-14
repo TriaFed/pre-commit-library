@@ -26,7 +26,7 @@ This is a **pre-commit hooks library** for validating and securing code generate
 - Security scanners: `detect_hardcoded_credentials.py`, `detect_hardcoded_urls.py`, `genai_security_check.py`
 - Language-specific scanners: `dotnet_security_scan.py`, `ansible_security_scan.py`
 - File validators: `check_xml.py`, `check_license.py`
-- AI-powered validation: `ai_commit_check.py`
+- AI-powered validation: `ai_commit_check.py` (supports both pre-commit and pre-push modes)
 
 **Shell Script Hooks** (`hooks/*.sh`):
 - Language tooling wrappers: `eslint.sh`, `prettier.sh`, `go_fmt.sh`
@@ -107,11 +107,30 @@ exit $?
 3. **Safe examples**: Example code should demonstrate best practices
 
 ### For AI Commit Check Hook
-The `ai_commit_check` hook has special security requirements:
+The `ai_commit_check` hook has special security requirements and dual-mode operation:
+- **Dual Mode Support**: Automatically detects pre-commit (staged changes) or pre-push (branch comparison) mode
+- **Pre-commit mode**: Reviews staged changes using `git diff --cached`
+- **Pre-push mode**: Compares current branch to `origin/main` or `origin/master` using `git diff origin/{branch}...HEAD`
 - Requires `opencode.jsonc` configuration file
 - Denies dangerous operations: `webfetch`, cloud CLIs, `curl`, `wget`, `terraform`
 - Only allows read-only git commands and safe tools
-- Blocks commits with `-COMMIT REJECTED-` prefix
+- Blocks commits/pushes with `-COMMIT REJECTED-` prefix
+
+**Important Setup Note**: When using pre-push mode, users must run:
+```bash
+pre-commit install --hook-type pre-push
+```
+
+**Configuration Example**:
+```yaml
+repos:
+  - repo: https://github.com/MattDonnellySoftrams/pre-commit-library
+    rev: 5be00901f2e761de24f46ce97bc8566703e9ee49
+    hooks:
+      - id: ai_commit_check
+        stages:
+          - pre-push
+```
 
 ## Testing Approach
 

@@ -142,10 +142,63 @@ def main():
 
         new_session_id = new_session.id
 
-        new_session_chat = client.session.chat(id=new_session_id, parts=[
-            {'type': 'text', 'text': """
-            Review the staged changes for this commit, focusing on these critical issues:
+        # Determine review mode: pre-commit (staged changes) or pre-push (branch comparison)
+        try:
+            staged_diff = subprocess.check_output(
+                ['git', 'diff', '--cached', '--name-only'],
+                text=True,
+                cwd=repo_root
+            ).strip()
+            has_staged_changes = bool(staged_diff)
+        except subprocess.CalledProcessError:
+            has_staged_changes = False
 
+        # Determine which mode and construct appropriate prompt
+        if has_staged_changes:
+            # Pre-commit mode: review staged changes
+            review_mode = "pre-commit"
+            review_target = "the staged changes for this commit"
+            review_context = """
+            **REVIEW MODE:** Pre-commit (staged changes)
+            
+            Use `git diff --cached` to see the staged changes that are about to be committed.
+            """
+        else:
+            # Pre-push mode: compare current branch to origin/main or origin/master
+            review_mode = "pre-push"
+            
+            # Determine the default branch (main or master)
+            default_branch = None
+            for branch in ['main', 'master']:
+                try:
+                    subprocess.check_output(
+                        ['git', 'rev-parse', '--verify', f'origin/{branch}'],
+                        stderr=subprocess.DEVNULL,
+                        text=True,
+                        cwd=repo_root
+                    )
+                    default_branch = branch
+                    break
+                except subprocess.CalledProcessError:
+                    continue
+            
+            if not default_branch:
+                print("Error: Could not find origin/main or origin/master branch for comparison.", file=sys.stderr)
+                print("Please ensure you have a remote tracking branch set up.", file=sys.stderr)
+                return 3
+            
+            review_target = f"all changes in the current branch compared to origin/{default_branch}"
+            review_context = f"""
+            **REVIEW MODE:** Pre-push (branch comparison)
+            
+            Use `git diff origin/{default_branch}...HEAD` to see all changes in the current branch 
+            that differ from origin/{default_branch}. Review ALL commits and changes since branching.
+            """
+
+        new_session_chat = client.session.chat(id=new_session_id, parts=[
+            {'type': 'text', 'text': f"""
+            Review {review_target}, focusing on these critical issues:
+            {review_context}
             **CRITICAL ISSUES TO CHECK:**
             1. **Unused Variables/Imports/Code**: Variables declared but never used, unused imports, dead code
             2. **Logic Bugs**: Incorrect implementations, missing null checks, wrong conditions, off-by-one errors

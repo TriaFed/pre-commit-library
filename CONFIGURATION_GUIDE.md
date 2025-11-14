@@ -10,9 +10,67 @@ Use the `examples/practical-security.yaml` configuration for a balanced approach
 
 ### ai_commit_check Configuration
 
-**Problem**: AI validation may be too slow or strict for all commits
+The `ai_commit_check` hook intelligently adapts to two modes:
+- **Pre-commit mode**: Reviews staged changes before committing
+- **Pre-push mode**: Reviews all branch changes compared to `origin/main` or `origin/master`
 
-**Solution**: Configure via environment variables and `opencode.jsonc`
+**Problem**: AI validation may be too slow for every commit, or you want comprehensive branch review before pushing
+
+**Solution**: Configure for pre-commit (manual/automatic) or pre-push stages
+
+#### Mode Selection
+
+The hook automatically determines which mode to use:
+1. **Pre-commit mode**: If staged changes exist (`git diff --cached`), reviews only those changes
+2. **Pre-push mode**: If no staged changes, assumes pre-push and compares current branch to `origin/main` or `origin/master`
+
+#### Configuration Options
+
+**Option 1: Manual pre-commit (recommended for frequent commits)**
+```yaml
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.7
+    hooks:
+      - id: ai_commit_check
+        stages: [manual]
+```
+
+Run with: `pre-commit run --hook-stage manual ai_commit_check`
+
+**Option 2: Automatic pre-push (recommended for comprehensive review)**
+```yaml
+repos:
+  - repo: https://github.com/MattDonnellySoftrams/pre-commit-library
+    rev: 5be00901f2e761de24f46ce97bc8566703e9ee49
+    hooks:
+      - id: ai_commit_check
+        stages:
+          - pre-push
+```
+
+**IMPORTANT**: For pre-push mode, you must install the pre-push hooks:
+```bash
+pre-commit install --hook-type pre-push
+```
+
+This runs automatically on `git push` and reviews all changes in your branch.
+
+**Option 3: Both modes**
+```yaml
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.1.7
+    hooks:
+      - id: ai_commit_check
+        stages: [pre-commit, pre-push]
+```
+
+Install both hook types:
+```bash
+pre-commit install              # For pre-commit
+pre-commit install --hook-type pre-push  # For pre-push
+```
 
 #### Required Setup
 
@@ -128,15 +186,34 @@ Reference instruction files in `opencode.jsonc`:
 
 **Usage in .pre-commit-config.yaml:**
 ```yaml
+# Manual pre-commit mode
 - id: ai_commit_check
-  # Only run manually or in CI, not on every commit
   stages: [manual]
+
+# Automatic pre-push mode
+- id: ai_commit_check
+  stages: [pre-push]
 ```
 
-Or disable for quick commits:
+**Running the hook:**
+```bash
+# Manual pre-commit
+pre-commit run --hook-stage manual ai_commit_check
+
+# Pre-push (runs automatically on git push)
+git push
+
+# Or run pre-push manually
+pre-commit run --hook-stage pre-push ai_commit_check
+```
+
+Or skip for urgent commits:
 ```bash
 # Skip AI validation for urgent commits
 git commit --no-verify -m "Quick fix"
+
+# Skip pre-push validation
+git push --no-verify
 ```
 
 ## Common False Positive Issues and Solutions

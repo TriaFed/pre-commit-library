@@ -478,8 +478,12 @@ repos:
 
 ### AI-Powered Commit Validation
 
-The `ai_commit_check` hook uses Opencode AI to review your staged changes before committing:
+The `ai_commit_check` hook uses Opencode AI to review your code changes. It supports two modes:
 
+- **Pre-commit mode**: Reviews staged changes before committing
+- **Pre-push mode**: Reviews all branch changes against `origin/main` or `origin/master` before pushing
+
+**Pre-commit Configuration:**
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
@@ -487,6 +491,17 @@ repos:
     hooks:
       - id: ai_commit_check
         stages: [manual]  # Run manually to avoid slowing down every commit
+```
+
+**Pre-push Configuration (Recommended for comprehensive review):**
+```yaml
+repos:
+  - repo: https://github.com/MattDonnellySoftrams/pre-commit-library
+    rev: 5be00901f2e761de24f46ce97bc8566703e9ee49
+    hooks:
+      - id: ai_commit_check
+        stages:
+          - pre-push
 ```
 
 **Setup:**
@@ -514,6 +529,12 @@ curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-libr
 # Commit the configuration files
 git add opencode.jsonc
 git commit -m "Add AI commit check configuration"
+
+# Install pre-commit hooks
+pre-commit install
+
+# IMPORTANT: For pre-push mode, also run:
+pre-commit install --hook-type pre-push
 ```
 
 **⚠️ Security Requirement:**
@@ -539,18 +560,29 @@ export OPENCODE_TIMEOUT=90              # Default: 90 seconds
 
 **Usage:**
 ```bash
-# Run manually
+# Pre-commit mode (review staged changes)
 pre-commit run --hook-stage manual ai_commit_check
+
+# Pre-push mode (review branch changes)
+# This runs automatically on git push if configured with stages: [pre-push]
+git push
+
+# Or run manually
+pre-commit run --hook-stage pre-push ai_commit_check
 
 # Or configure to run automatically on every commit
 # (Remove the stages: [manual] line from config)
 ```
 
+The hook automatically detects its mode:
+- **Pre-commit**: If there are staged changes, reviews only those changes
+- **Pre-push**: If no staged changes, compares current branch against `origin/main` or `origin/master`
+
 The hook will:
 - Review code quality and best practices
 - Identify potential bugs or security concerns
 - Suggest improvements
-- Block commits with critical issues (starting with "-COMMIT REJECTED-")
+- Block commits/pushes with critical issues (starting with "-COMMIT REJECTED-")
 - Provide commands to continue the AI session or auto-fix issues
 
 **Configuring Permissions (Optional):**
