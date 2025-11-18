@@ -79,30 +79,22 @@ if ! check_tflint; then
     exit 1
 fi
 
-# Function to find Terraform files safely and populate array
+# Function to find Terraform files efficiently
 find_terraform_files() {
-    # Clear the global tf_files_array
     tf_files_array=()
+    local count=0
     
-    # Use process substitution to avoid subshell issues and handle filenames with spaces
-    local file_count=0
-    while IFS= read -r -d '' file; do
+    # Use mapfile for efficient array population
+    while IFS= read -r -d '' file && 
+          [ "$TFLINT_MAX_FILES" -eq 0 ] || [ "$count" -lt "$TFLINT_MAX_FILES" ]; do
         tf_files_array+=("$file")
-        ((file_count++))
-        
-        # Check file limit to prevent performance issues
-        if [ "$TFLINT_MAX_FILES" -gt 0 ] && [ "$file_count" -ge "$TFLINT_MAX_FILES" ]; then
-            echo "⚠️  WARNING: Found $file_count+ Terraform files, limiting to first $TFLINT_MAX_FILES for performance." >&2
-            echo "⚠️  Reason: Large repositories can cause TFLint to run very slowly or consume excessive memory." >&2
-            echo "⚠️  Solutions:" >&2
-            echo "⚠️    - Increase limit: export TFLINT_MAX_FILES=500" >&2
-            echo "⚠️    - Run on specific directories: cd terraform/modules && tflint" >&2
-            echo "⚠️    - Use .tflint.hcl to exclude large directories" >&2
-            break
-        fi
-    done < <(find . -maxdepth 10 -name "*.tf" -type f -not -path "./.terraform/*" -print0 2>/dev/null)
+        ((count++))
+    done < <(find . -maxdepth 10 -name "*.tf" -type f ! -path "./.terraform/*" -print0 2>/dev/null)
     
-    return "${#tf_files_array[@]}"
+    # Warn if limit reached
+    if [ "$TFLINT_MAX_FILES" -gt 0 ] && [ "$count" -ge "$TFLINT_MAX_FILES" ]; then
+        printf "⚠️  Limited to %d files (found %d+)\\n" "$TFLINT_MAX_FILES" "$count" >&2
+    fi
 }
 
 # Run TFLint
@@ -121,28 +113,25 @@ fi
 
 echo "🔍 Found ${#tf_files_array[@]} Terraform files"
 echo "🔍 Extracting directories..."
-# Use associative array for O(1) duplicate detection and cache path resolution
-declare -A dir_map=()
-declare -A path_cache=()  # Cache for absolute path resolution
-declare -a terraform_dirs=()
+# Extract unique directories efficiently
+declare -A unique_dirs=()
 
 for file in "${tf_files_array[@]}"; do
-    dir=$(dirname "$file")
+    # Extract directory and convert to absolute path in one step
+    dir="${file%/*}"  # Faster than dirname
+    [ "$dir" = "$file" ] && dir="."  # Handle files in current directory
     
-    # Use cached absolute path or resolve and cache it
-    if [ -n "${path_cache[$dir]:-}" ]; then
-        abs_dir="${path_cache[$dir]}"
-    else
-        abs_dir=$(cd "$dir" 2>/dev/null && pwd || echo "")
-        path_cache["$dir"]="$abs_dir"
-    fi
+    # Skip if already processed
+    [ -n "${unique_dirs[$dir]:-}" ] && continue
     
-    # Add to array if not already seen and is valid directory
-    if [ -n "$abs_dir" ] && [ -d "$abs_dir" ] && [ -z "${dir_map[$abs_dir]:-}" ]; then
-        dir_map["$abs_dir"]=1
-        terraform_dirs+=("$abs_dir")
+    # Resolve absolute path
+    if abs_dir=$(cd "$dir" 2>/dev/null && pwd); then
+        unique_dirs["$abs_dir"]=1
     fi
 done
+
+# Convert to array for iteration
+terraform_dirs=("${!unique_dirs[@]}")
 
 if [ ${#terraform_dirs[@]} -eq 0 ]; then
     echo "⚠️  No valid Terraform directories found"
@@ -184,21 +173,23 @@ for dir in "${terraform_dirs[@]}"; do
     temp_file=$(mktemp)
     TEMP_FILES+=("$temp_file")
     
-    # Build tflint command with configurable disabled rules
-    tflint_cmd="tflint --no-color"
+    # Build tflint command efficiently
+    tflint_args=("--no-color")
+    
+    # Process disabled rules if any
     if [ -n "$TFLINT_DISABLED_RULES" ]; then
-        IFS=',' read -ra disabled_rules <<< "$TFLINT_DISABLED_RULES"
-        for rule in "${disabled_rules[@]}"; do
-            # Trim leading and trailing whitespace using bash parameter expansion
-            rule="${rule## }"    # Remove leading spaces
-            rule="${rule%% }"    # Remove trailing spaces
-            [ -n "$rule" ] && tflint_cmd="$tflint_cmd --disable-rule $rule"
+        IFS=',' read -ra rules <<< "$TFLINT_DISABLED_RULES"
+        for rule in "${rules[@]}"; do
+            # Simple and reliable whitespace trim
+            rule=$(echo "$rule" | xargs)
+            [ -n "$rule" ] && tflint_args+=("--disable-rule" "$rule")
         done
     fi
-    tflint_cmd="$tflint_cmd ."
     
-    # Add timeout and disable plugin installation to prevent hanging
-    if timeout "$TFLINT_TIMEOUT" bash -c "$tflint_cmd" > "$temp_file" 2>&1; then
+    tflint_args+=(".")
+    
+    # Execute tflint with proper argument array
+    if timeout "$TFLINT_TIMEOUT" tflint "${tflint_args[@]}" > "$temp_file" 2>&1; then
         # Use file size check to avoid unnecessary cat for empty files
         if [ -s "$temp_file" ]; then
             echo "✅ TFLint passed in $dir"

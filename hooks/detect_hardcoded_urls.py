@@ -41,8 +41,11 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
     for protocol in protocols:
         if protocol == 'jdbc':
             # JDBC URLs have format jdbc:subprotocol://...
-            # Special case: don't escape this pattern as it's intentionally a regex
-            regex_protocols.append('jdbc:[^:]+')
+            # Explicitly allow only known safe JDBC subprotocols instead of wildcards
+            # This prevents inadvertent whitelisting of malicious URLs
+            allowed_jdbc_subprotocols = ['postgresql', 'mysql', 'mariadb', 'h2', 'sqlite', 'oracle', 'sqlserver']
+            jdbc_patterns = [f'jdbc:{subprotocol}' for subprotocol in allowed_jdbc_subprotocols]
+            regex_protocols.extend(jdbc_patterns)
         else:
             # For other protocols, escape any special regex characters to treat them as literals
             escaped_protocol = re.escape(protocol.strip())
@@ -95,20 +98,24 @@ _STATIC_SAFE_PATTERNS = [
     r'https?://central\.maven\.org/.*',
 ]
 
-# Generate dynamic patterns for common domains with multiple protocols
-# This reduces duplication and improves maintainability
-_COMMON_PROTOCOLS = ['https', 'http', 'jdbc', 'postgresql', 'mysql', 'mongodb']
+# Protocol definitions for different use cases
+_WEB_PROTOCOLS = ['https', 'http']  # Standard web protocols
+_DATABASE_PROTOCOLS = ['jdbc', 'postgresql', 'mysql', 'mongodb']  # Database connection protocols
 
-# Government domains (cms.gov and related)
+# All protocols combined - includes database protocols because:
+# 1. Government/AWS systems often use managed database services (RDS, etc.)
+# 2. Connection strings may legitimately reference these domains
+# 3. Infrastructure-as-code often includes database configurations
+_ALL_PROTOCOLS = _WEB_PROTOCOLS + _DATABASE_PROTOCOLS
+
+# Domain definitions
 _GOVERNMENT_DOMAINS = ['cms.gov', 'cmscloud.local']
-
-# AWS domains
 _AWS_DOMAINS = ['amazonaws.com']
 
 # Build the final SAFE_URL_PATTERNS by combining static and dynamic patterns
 SAFE_URL_PATTERNS = _STATIC_SAFE_PATTERNS.copy()
-SAFE_URL_PATTERNS.extend(generate_domain_patterns(_GOVERNMENT_DOMAINS, _COMMON_PROTOCOLS))
-SAFE_URL_PATTERNS.extend(generate_domain_patterns(_AWS_DOMAINS, _COMMON_PROTOCOLS))
+SAFE_URL_PATTERNS.extend(generate_domain_patterns(_GOVERNMENT_DOMAINS, _ALL_PROTOCOLS))
+SAFE_URL_PATTERNS.extend(generate_domain_patterns(_AWS_DOMAINS, _ALL_PROTOCOLS))
 
 # File extensions to skip
 SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz'}
