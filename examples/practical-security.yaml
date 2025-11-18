@@ -1,0 +1,53 @@
+# Practical Security Configuration for Real-World Projects
+# Balanced approach that catches real issues while minimizing false positives
+
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.2.0 # Use the latest version
+    hooks:
+      # Essential security hooks with practical settings
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        # This will create a baseline file to exclude known false positives
+
+      - id: hardcoded-urls
+        # Only check for actual hardcoded production URLs, not local dev URLs
+        args: ['--exclude-patterns', 'localhost,127.0.0.1,0.0.0.0,docker,local']
+
+      - id: hardcoded-credentials
+        # Exclude common development patterns
+        args: ['--exclude-patterns', 'test,example,demo,local,docker']
+
+      - id: genai-security-check
+        # Only report high and medium severity issues
+        args: ['--severity', 'medium']
+
+      # Vulnerability scanning with reasonable thresholds
+      - id: npm-audit
+        # Only fail on high/critical vulnerabilities
+        args: []
+        env:
+          NPM_AUDIT_LEVEL: high
+
+      # Code quality (optional - can be disabled if too noisy)
+      - id: eslint
+        # Only run on staged files
+        args: ['--fix']
+
+  # Standard pre-commit hooks (essential ones only)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-yaml
+        # Exclude problematic files
+        exclude: '^(docker-compose|\.github/workflows)'
+      - id: check-json
+      - id: end-of-file-fixer
+        # Only for source code files
+        types: [python, javascript, typescript]
+      - id: trailing-whitespace
+        # Only for source code files
+        types: [python, javascript, typescript]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000'] # Allow files up to 1MB

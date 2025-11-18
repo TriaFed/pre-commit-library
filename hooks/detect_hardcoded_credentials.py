@@ -2,6 +2,22 @@
 """
 Detect hardcoded credentials and sensitive information in code files.
 Enhanced for GenAI-generated code which might accidentally include credentials.
+
+This hook scans code for hardcoded passwords, API keys, tokens, and other sensitive
+credentials that should be stored in environment variables or secure vaults instead.
+
+Features:
+- Detects passwords, API keys, tokens, private keys, AWS credentials
+- Context-aware scanning (lenient in tests, strict in production code)
+- Support for inline suppression comments for false positives
+- ORM/framework pattern recognition (e.g., Sequelize keys)
+
+Suppressing False Positives:
+Add an inline comment containing: pragma: allowlist secret
+Usage:
+  python detect_hardcoded_credentials.py file1.py file2.js
+  python detect_hardcoded_credentials.py --show-values file.py
+  python detect_hardcoded_credentials.py --exclude-patterns test,demo file.py
 """
 
 import re
@@ -21,7 +37,8 @@ CREDENTIAL_PATTERNS = {
     'api_key': [
         r'api[_-]?key\s*[:=]\s*["\'][^"\']{10,}["\']',
         r'apikey\s*[:=]\s*["\'][^"\']{10,}["\']',
-        r'key\s*[:=]\s*["\'][A-Za-z0-9]{20,}["\']',
+        # Match standalone 'key' but not compound words like sourceKey, foreignKey, etc.
+        r'(?<![a-zA-Z])key\s*[:=]\s*["\'][A-Za-z0-9]{20,}["\']',
     ],
     'token': [
         r'token\s*[:=]\s*["\'][^"\']{10,}["\']',
@@ -65,10 +82,10 @@ SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zi
 # Patterns that suggest this might be in a comment or test
 SAFE_CONTEXT_PATTERNS = [
     r'^\s*#',     # Comments
-    r'^\s*//',    
-    r'^\s*/\*',   
-    r'^\s*\*',    
-    r'^\s*<!--',  
+    r'^\s*//',
+    r'^\s*/\*',
+    r'^\s*\*',
+    r'^\s*<!--',
     r'test.*',    # Test files/variables
     r'.*test.*',
     r'example.*', # Example code
@@ -81,39 +98,66 @@ SAFE_CONTEXT_PATTERNS = [
     r'.*placeholder.*',
 ]
 
+# Patterns to ignore specific lines (inline comments)
+IGNORE_LINE_PATTERNS = [
+    r'pragma:\s*allowlist\s+secret',   # pragma: allowlist secret
+]
+
+# ORM/Framework patterns that are safe (e.g., Sequelize, TypeORM, etc.)
+SAFE_ORM_PATTERNS = [
+    r'sourcekey\s*:',      # Sequelize sourceKey
+    r'foreignkey\s*:',     # Sequelize foreignKey
+    r'primarykey\s*:',     # ORM primary key definitions
+    r'uniquekey\s*:',      # ORM unique key definitions
+    r'indexkey\s*:',       # ORM index key definitions
+    r'partitionkey\s*:',   # Database partition keys
+    r'sortkey\s*:',        # Database sort keys
+]
+
 
 def is_safe_context(line: str, file_path: str) -> bool:
     """Check if the line/file appears to be in a safe context."""
     # Check if file is a test file
-    if any(test_indicator in file_path.lower() for test_indicator in 
+    if any(test_indicator in file_path.lower() for test_indicator in
            ['test', 'spec', 'mock', 'example', 'sample', 'demo']):
         return True
-    
+
+    # Check if line has an ignore comment
+    if any(re.search(pattern, line, re.IGNORECASE) for pattern in IGNORE_LINE_PATTERNS):
+        return True
+
     # Check if line appears to be in a safe context
-    return any(re.match(pattern, line.lower()) for pattern in SAFE_CONTEXT_PATTERNS)
+    if any(re.match(pattern, line.lower()) for pattern in SAFE_CONTEXT_PATTERNS):
+        return True
+
+    # Check if line contains ORM/framework patterns
+    if any(re.search(pattern, line.lower()) for pattern in SAFE_ORM_PATTERNS):
+        return True
+
+    return False
 
 
 def is_safe_value(value: str) -> bool:
     """Check if the extracted value is a safe placeholder."""
     clean_value = value.strip('\'"').lower()
-    
+
     # Check against known safe values
     if clean_value in SAFE_VALUES:
         return True
-    
+
     # Check if it's too short to be a real credential
     if len(clean_value) < 4:
         return True
-    
+
     # Check if it's all the same character (like ***)
     if len(set(clean_value)) == 1:
         return True
-    
+
     # Check if it contains placeholder-like text
     placeholder_indicators = ['your_', 'insert_', 'replace_', 'change_', 'enter_', 'add_', 'put_']
     if any(indicator in clean_value for indicator in placeholder_indicators):
         return True
-    
+
     return False
 
 
@@ -123,12 +167,12 @@ def extract_credential_value(match_text: str) -> str:
     quote_match = re.search(r'["\']([^"\']+)["\']', match_text)
     if quote_match:
         return quote_match.group(1)
-    
+
     # Look for unquoted values after = or :
     value_match = re.search(r'[:=]\s*([^\s\'"]+)', match_text)
     if value_match:
         return value_match.group(1)
-    
+
     return match_text
 
 
@@ -154,21 +198,21 @@ def find_hardcoded_credentials(file_path: str) -> List[Tuple[int, str, str, str]
     Returns list of (line_number, line_content, credential_type, value) tuples.
     """
     issues = []
-    
+
     # Skip binary files and certain extensions
     if any(file_path.endswith(ext) for ext in SKIP_EXTENSIONS):
         return issues
-    
+
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
             lines = content.split('\n')
-            
+
             for line_num, line in enumerate(lines, 1):
                 # Skip empty lines
                 if not line.strip():
                     continue
-                
+
                 # Check each credential pattern type
                 for cred_type, patterns in CREDENTIAL_PATTERNS.items():
                     for pattern in patterns:
@@ -176,11 +220,11 @@ def find_hardcoded_credentials(file_path: str) -> List[Tuple[int, str, str, str]
                         for match in matches:
                             match_text = match.group()
                             credential_value = extract_credential_value(match_text)
-                            
+
                             # Skip if it's a safe value
                             if is_safe_value(credential_value):
                                 continue
-                            
+
                             # Be more lenient in safe contexts (tests, examples, comments)
                             if is_safe_context(line, file_path):
                                 # Only flag very suspicious patterns in safe contexts
@@ -188,10 +232,10 @@ def find_hardcoded_credentials(file_path: str) -> List[Tuple[int, str, str, str]
                                     issues.append((line_num, line.strip(), cred_type, credential_value))
                             else:
                                 issues.append((line_num, line.strip(), cred_type, credential_value))
-    
+
     except Exception as e:
         print(f"Error reading {file_path}: {e}", file=sys.stderr)
-    
+
     return issues
 
 
@@ -200,14 +244,25 @@ def main():
     parser.add_argument('files', nargs='*', help='Files to check')
     parser.add_argument('--show-values', action='store_true',
                         help='Show the actual credential values (use with caution)')
+    parser.add_argument('--exclude-patterns', type=str,
+                        help='Comma-separated list of patterns to exclude (e.g., "test,demo,local")')
     args = parser.parse_args()
-    
+
     exit_code = 0
     total_issues = 0
-    
+
+    # Parse exclusion patterns
+    exclude_patterns = []
+    if args.exclude_patterns:
+        exclude_patterns = [p.strip().lower() for p in args.exclude_patterns.split(',')]
+
     for file_path in args.files:
+        # Skip files matching exclusion patterns
+        if exclude_patterns and any(pattern in file_path.lower() for pattern in exclude_patterns):
+            continue
+
         issues = find_hardcoded_credentials(file_path)
-        
+
         if issues:
             print(f"\n🔐 Hardcoded credentials found in {file_path}:")
             for line_num, line_content, cred_type, value in issues:
@@ -217,10 +272,10 @@ def main():
                 else:
                     print(f"    Value: {'*' * min(len(value), 20)}")
                 print(f"    Context: {line_content}")
-            
+
             total_issues += len(issues)
             exit_code = 1
-    
+
     if total_issues > 0:
         print(f"\n❌ Found {total_issues} potential hardcoded credential(s)")
         print("💡 Use environment variables or secure vaults for credentials")
@@ -228,7 +283,7 @@ def main():
         print("💡 Consider using tools like .env files with .gitignore")
     else:
         print("✅ No hardcoded credentials detected")
-    
+
     return exit_code
 
 

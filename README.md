@@ -39,6 +39,26 @@ This library provides pre-commit hooks specifically designed to:
 
 ## 🚀 Quick Start
 
+### For Real-World Projects (Recommended)
+
+If you're implementing this in a production codebase and want to minimize false positives, start with our practical configuration:
+
+```bash
+# Copy the practical configuration
+curl -o .pre-commit-config.yaml https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/practical-security.yaml
+
+# Install pre-commit
+pip install pre-commit
+
+# Install the hooks
+pre-commit install
+
+# Create a secrets baseline to exclude known false positives
+detect-secrets scan --baseline .secrets.baseline
+```
+
+See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for detailed guidance on handling false positives.
+
 ### 1. Install dependencies
 
 **Quick setup for macOS:**
@@ -503,7 +523,35 @@ const password = 'mySecretPassword123';
 // ✅ Safe alternatives
 const apiKey = process.env.API_KEY;
 const password = process.env.PASSWORD;
+
+// ✅ For false positives, use inline comments to suppress
+persistState(store, {
+  key: 'AppPreferences', // pragma: allowlist secret
+  storage: sessionStorage,
+});
 ```
+
+**Suppressing False Positives:**
+
+The `hardcoded_credentials` hook supports inline comments to mark false positives:
+
+```python
+# Python example
+config = {
+    "key": "LocalStorageKey"  # pragma: allowlist secret
+}
+```
+
+```javascript
+// JavaScript example
+const settings = {
+  key: 'PreferenceKey', // pragma: allowlist secret
+};
+```
+
+Supported suppression comments:
+
+- `// pragma: allowlist secret`
 
 ### GenAI Security Patterns
 
@@ -675,10 +723,10 @@ Some tools provide enhanced functionality:
 
 ```bash
 # Generate baseline
-detect_secrets scan --baseline .secrets.baseline
+detect-secrets scan --baseline .secrets.baseline
 
 # Update baseline
-detect_secrets scan --baseline .secrets.baseline --force-use-all-plugins
+detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins
 ```
 
 #### ESLint

@@ -30,7 +30,7 @@ def test_node_only_profiles_and_tools_darwin():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: detect_secrets
       - id: genai_security_check
@@ -58,7 +58,7 @@ def test_infra_only_profiles_and_tools_windows():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: detect_secrets
       - id: genai_security_check
@@ -88,7 +88,7 @@ def test_optional_trufflehog_not_installed_if_hook_absent_darwin():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: detect_secrets
       - id: genai_security_check
@@ -108,7 +108,7 @@ def test_profiles_include_exclude_merge():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: eslint
       - id: prettier
@@ -127,7 +127,7 @@ def test_platform_specific_packages_match_map_windows():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: dotnet_format
       - id: dotnet_test
@@ -174,7 +174,7 @@ def test_duplicate_tools_removed_in_plan():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: python_black
       - id: python_flake8
@@ -194,7 +194,7 @@ def test_mixed_stacks_union_of_profiles():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: eslint
       - id: python_black
@@ -245,7 +245,7 @@ def test_tools_notes_ignored_in_mapping(tmp_path: Path):
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: eslint
 """
@@ -273,7 +273,7 @@ def test_trufflehog_removed_if_absent_windows():
     cfg = """
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.4
+    rev: v1.2.0
     hooks:
       - id: detect_secrets
       - id: genai_security_check

@@ -116,13 +116,28 @@ def main():
     parser.add_argument('files', nargs='*', help='Files to check')
     parser.add_argument('--exclude-comments', action='store_true',
                         help='Exclude URLs found in comments')
+    parser.add_argument('--exclude-patterns', type=str,
+                        help='Comma-separated list of URL patterns to exclude (e.g., "localhost,127.0.0.1,docker")')
     args = parser.parse_args()
     
     exit_code = 0
     total_issues = 0
     
+    # Parse exclusion patterns
+    exclude_patterns = []
+    if args.exclude_patterns:
+        exclude_patterns = [p.strip().lower() for p in args.exclude_patterns.split(',')]
+    
     for file_path in args.files:
         issues = find_hardcoded_urls(file_path)
+        
+        # Filter out excluded URL patterns
+        if exclude_patterns:
+            filtered_issues = []
+            for line_num, line_content, url in issues:
+                if not any(pattern in url.lower() for pattern in exclude_patterns):
+                    filtered_issues.append((line_num, line_content, url))
+            issues = filtered_issues
         
         if issues:
             print(f"\n🚨 Hardcoded URLs found in {file_path}:")
