@@ -49,28 +49,26 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
             # JDBC URLs have format jdbc:subprotocol://...
             # Use the centrally defined JDBC subprotocols for consistency
             # This prevents inadvertent whitelisting of malicious URLs
-            jdbc_patterns = [f'jdbc:{subprotocol}' for subprotocol in _JDBC_SUBPROTOCOLS]
+            jdbc_patterns = [f'jdbc:{re.escape(subprotocol)}' for subprotocol in _JDBC_SUBPROTOCOLS]
             regex_protocols.extend(jdbc_patterns)
         else:
             # For other protocols, escape any special regex characters to treat them as literals
             escaped_protocol = re.escape(protocol.strip())
             regex_protocols.append(escaped_protocol)
     
-    protocol_group = f"(?:{'|'.join(regex_protocols)})"
+    protocol_group = f'(?:{"|".join(regex_protocols)})'
     
     for domain in domains:
         # Escape dots in domain names for regex
         escaped_domain = domain.replace('.', r'\.')
         
-        # Pattern 1: Main domain only (e.g., https://cms.gov)
-        # This handles the base domain without any subdomains
-        patterns.append(f"{protocol_group}://{escaped_domain}(?::\\d+)?(?:/.*)?")
-        
-        # Pattern 2: Legitimate subdomains (e.g., https://api.cms.gov, https://secure.login.cms.gov)
-        # Uses {1,5} to require at least 1 subdomain level, max 5 for security
-        # This prevents badsite.com.cms.gov from matching cms.gov whitelist
-        # Each subdomain must be RFC-compliant: alphanumeric, optional hyphens, 1-63 chars
-        patterns.append(f"{protocol_group}://(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?\\.){{1,5}}{escaped_domain}(?::\\d+)?(?:/.*)?")
+        # Unified pattern: Base domain with optional subdomains (e.g., https://cms.gov, https://api.cms.gov)
+        # Optional subdomain prefix: up to 5 levels of RFC-compliant subdomains
+        # This prevents badsite.com.cms.gov from matching cms.gov whitelist while allowing both:
+        # - Base domains: https://cms.gov
+        # - Legitimate subdomains: https://api.cms.gov, https://secure.login.cms.gov
+        # Each subdomain must be: alphanumeric, optional hyphens (not at start/end), 1-63 chars
+        patterns.append(f"{protocol_group}://(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?\\.){{1,5}})?{escaped_domain}(?::\\d+)?(?:/.*)?")
     
     return patterns
 

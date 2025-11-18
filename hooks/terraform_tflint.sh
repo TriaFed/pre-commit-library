@@ -35,14 +35,18 @@ trap cleanup EXIT INT TERM
 #                 Example: export TFLINT_TIMEOUT=120
 # 
 # TFLINT_MAX_FILES: Maximum number of Terraform files to process (default: 100)
+#                   Set to 0 for unlimited files, or specify a positive integer limit.
 #                   This limit exists to prevent performance issues in large repositories
 #                   with hundreds/thousands of .tf files. When exceeded, only the first
 #                   N files are processed to maintain reasonable execution times.
 #                   Solutions when limit is reached:
+#                   - Remove limit: export TFLINT_MAX_FILES=0
 #                   - Increase limit: export TFLINT_MAX_FILES=500
 #                   - Run on specific directories: cd subdir && tflint
 #                   - Use .tflint.hcl to exclude directories
-#                   Example: export TFLINT_MAX_FILES=200
+#                   Examples: 
+#                   - export TFLINT_MAX_FILES=0    # Unlimited files
+#                   - export TFLINT_MAX_FILES=200  # Limit to 200 files
 #
 # TFLINT_MAX_DEPTH: Maximum directory depth to search for .tf files (default: 0 = unlimited)
 #                   This prevents infinite recursion and improves performance in deep directory structures.
