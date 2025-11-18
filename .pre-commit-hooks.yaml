@@ -97,9 +97,10 @@
 
 - id: terraform_tflint
   name: TFLint (Terraform linter)
-  entry: tflint
-  language: system
+  entry: hooks/terraform_tflint.sh
+  language: script
   files: \.tf$
+  pass_filenames: false
   require_serial: false
 
 - id: cloudformation_validate
@@ -135,6 +136,11 @@
   language: python
   types: [text]
   require_serial: false
+  # Example usage with exclusions:
+  # args: ['--exclude-patterns', 'localhost,127.0.0.1']
+  # args: ['--exclude-files', 'README.md,CHANGELOG.md,LICENSE']
+  # args: ['--safe-domains', 'cms.gov,amazonaws.com,github.com,yourcompany.com']
+  # args: ['--safe-protocols', 'https,http,jdbc,postgresql,mysql,mongodb']
 
 - id: hardcoded_credentials
   name: Detect hardcoded credentials
