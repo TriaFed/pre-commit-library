@@ -99,18 +99,19 @@ find_terraform_files() {
     tf_files_array=()
     local count=0
     
-    # Build find command with configurable depth
-    local find_cmd="find . -name '*.tf' -type f ! -path './.terraform/*'"
+    # Build find command with configurable depth (secure array-based approach)
+    local find_args=("." "-name" "*.tf" "-type" "f" "!" "-path" "./.terraform/*")
     if [ "$TFLINT_MAX_DEPTH" -gt 0 ]; then
-        find_cmd="find . -maxdepth $TFLINT_MAX_DEPTH -name '*.tf' -type f ! -path './.terraform/*'"
+        # Insert maxdepth at the beginning for proper find syntax
+        find_args=("." "-maxdepth" "$TFLINT_MAX_DEPTH" "-name" "*.tf" "-type" "f" "!" "-path" "./.terraform/*")
     fi
     
-    # Use process substitution for efficient array population
+    # Use process substitution with secure array expansion
     while IFS= read -r -d '' file && 
           [ "$TFLINT_MAX_FILES" -eq 0 ] || [ "$count" -lt "$TFLINT_MAX_FILES" ]; do
         tf_files_array+=("$file")
         ((count++))
-    done < <($find_cmd -print0 2>/dev/null)
+    done < <(find "${find_args[@]}" -print0 2>/dev/null)
     
     # Warn if limits applied
     if [ "$TFLINT_MAX_FILES" -gt 0 ] && [ "$count" -ge "$TFLINT_MAX_FILES" ]; then
@@ -133,7 +134,7 @@ if [ "${#tf_files_array[@]}" -eq 0 ]; then
     exit 0
 fi
 
-echo "� Found ${#tf_files_array[@]} Terraform files, extracting directories..."
+echo "📁 Found ${#tf_files_array[@]} Terraform files, extracting directories..."
 # Extract unique directories efficiently
 declare -A unique_dirs=()
 
@@ -208,7 +209,13 @@ for dir in "${terraform_dirs[@]}"; do
             # Efficient whitespace trim using bash parameter expansion
             rule="${rule#"${rule%%[![:space:]]*}"}"  # Remove leading whitespace
             rule="${rule%"${rule##*[![:space:]]}"}"  # Remove trailing whitespace
-            [ -n "$rule" ] && tflint_args+=("--disable-rule" "$rule")
+            
+            # Validate rule name before adding (prevent empty rules and basic validation)
+            if [ -n "$rule" ] && [[ "$rule" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+                tflint_args+=("--disable-rule" "$rule")
+            elif [ -n "$rule" ]; then
+                echo "⚠️  Skipping invalid rule name: '$rule'" >&2
+            fi
         done
     fi
     

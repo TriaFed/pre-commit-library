@@ -10,6 +10,24 @@ import os
 import argparse
 from typing import List, Tuple, Set
 
+# Protocol definitions - defined early to avoid circular dependencies
+_WEB_PROTOCOLS = ['https', 'http']  # Standard web protocols
+
+# Database protocols that can be used directly (not via JDBC)
+_DIRECT_DB_PROTOCOLS = ['postgresql', 'mysql', 'mongodb']
+
+# JDBC subprotocols that are allowed when using jdbc: prefix
+_JDBC_SUBPROTOCOLS = ['postgresql', 'mysql', 'mariadb', 'h2', 'sqlite', 'oracle', 'sqlserver']
+
+# All database protocols combined (direct + JDBC)
+_DATABASE_PROTOCOLS = ['jdbc'] + _DIRECT_DB_PROTOCOLS
+
+# All protocols combined - includes database protocols because:
+# 1. Government/AWS systems often use managed database services (RDS, etc.)
+# 2. Connection strings may legitimately reference these domains  
+# 3. Infrastructure-as-code often includes database configurations
+_ALL_PROTOCOLS = _WEB_PROTOCOLS + _DATABASE_PROTOCOLS
+
 def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[str]:
     """Generate URL patterns for given domains and protocols.
     
@@ -44,12 +62,15 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
         # Escape dots in domain names for regex
         escaped_domain = domain.replace('.', r'\.')
         
-        # Pattern for legitimate subdomains only (prevents badsite.com.example.com matching)
-        # Use word boundary at start and specific subdomain pattern
-        patterns.append(f"{protocol_group}://(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?\\.){{1,5}}{escaped_domain}(?::\\d+)?(?:/.*)?")
-        
-        # Pattern for main domain (exact match with word boundaries)  
+        # Pattern 1: Main domain only (e.g., https://cms.gov)
+        # This handles the base domain without any subdomains
         patterns.append(f"{protocol_group}://{escaped_domain}(?::\\d+)?(?:/.*)?")
+        
+        # Pattern 2: Legitimate subdomains (e.g., https://api.cms.gov, https://secure.login.cms.gov)
+        # Uses {1,5} to require at least 1 subdomain level, max 5 for security
+        # This prevents badsite.com.cms.gov from matching cms.gov whitelist
+        # Each subdomain must be RFC-compliant: alphanumeric, optional hyphens, 1-63 chars
+        patterns.append(f"{protocol_group}://(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?\\.){{1,5}}{escaped_domain}(?::\\d+)?(?:/.*)?")
     
     return patterns
 
@@ -88,24 +109,6 @@ _STATIC_SAFE_PATTERNS = [
     r'https?://central\.maven\.org/.*',
 ]
 
-# Protocol definitions for different use cases
-_WEB_PROTOCOLS = ['https', 'http']  # Standard web protocols
-
-# Database protocols that can be used directly (not via JDBC)
-_DIRECT_DB_PROTOCOLS = ['postgresql', 'mysql', 'mongodb']
-
-# JDBC subprotocols that are allowed when using jdbc: prefix
-_JDBC_SUBPROTOCOLS = ['postgresql', 'mysql', 'mariadb', 'h2', 'sqlite', 'oracle', 'sqlserver']
-
-# All database protocols combined (direct + JDBC)
-_DATABASE_PROTOCOLS = ['jdbc'] + _DIRECT_DB_PROTOCOLS
-
-# All protocols combined - includes database protocols because:
-# 1. Government/AWS systems often use managed database services (RDS, etc.)
-# 2. Connection strings may legitimately reference these domains  
-# 3. Infrastructure-as-code often includes database configurations
-_ALL_PROTOCOLS = _WEB_PROTOCOLS + _DATABASE_PROTOCOLS
-
 # Domain definitions
 _GOVERNMENT_DOMAINS = ['cms.gov', 'cmscloud.local']
 _AWS_DOMAINS = ['amazonaws.com']
@@ -132,19 +135,22 @@ def _generate_url_detection_patterns() -> List[str]:
     
     return patterns
 
-# URL patterns that indicate hardcoded URLs (generated dynamically)
-URL_PATTERNS = _generate_url_detection_patterns()
+# URL patterns that indicate hardcoded URLs (pre-compiled for performance)
+URL_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in _generate_url_detection_patterns()]
 
 # Build the final SAFE_URL_PATTERNS by combining static and dynamic patterns
 SAFE_URL_PATTERNS = _STATIC_SAFE_PATTERNS.copy()
 SAFE_URL_PATTERNS.extend(generate_domain_patterns(_GOVERNMENT_DOMAINS, _ALL_PROTOCOLS))
 SAFE_URL_PATTERNS.extend(generate_domain_patterns(_AWS_DOMAINS, _ALL_PROTOCOLS))
 
+# Pre-compile safe patterns for performance and security
+_COMPILED_SAFE_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in SAFE_URL_PATTERNS]
+
 # File extensions to skip
 SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz'}
 
 # Patterns that suggest this might be in a comment or documentation
-COMMENT_PATTERNS = [
+_COMMENT_PATTERN_STRINGS = [
     r'^\s*#',     # Python, shell comments
     r'^\s*//',    # JavaScript, Java, C++ comments
     r'^\s*/\*',   # Multi-line comment start
@@ -152,18 +158,33 @@ COMMENT_PATTERNS = [
     r'^\s*<!--',  # HTML comments
 ]
 
+# Pre-compile regex patterns for performance
+COMMENT_PATTERNS = [re.compile(pattern) for pattern in _COMMENT_PATTERN_STRINGS]
+
 
 def is_in_comment(line: str) -> bool:
     """Check if the line appears to be a comment."""
-    return any(re.match(pattern, line) for pattern in COMMENT_PATTERNS)
+    return any(pattern.match(line) for pattern in COMMENT_PATTERNS)
 
 
 def is_safe_url(url: str, additional_patterns: List[str] = None) -> bool:
     """Check if URL matches safe patterns."""
-    all_patterns = SAFE_URL_PATTERNS[:]
+    # Check pre-compiled safe patterns first (fastest path)
+    for pattern in _COMPILED_SAFE_PATTERNS:
+        if pattern.match(url):
+            return True
+    
+    # Only compile additional patterns if needed (slower path)
     if additional_patterns:
-        all_patterns.extend(additional_patterns)
-    return any(re.match(pattern, url, re.IGNORECASE) for pattern in all_patterns)
+        for pattern_str in additional_patterns:
+            try:
+                if re.match(pattern_str, url, re.IGNORECASE):
+                    return True
+            except re.error:
+                # Skip malformed regex patterns for security
+                continue
+    
+    return False
 
 
 def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_safe_patterns: List[str] = None) -> List[Tuple[int, str, str]]:
@@ -177,8 +198,9 @@ def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_
         additional_safe_patterns = []
     issues = []
     
-    # Skip binary files and certain extensions
-    if any(file_path.endswith(ext) for ext in SKIP_EXTENSIONS):
+    # Skip binary files and certain extensions (O(1) lookup)
+    _, ext = os.path.splitext(file_path.lower())
+    if ext in SKIP_EXTENSIONS:
         return issues
     
     # Skip files specified by user
@@ -189,13 +211,14 @@ def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line_num, line in enumerate(f, 1):
-                # Skip empty lines
-                if not line.strip():
+                # Pre-strip line once for efficiency
+                stripped_line = line.strip()
+                if not stripped_line:
                     continue
                 
-                # Check for URL patterns
+                # Check for URL patterns (already compiled with IGNORECASE)
                 for pattern in URL_PATTERNS:
-                    matches = re.finditer(pattern, line, re.IGNORECASE)
+                    matches = pattern.finditer(line)
                     for match in matches:
                         url = match.group()
                         
@@ -204,13 +227,15 @@ def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_
                             continue
                         
                         # Be more lenient with URLs in comments/documentation
-                        if is_in_comment(line):
-                            # Only flag suspicious URLs even in comments
-                            if any(keyword in url.lower() for keyword in 
+                        is_comment = is_in_comment(line)
+                        if is_comment:
+                            # Only flag suspicious URLs even in comments (pre-compute lower case)
+                            url_lower = url.lower()
+                            if any(keyword in url_lower for keyword in 
                                    ['api', 'prod', 'staging', 'internal', 'admin']):
-                                issues.append((line_num, line.strip(), url))
+                                issues.append((line_num, stripped_line, url))
                         else:
-                            issues.append((line_num, line.strip(), url))
+                            issues.append((line_num, stripped_line, url))
     
     except Exception as e:
         print(f"Error reading {file_path}: {e}", file=sys.stderr)
