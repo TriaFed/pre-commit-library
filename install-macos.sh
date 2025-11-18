@@ -4,6 +4,92 @@
 
 set -e
 
+# Args and defaults
+AUTO=1
+CONFIG=""
+EXPLICIT_PROFILES=""
+EXCLUDE_PROFILES=""
+DRY_RUN=0
+ASSUME_YES=0
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+print_usage() {
+    echo "Usage: install-macos.sh [--no-auto] [--config /abs/path/.pre-commit-config.yaml] [--profiles p1,p2] [--exclude p3] [--dry-run] [--assume-yes]"
+}
+
+parse_args() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --auto)
+                AUTO=1
+                shift
+                ;;
+            --no-auto)
+                AUTO=0
+                shift
+                ;;
+            --config)
+                CONFIG="$2"
+                shift 2
+                ;;
+            --profiles)
+                EXPLICIT_PROFILES="$2"
+                shift 2
+                ;;
+            --exclude)
+                EXCLUDE_PROFILES="$2"
+                shift 2
+                ;;
+            --dry-run)
+                DRY_RUN=1
+                shift
+                ;;
+            --assume-yes)
+                ASSUME_YES=1
+                shift
+                ;;
+            -h|--help)
+                print_usage
+                exit 0
+                ;;
+            *)
+                echo "Unknown option: $1"; print_usage; exit 1
+                ;;
+        esac
+    done
+}
+
+resolve_with_config() {
+    local config_path="$1"
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "⚠️  Python3 not available; cannot auto-resolve. Falling back to manual selection."
+        return 1
+    fi
+    if [ ! -f "$SCRIPT_DIR/resolve_deps.py" ]; then
+        echo "❌ Resolver script not found at $SCRIPT_DIR/resolve_deps.py"
+        return 1
+    fi
+    local resolver_out
+    if ! resolver_out=$(python3 "$SCRIPT_DIR/resolve_deps.py" --config "$config_path" --os darwin --profiles "$EXPLICIT_PROFILES" --exclude "$EXCLUDE_PROFILES" 2>/dev/null); then
+        echo "⚠️  Resolver failed; falling back to manual selection."
+        return 1
+    fi
+    echo "$resolver_out"
+    return 0
+}
+
+prompt_profiles() {
+    echo "Select profiles to install (comma-separated):"
+    echo "  core, python, node, dotnet, go, java, ansible, infrastructure"
+    if [ $ASSUME_YES -eq 1 ]; then
+        # default minimal
+        echo "core"
+        return 0
+    fi
+    read -r selection
+    echo "$selection"
+}
+
 echo "🍎 Installing dependencies for Pre-commit Hooks Library on macOS..."
 echo "=================================================="
 
@@ -91,8 +177,13 @@ install_nodejs_tools() {
         echo "✅ Node.js already installed"
     fi
     
-    # Install global packages
-    npm install -g eslint prettier typescript @angular/cli
+    # Install global packages unless Yarn is detected in the project
+    if [ -f yarn.lock ] || command -v yarn >/dev/null 2>&1; then
+        echo "ℹ️  Yarn detected (yarn.lock or yarn CLI). Skipping npm -g installs for eslint/prettier/typescript/@angular/cli."
+        echo "💡 Ensure these tools are available via devDependencies in your project."
+    else
+        npm install -g eslint prettier typescript @angular/cli
+    fi
     
     echo "✅ Node.js tools installed"
 }
@@ -285,15 +376,77 @@ main() {
     echo "Starting installation..."
     echo ""
     
+    parse_args "$@"
+
+    selected_profiles=""
+    tools_plan_json=""
+
+    if [ $AUTO -eq 1 ]; then
+        if [ -z "$CONFIG" ]; then
+            if [ -f ".pre-commit-config.yaml" ]; then
+                CONFIG="$(pwd)/.pre-commit-config.yaml"
+            fi
+        fi
+        if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            resolved=$(resolve_with_config "$CONFIG" || true)
+            if [ -n "$resolved" ]; then
+                tools_plan_json="$resolved"
+                selected_profiles=$(echo "$resolved" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(",".join(d.get("profiles", [])))')
+            fi
+        fi
+    fi
+
+    if [ -z "$selected_profiles" ]; then
+        if [ -n "$EXPLICIT_PROFILES" ]; then
+            selected_profiles="$EXPLICIT_PROFILES"
+        else
+            selected_profiles=$(prompt_profiles)
+        fi
+    fi
+
+    echo "📋 Selected profiles: $selected_profiles"
+
+    if [ $DRY_RUN -eq 1 ]; then
+        if [ -z "$tools_plan_json" ] && [ -n "$CONFIG" ] && command -v python3 >/dev/null 2>&1; then
+            tools_plan_json=$(python3 "$SCRIPT_DIR/resolve_deps.py" --config "$CONFIG" --os darwin --profiles "$selected_profiles" --exclude "$EXCLUDE_PROFILES" 2>/dev/null || true)
+        fi
+        echo "🔎 Dry run - planned installs:"
+        if [ -n "$tools_plan_json" ]; then
+            echo "$tools_plan_json"
+        else
+            echo "(Resolver unavailable; will install groups corresponding to: $selected_profiles)"
+        fi
+        exit 0
+    fi
+
     install_core_deps
-    install_python_tools
-    install_nodejs_tools
-    install_dotnet
-    install_go_tools
-    install_java
-    install_infra_tools
-    install_ansible
-    install_security_tools
+
+    # Dispatch per selected profiles
+    case ",$selected_profiles," in
+        *",core,"*) install_security_tools ;; 
+    esac
+    case ",$selected_profiles," in
+        *",python,"*) install_python_tools ;;
+    esac
+    case ",$selected_profiles," in
+        *",node,"*) install_nodejs_tools ;;
+    esac
+    case ",$selected_profiles," in
+        *",dotnet,"*) install_dotnet ;;
+    esac
+    case ",$selected_profiles," in
+        *",go,"*) install_go_tools ;;
+    esac
+    case ",$selected_profiles," in
+        *",java,"*) install_java ;;
+    esac
+    case ",$selected_profiles," in
+        *",infrastructure,"*) install_infra_tools ;;
+    esac
+    case ",$selected_profiles," in
+        *",ansible,"*) install_ansible ;;
+    esac
+
     setup_shell_profile
     
     echo ""
@@ -309,7 +462,50 @@ main() {
     echo ""
     echo "📚 Documentation: https://github.com/TriaFed/pre-commit-library"
     
-    verify_tools
+    # Build a minimal verification list based on selected profiles
+    VERIFY_CMDS=(
+        "python3 --version"
+        "git --version"
+        "pre-commit --version"
+    )
+    case ",$selected_profiles," in
+        *",python,"*) VERIFY_CMDS+=("black --version" "flake8 --version" "bandit --version") ;;
+    esac
+    case ",$selected_profiles," in
+        *",node,"*) VERIFY_CMDS+=("node --version" "npm --version" "eslint --version") ;;
+    esac
+    case ",$selected_profiles," in
+        *",dotnet,"*) VERIFY_CMDS+=("dotnet --info") ;;
+    esac
+    case ",$selected_profiles," in
+        *",go,"*) VERIFY_CMDS+=("go version" "golangci-lint --version") ;;
+    esac
+    case ",$selected_profiles," in
+        *",java,"*) VERIFY_CMDS+=("java -version" "mvn -v" "gradle -v") ;;
+    esac
+    case ",$selected_profiles," in
+        *",infrastructure,"*) VERIFY_CMDS+=("terraform --version" "tflint --version" "hadolint --version" "aws --version") ;;
+    esac
+    case ",$selected_profiles," in
+        *",ansible,"*) VERIFY_CMDS+=("ansible --version" "ansible-lint --version") ;;
+    esac
+
+    echo ""
+    echo "🔍 Verifying selected tools..."
+    echo "================================"
+    HAS_ERRORS=0
+    for cmd in "${VERIFY_CMDS[@]}"; do
+        if $cmd >/dev/null 2>&1; then
+            echo "✅ $cmd"
+        else
+            HAS_ERRORS=1
+            echo "❌ $cmd (not available)"
+        fi
+    done
+    if [ $HAS_ERRORS -eq 1 ]; then
+        echo ""
+        echo "❗ Some tools are missing. You may need to add them to PATH or re-run the installer."
+    fi 
 }
 
 # Run main function

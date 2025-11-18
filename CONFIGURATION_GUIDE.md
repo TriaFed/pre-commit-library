@@ -11,6 +11,7 @@ Use the `examples/practical-security.yaml` configuration for a balanced approach
 ### 1. detect-secrets and hardcoded-credentials
 
 **Problem**: Flags development passwords and test credentials
+
 ```bash
 # Example false positive
 ERROR: Potential secrets about to be committed to git repo!
@@ -21,12 +22,14 @@ Location: scripts/db-setup.sh:8
 **Solutions**:
 
 #### Option A: Create a secrets baseline (Recommended)
+
 ```bash
 # Create baseline file to exclude known false positives
 detect-secrets scan --baseline .secrets.baseline
 ```
 
 Then add to your `.pre-commit-config.yaml`:
+
 ```yaml
 - id: detect-secrets
   args: ['--baseline', '.secrets.baseline']
@@ -58,11 +61,13 @@ String key = "ConfigKey";  // pragma: allowlist secret
 ```
 
 **Supported suppression formats:**
-- `pragma: allowlist secret` - Compatible with detect-secrets & hardcoded-credentials 
+
+- `pragma: allowlist secret` - Compatible with detect-secrets & hardcoded-credentials
 
 These comments work for both `detect-secrets` and `hardcoded-credentials` hooks.
 
 #### Option C: Exclude patterns
+
 ```yaml
 - id: hardcoded-credentials
   args: ['--exclude-patterns', 'test,example,demo,local,docker,dev']
@@ -71,6 +76,7 @@ These comments work for both `detect-secrets` and `hardcoded-credentials` hooks.
 ### 2. genai-security-check Issues
 
 **Problem 1**: Flags relative imports as path traversal
+
 ```javascript
 // False positive:
 import { Model } from '../models/model.js';
@@ -79,17 +85,20 @@ import { Model } from '../models/model.js';
 **Solution**: The updated genai-security-check now excludes import statements automatically.
 
 **Problem 2**: Flags parameterized SQL queries
+
 ```javascript
 // False positive:
-query += ' and cp.CYCLE = :cycle';  // This is actually safe (parameterized)
+query += ' and cp.CYCLE = :cycle'; // This is actually safe (parameterized)
 ```
 
 **Solution**: Use inline comments to exclude:
+
 ```javascript
-query += ' and cp.CYCLE = :cycle';  // genai:ignore - parameterized query
+query += ' and cp.CYCLE = :cycle'; // genai:ignore - parameterized query
 ```
 
 **Problem 3**: Flags all console.error statements
+
 ```javascript
 // False positive:
 console.error('Error creating email:', emailInput.status);
@@ -98,9 +107,10 @@ console.error('Error creating email:', emailInput.status);
 **Solution**: The updated version only flags console.error with sensitive data patterns.
 
 #### Configure severity levels:
+
 ```yaml
 - id: genai-security-check
-  args: ['--severity', 'medium']  # Only report medium/high issues
+  args: ['--severity', 'medium'] # Only report medium/high issues
 ```
 
 ### 3. npm-audit Issues
@@ -108,13 +118,15 @@ console.error('Error creating email:', emailInput.status);
 **Problem**: Fails on any vulnerability, even low-severity ones
 
 **Solution**: Configure audit level
+
 ```yaml
 - id: npm-audit
   env:
-    NPM_AUDIT_LEVEL: high  # Only fail on high/critical vulnerabilities
+    NPM_AUDIT_LEVEL: high # Only fail on high/critical vulnerabilities
 ```
 
 Available levels:
+
 - `low`: All vulnerabilities (very strict)
 - `moderate`: Moderate and above (previous default)
 - `high`: High and critical only (default, recommended)
@@ -127,7 +139,7 @@ Exclude entire files or directories:
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.7
+    rev: v1.2.0
     hooks:
       - id: genai-security-check
         exclude: '^(tests/|spec/|__tests__/|\.test\.|\.spec\.)'
@@ -138,6 +150,7 @@ repos:
 ### 5. Safe Context Detection
 
 The hooks automatically detect safe contexts and are more lenient in:
+
 - Test files (`test`, `spec`, `__tests__`)
 - Development files (`dev`, `development`, `local`)
 - Setup files (`setup`, `migration`, `seed`)
@@ -146,18 +159,20 @@ The hooks automatically detect safe contexts and are more lenient in:
 ## Environment-Specific Configuration
 
 ### Development Environment (Lenient)
+
 ```yaml
 - id: genai-security-check
-  args: ['--severity', 'high']  # Only critical issues
+  args: ['--severity', 'high'] # Only critical issues
 - id: npm-audit
   env:
     NPM_AUDIT_LEVEL: critical
 ```
 
 ### CI/Production Environment (Strict)
+
 ```yaml
 - id: genai-security-check
-  args: ['--severity', 'low']   # All issues
+  args: ['--severity', 'low'] # All issues
 - id: npm-audit
   env:
     NPM_AUDIT_LEVEL: moderate
@@ -166,17 +181,19 @@ The hooks automatically detect safe contexts and are more lenient in:
 ## Troubleshooting Specific Patterns
 
 ### SQL Injection False Positives
+
 If you're getting SQL injection warnings on safe parameterized queries:
 
 ```javascript
 // Add genai:ignore comment:
-query += ' WHERE id = :userId';  // genai:ignore - parameterized query
+query += ' WHERE id = :userId'; // genai:ignore - parameterized query
 
 // Or use this pattern (automatically excluded):
 const query = 'SELECT * FROM users WHERE id = $1';
 ```
 
 ### Path Traversal False Positives
+
 For legitimate relative imports:
 
 ```javascript
@@ -186,6 +203,7 @@ const config = require('../../config/database.js');
 ```
 
 ### Information Disclosure False Positives
+
 For legitimate error logging:
 
 ```javascript
@@ -193,7 +211,7 @@ For legitimate error logging:
 console.error('Error creating email:', error.message);
 
 // This WILL be flagged (contains 'password'):
-console.error('Login failed:', user.password);  // Don't do this!
+console.error('Login failed:', user.password); // Don't do this!
 ```
 
 ## Best Practices
@@ -210,7 +228,7 @@ console.error('Login failed:', user.password);  // Don't do this!
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: v1.1.7
+    rev: v1.2.0
     hooks:
       # Security with baselines and exclusions
       - id: detect-secrets
@@ -221,12 +239,12 @@ repos:
       - id: genai-security-check
         args: ['--severity', 'medium']
         exclude: '^(tests/|spec/|__tests__/)'
-      
+
       # Vulnerability scanning with reasonable thresholds
       - id: npm-audit
         env:
           NPM_AUDIT_LEVEL: high
-      
+
       # Code quality (optional)
       - id: eslint
         args: ['--fix']

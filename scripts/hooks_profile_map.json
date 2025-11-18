@@ -1,0 +1,113 @@
+{
+  "hookIdToProfiles": {
+    "detect_secrets": ["core"],
+    "hardcoded_credentials": ["core"],
+    "hardcoded_urls": ["core"],
+    "genai_security_check": ["core"],
+    "detect_verbose_flags": ["core"],
+    "semgrep": ["core"],
+    "truffhog": ["core"],
+
+    "python_black": ["python"],
+    "python_flake8": ["python"],
+    "python_isort": ["python"],
+    "python_mypy": ["python"],
+    "bandit": ["python"],
+    "safety_python": ["python"],
+
+    "eslint": ["node"],
+    "prettier": ["node"],
+    "typescript_check": ["node"],
+    "npm_audit": ["node"],
+    "yarn_audit": ["node"],
+    "angular_lint": ["node"],
+
+    ".NET-specific": [],
+    "dotnet_format": ["dotnet"],
+    "dotnet_test": ["dotnet"],
+    "dotnet_security_scan": ["dotnet"],
+
+    "go_fmt": ["go"],
+    "go_lint": ["go"],
+    "go_security_scan": ["go"],
+
+    "java_checkstyle": ["java"],
+    "java_spotbugs": ["java"],
+
+    "ansible_lint": ["ansible"],
+    "ansible_syntax_check": ["ansible"],
+    "ansible_security_scan": ["ansible"],
+
+    "terraform_fmt": ["infrastructure"],
+    "terraform_validate": ["infrastructure"],
+    "terraform_tflint": ["infrastructure"],
+    "cloudformation_validate": ["infrastructure"],
+    "dockerfile_lint": ["infrastructure"],
+
+    "check_xml": ["core"],
+    "check_license": ["core"]
+  },
+  "profiles": {
+    "core": {
+      "darwin": {
+        "pip": ["detect-secrets", "bandit", "safety", "semgrep"],
+        "brew": ["trufflehog"],
+        "notes": ["trufflehog is optional; install only if trufflehog hook present"]
+      },
+      "windows": {
+        "pip": ["detect-secrets", "bandit", "safety", "semgrep"],
+        "winget": ["trufflesecurity.trufflehog"],
+        "notes": ["trufflehog optional; install only if trufflehog hook present"]
+      }
+    },
+    "python": {
+      "darwin": { "pip": ["black", "flake8", "isort", "mypy", "bandit", "safety"] },
+      "windows": { "pip": ["black", "flake8", "isort", "mypy", "bandit", "safety"] }
+    },
+    "node": {
+      "darwin": { "brew": ["node"], "npm": ["eslint", "prettier", "typescript", "@angular/cli"] },
+      "windows": { "winget": ["OpenJS.NodeJS"], "npm": ["eslint", "prettier", "typescript", "@angular/cli"] }
+    },
+    "dotnet": {
+      "darwin": { "brew_cask": ["dotnet"] },
+      "windows": { "winget": ["Microsoft.DotNet.SDK.8"] }
+    },
+    "go": {
+      "darwin": {
+        "brew": ["go"],
+        "go": [
+          "github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
+          "github.com/securego/gosec/v2/cmd/gosec@latest",
+          "honnef.co/go/tools/cmd/staticcheck@latest"
+        ]
+      },
+      "windows": {
+        "winget": ["GoLang.Go"],
+        "go": [
+          "github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
+          "github.com/securego/gosec/v2/cmd/gosec@latest",
+          "honnef.co/go/tools/cmd/staticcheck@latest"
+        ]
+      }
+    },
+    "java": {
+      "darwin": { "brew": ["openjdk@17", "maven", "gradle", "checkstyle", "spotbugs"] },
+      "windows": {
+        "winget": ["Microsoft.OpenJDK.17", "Apache.Maven", "Gradle.Gradle"],
+        "notes": ["Checkstyle/SpotBugs often via build plugins"]
+      }
+    },
+    "ansible": {
+      "darwin": { "pip": ["ansible", "ansible-lint"] },
+      "windows": { "pip": ["ansible", "ansible-lint"] }
+    },
+    "infrastructure": {
+      "darwin": { "brew": ["terraform", "tflint", "hadolint"], "pip": ["awscli", "cfn-lint"] },
+      "windows": {
+        "winget": ["Hashicorp.Terraform", "Hadolint.Hadolint"],
+        "choco": ["tflint"],
+        "pip": ["awscli", "cfn-lint"]
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+[run]
+source = scripts
+branch = True
+
+[report]
+omit =
+    scripts/tests/*
+    */site-packages/*
+    */dist-packages/*
+show_missing = True
+
+
