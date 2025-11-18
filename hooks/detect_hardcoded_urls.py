@@ -132,21 +132,22 @@ _AWS_DOMAINS = ['amazonaws.com']
 def _generate_url_detection_patterns() -> List[str]:
     """Generate URL detection patterns using our centralized protocol definitions."""
     patterns = [
-        # HTTP/HTTPS URLs
-        r'https?://[^\s\'">\\]]+',
-        # FTP URLs  
-        r'ftp://[^\s\'">\\]]+',
-        # API endpoints patterns
-        r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\\]]*)?',
+    # HTTP/HTTPS URLs (exclude whitespace, quotes, >, backslash, closing ])
+    # Char class excludes: \s ' " > \\ ]  (closing ] escaped as \])
+    r'https?://[^\s\'">\\\]]+',  # canonical exclusion set
+    # FTP URLs (same exclusions)
+    r'ftp://[^\s\'">\\\]]+',
+    # API endpoints (same exclusions after optional /)
+    r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\\\]]*)?',
     ]
-    
-    # Add direct database protocol patterns
+
+    # Add direct database protocol patterns (raw f-string for clarity of escapes)
     for protocol in _DIRECT_DB_PROTOCOLS:
-        patterns.append(f'{re.escape(protocol)}://[^\\s\'">\\\\]]+')
-    
-    # Add JDBC patterns for all allowed subprotocols
+        patterns.append(fr'{re.escape(protocol)}://[^\s\'">\\\]]+')  # direct DB protocols
+
+    # Add JDBC subprotocol patterns (raw f-string)
     for subprotocol in _JDBC_SUBPROTOCOLS:
-        patterns.append(f'jdbc:{re.escape(subprotocol)}://[^\\s\'">\\\\]]+')
+        patterns.append(fr'jdbc:{re.escape(subprotocol)}://[^\s\'">\\\]]+')  # JDBC subprotocols
     
     return patterns
 
@@ -310,9 +311,9 @@ def main() -> int:
                         help='Comma-separated list of filenames to exclude (e.g., "README.md,CHANGELOG.md,docs.txt")')
     parser.add_argument('--safe-domains', type=str,
                         help='Comma-separated list of domains to whitelist with all protocols (e.g., "cms.gov,amazonaws.com,github.com")')
-    parser.add_argument('--safe-protocols', type=str, 
+    parser.add_argument('--safe-protocols', type=str,
                         default=','.join(_ALL_PROTOCOLS),
-                        help=f'Comma-separated list of protocol names for safe domains (default: {",".join(_ALL_PROTOCOLS)})')
+                        help=f"Comma-separated list of protocol names for safe domains (default: {','.join(_ALL_PROTOCOLS)})")
     args = parser.parse_args()
     
     # Input validation

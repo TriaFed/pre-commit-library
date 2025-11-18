@@ -65,7 +65,7 @@ TFLINT_MAX_FILES="${TFLINT_MAX_FILES:-100}"
 TFLINT_MAX_DEPTH="${TFLINT_MAX_DEPTH:-0}"
 
 # Validate numeric parameters
-if ! [[ "$TFLINT_TIMEOUT" =~ ^[1-9][0-9]*$ ]]; then
+if ! [[ "$TFLINT_TIMEOUT" =~ ^[0-9]+$ ]] || [ "$TFLINT_TIMEOUT" -eq 0 ]; then
     echo "❌ Error: TFLINT_TIMEOUT must be a positive integer (got: '$TFLINT_TIMEOUT')" >&2
     exit 1
 fi
