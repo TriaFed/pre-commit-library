@@ -10,18 +10,6 @@ import os
 import argparse
 from typing import List, Tuple, Set
 
-# Common patterns that indicate hardcoded URLs
-URL_PATTERNS = [
-    # HTTP/HTTPS URLs
-    r'https?://[^\s\'">\]]+',
-    # FTP URLs
-    r'ftp://[^\s\'">\]]+',
-    # Database connection strings with URLs
-    r'(?:jdbc|mongodb|mysql|postgresql)://[^\s\'">\]]+',
-    # API endpoints patterns
-    r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\]]*)?',
-]
-
 def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[str]:
     """Generate URL patterns for given domains and protocols.
     
@@ -41,10 +29,9 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
     for protocol in protocols:
         if protocol == 'jdbc':
             # JDBC URLs have format jdbc:subprotocol://...
-            # Explicitly allow only known safe JDBC subprotocols instead of wildcards
+            # Use the centrally defined JDBC subprotocols for consistency
             # This prevents inadvertent whitelisting of malicious URLs
-            allowed_jdbc_subprotocols = ['postgresql', 'mysql', 'mariadb', 'h2', 'sqlite', 'oracle', 'sqlserver']
-            jdbc_patterns = [f'jdbc:{subprotocol}' for subprotocol in allowed_jdbc_subprotocols]
+            jdbc_patterns = [f'jdbc:{subprotocol}' for subprotocol in _JDBC_SUBPROTOCOLS]
             regex_protocols.extend(jdbc_patterns)
         else:
             # For other protocols, escape any special regex characters to treat them as literals
@@ -56,9 +43,12 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
     for domain in domains:
         # Escape dots in domain names for regex
         escaped_domain = domain.replace('.', r'\.')
-        # Pattern for subdomains
-        patterns.append(f"{protocol_group}://.*\\.{escaped_domain}(?::\\d+)?(?:/.*)?")
-        # Pattern for main domain
+        
+        # Pattern for legitimate subdomains only (prevents badsite.com.example.com matching)
+        # Use word boundary at start and specific subdomain pattern
+        patterns.append(f"{protocol_group}://(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?\\.){{1,5}}{escaped_domain}(?::\\d+)?(?:/.*)?")
+        
+        # Pattern for main domain (exact match with word boundaries)  
         patterns.append(f"{protocol_group}://{escaped_domain}(?::\\d+)?(?:/.*)?")
     
     return patterns
@@ -100,17 +90,50 @@ _STATIC_SAFE_PATTERNS = [
 
 # Protocol definitions for different use cases
 _WEB_PROTOCOLS = ['https', 'http']  # Standard web protocols
-_DATABASE_PROTOCOLS = ['jdbc', 'postgresql', 'mysql', 'mongodb']  # Database connection protocols
+
+# Database protocols that can be used directly (not via JDBC)
+_DIRECT_DB_PROTOCOLS = ['postgresql', 'mysql', 'mongodb']
+
+# JDBC subprotocols that are allowed when using jdbc: prefix
+_JDBC_SUBPROTOCOLS = ['postgresql', 'mysql', 'mariadb', 'h2', 'sqlite', 'oracle', 'sqlserver']
+
+# All database protocols combined (direct + JDBC)
+_DATABASE_PROTOCOLS = ['jdbc'] + _DIRECT_DB_PROTOCOLS
 
 # All protocols combined - includes database protocols because:
 # 1. Government/AWS systems often use managed database services (RDS, etc.)
-# 2. Connection strings may legitimately reference these domains
+# 2. Connection strings may legitimately reference these domains  
 # 3. Infrastructure-as-code often includes database configurations
 _ALL_PROTOCOLS = _WEB_PROTOCOLS + _DATABASE_PROTOCOLS
 
 # Domain definitions
 _GOVERNMENT_DOMAINS = ['cms.gov', 'cmscloud.local']
 _AWS_DOMAINS = ['amazonaws.com']
+
+# Function to generate URL detection patterns based on our protocol definitions
+def _generate_url_detection_patterns() -> List[str]:
+    """Generate URL detection patterns using our centralized protocol definitions."""
+    patterns = [
+        # HTTP/HTTPS URLs
+        r'https?://[^\s\'">\]]+',
+        # FTP URLs  
+        r'ftp://[^\s\'">\]]+',
+        # API endpoints patterns
+        r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\]]*)?',
+    ]
+    
+    # Add direct database protocol patterns
+    for protocol in _DIRECT_DB_PROTOCOLS:
+        patterns.append(f'{re.escape(protocol)}://[^\\s\'">\]]+')
+    
+    # Add JDBC patterns for all allowed subprotocols
+    for subprotocol in _JDBC_SUBPROTOCOLS:
+        patterns.append(f'jdbc:{re.escape(subprotocol)}://[^\\s\'">\]]+')
+    
+    return patterns
+
+# URL patterns that indicate hardcoded URLs (generated dynamically)
+URL_PATTERNS = _generate_url_detection_patterns()
 
 # Build the final SAFE_URL_PATTERNS by combining static and dynamic patterns
 SAFE_URL_PATTERNS = _STATIC_SAFE_PATTERNS.copy()
@@ -206,8 +229,9 @@ def main():
                         help='Comma-separated list of filenames to exclude (e.g., "README.md,CHANGELOG.md,docs.txt")')
     parser.add_argument('--safe-domains', type=str,
                         help='Comma-separated list of domains to whitelist with all protocols (e.g., "cms.gov,amazonaws.com,github.com")')
-    parser.add_argument('--safe-protocols', type=str, default='https,http,jdbc,postgresql,mysql,mongodb',
-                        help='Comma-separated list of protocol names for safe domains (default: https,http,jdbc,postgresql,mysql,mongodb)')
+    parser.add_argument('--safe-protocols', type=str, 
+                        default=','.join(_ALL_PROTOCOLS),
+                        help=f'Comma-separated list of protocol names for safe domains (default: {",".join(_ALL_PROTOCOLS)})')
     args = parser.parse_args()
     
     exit_code = 0

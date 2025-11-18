@@ -43,19 +43,34 @@ trap cleanup EXIT INT TERM
 #                   - Run on specific directories: cd subdir && tflint
 #                   - Use .tflint.hcl to exclude directories
 #                   Example: export TFLINT_MAX_FILES=200
+#
+# TFLINT_MAX_DEPTH: Maximum directory depth to search for .tf files (default: 0 = unlimited)
+#                   This prevents infinite recursion and improves performance in deep directory structures.
+#                   Set to 0 for unlimited depth, or specify a positive integer.
+#                   Examples:
+#                   - export TFLINT_MAX_DEPTH=0   # Unlimited (searches entire tree)
+#                   - export TFLINT_MAX_DEPTH=10  # Limit to 10 directory levels deep
+#                   - export TFLINT_MAX_DEPTH=5   # Limit to 5 directory levels deep
+#
 # Set defaults and validate configuration
 TFLINT_DISABLED_RULES="${TFLINT_DISABLED_RULES:-terraform_unused_declarations}"
 TFLINT_TIMEOUT="${TFLINT_TIMEOUT:-60}"
 TFLINT_MAX_FILES="${TFLINT_MAX_FILES:-100}"
+TFLINT_MAX_DEPTH="${TFLINT_MAX_DEPTH:-0}"
 
 # Validate numeric parameters
-if ! [[ "$TFLINT_TIMEOUT" =~ ^[0-9]+$ ]] || [ "$TFLINT_TIMEOUT" -le 0 ]; then
+if ! [[ "$TFLINT_TIMEOUT" =~ ^[1-9][0-9]*$ ]]; then
     echo "❌ Error: TFLINT_TIMEOUT must be a positive integer (got: '$TFLINT_TIMEOUT')" >&2
     exit 1
 fi
 
 if ! [[ "$TFLINT_MAX_FILES" =~ ^[0-9]+$ ]]; then
     echo "❌ Error: TFLINT_MAX_FILES must be a non-negative integer (got: '$TFLINT_MAX_FILES')" >&2
+    exit 1
+fi
+
+if ! [[ "$TFLINT_MAX_DEPTH" =~ ^[0-9]+$ ]]; then
+    echo "❌ Error: TFLINT_MAX_DEPTH must be a non-negative integer (got: '$TFLINT_MAX_DEPTH')" >&2
     exit 1
 fi
 
@@ -84,25 +99,32 @@ find_terraform_files() {
     tf_files_array=()
     local count=0
     
-    # Use mapfile for efficient array population
+    # Build find command with configurable depth
+    local find_cmd="find . -name '*.tf' -type f ! -path './.terraform/*'"
+    if [ "$TFLINT_MAX_DEPTH" -gt 0 ]; then
+        find_cmd="find . -maxdepth $TFLINT_MAX_DEPTH -name '*.tf' -type f ! -path './.terraform/*'"
+    fi
+    
+    # Use process substitution for efficient array population
     while IFS= read -r -d '' file && 
           [ "$TFLINT_MAX_FILES" -eq 0 ] || [ "$count" -lt "$TFLINT_MAX_FILES" ]; do
         tf_files_array+=("$file")
         ((count++))
-    done < <(find . -maxdepth 10 -name "*.tf" -type f ! -path "./.terraform/*" -print0 2>/dev/null)
+    done < <($find_cmd -print0 2>/dev/null)
     
-    # Warn if limit reached
+    # Warn if limits applied
     if [ "$TFLINT_MAX_FILES" -gt 0 ] && [ "$count" -ge "$TFLINT_MAX_FILES" ]; then
         printf "⚠️  Limited to %d files (found %d+)\\n" "$TFLINT_MAX_FILES" "$count" >&2
+    fi
+    
+    # Show depth info if limited
+    if [ "$TFLINT_MAX_DEPTH" -gt 0 ]; then
+        printf "📏 Search depth limited to %d levels\\n" "$TFLINT_MAX_DEPTH" >&2
     fi
 }
 
 # Run TFLint
-echo "🔍 Running TFLint..."
-echo "🔍 Searching for Terraform directories..."
-
-# Get terraform files and extract unique directories
-echo "🔍 Looking for .tf files..."
+echo "🔍 Running TFLint on Terraform files..."
 declare -a tf_files_array=()
 find_terraform_files
 
@@ -111,8 +133,7 @@ if [ "${#tf_files_array[@]}" -eq 0 ]; then
     exit 0
 fi
 
-echo "🔍 Found ${#tf_files_array[@]} Terraform files"
-echo "🔍 Extracting directories..."
+echo "� Found ${#tf_files_array[@]} Terraform files, extracting directories..."
 # Extract unique directories efficiently
 declare -A unique_dirs=()
 
@@ -142,16 +163,20 @@ fi
 dir_count=${#terraform_dirs[@]}
 echo "📊 Found $dir_count director(ies) with Terraform files"
 
-# Debug: Show directories found
-echo "🔍 Directories to lint:"
-for dir in "${terraform_dirs[@]}"; do
-    echo "  $dir"
-done
+# Show directories found (only if more than 1 for cleaner output)
+if [ "$dir_count" -gt 1 ]; then
+    echo "🔍 Directories to lint:"
+    for dir in "${terraform_dirs[@]}"; do
+        echo "  $dir"
+    done
+fi
 
 exit_code=0
 
+current_dir=0
 for dir in "${terraform_dirs[@]}"; do
-    echo "📁 Linting directory: $dir"
+    ((current_dir++))
+    echo "📁 [$current_dir/$dir_count] Linting: $dir"
     
     # Basic validation
     if [ ! -d "$dir" ]; then
@@ -180,8 +205,9 @@ for dir in "${terraform_dirs[@]}"; do
     if [ -n "$TFLINT_DISABLED_RULES" ]; then
         IFS=',' read -ra rules <<< "$TFLINT_DISABLED_RULES"
         for rule in "${rules[@]}"; do
-            # Simple and reliable whitespace trim
-            rule=$(echo "$rule" | xargs)
+            # Efficient whitespace trim using bash parameter expansion
+            rule="${rule#"${rule%%[![:space:]]*}"}"  # Remove leading whitespace
+            rule="${rule%"${rule##*[![:space:]]}"}"  # Remove trailing whitespace
             [ -n "$rule" ] && tflint_args+=("--disable-rule" "$rule")
         done
     fi
