@@ -132,13 +132,15 @@ _AWS_DOMAINS = ['amazonaws.com']
 def _generate_url_detection_patterns() -> List[str]:
     """Generate URL detection patterns using our centralized protocol definitions."""
     patterns = [
-    # HTTP/HTTPS URLs (exclude whitespace, quotes, >, backslash, closing ])
-    # Char class excludes: \s ' " > \\ ]  (closing ] escaped as \])
-    r'https?://[^\s\'">\\\]]+',  # canonical exclusion set
-    # FTP URLs (same exclusions)
-    r'ftp://[^\s\'">\\\]]+',
-    # API endpoints (same exclusions after optional /)
-    r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\\\]]*)?',
+        # HTTP/HTTPS URLs (exclude whitespace, quotes, >, backslash, closing ])
+        # In raw string r'...\\\]': the \\\] sequence = 3 backslashes + bracket in string
+        # Regex interprets this as: \\ (escaped backslash) + \] (escaped bracket)
+        # Both \ and ] are excluded independently. Do NOT change to \\] (would break regex).
+        r'https?://[^\s\'">\\\]]+',
+        # FTP URLs (same exclusions)
+        r'ftp://[^\s\'">\\\]]+',
+        # API endpoints (same exclusions after optional /)
+        r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\\\]]*)?',
     ]
 
     # Add direct database protocol patterns (raw f-string for clarity of escapes)

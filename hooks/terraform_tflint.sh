@@ -130,8 +130,8 @@ find_terraform_files() {
         sed 's/^/  /' "$find_errors" >&2
     fi
     
-    # Warn if limits applied
-    if [ "$TFLINT_MAX_FILES" -gt 0 ] && [ "$count" -ge "$TFLINT_MAX_FILES" ]; then
+    # Warn if limit was reached (count stops at exactly TFLINT_MAX_FILES due to loop condition)
+    if [ "$TFLINT_MAX_FILES" -gt 0 ] && [ "$count" -eq "$TFLINT_MAX_FILES" ]; then
         printf "⚠️  Limited to %d files (found %d+)\\n" "$TFLINT_MAX_FILES" "$count" >&2
     fi
     
