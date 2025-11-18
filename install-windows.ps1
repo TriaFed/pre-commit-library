@@ -4,7 +4,13 @@
 param(
     [switch]$SkipChocolatey,
     [switch]$UseWinget,
-    [switch]$Verbose
+    [switch]$Verbose,
+    [switch]$Auto = $true,
+    [string]$Config,
+    [string]$Profiles,
+    [string]$Exclude,
+    [switch]$DryRun,
+    [switch]$Yes
 )
 
 # Set error action
@@ -166,8 +172,15 @@ function Install-NodeJSTools {
         Write-Host "✅ Node.js already installed" -ForegroundColor Green
     }
     
-    # Install global packages
-    npm install -g eslint prettier typescript "@angular/cli"
+    # Install global packages unless Yarn is detected in the project
+    $yarnLockPresent = Test-Path (Join-Path (Get-Location) "yarn.lock")
+    $yarnCliPresent = (Test-CommandExists "yarn")
+    if ($yarnLockPresent -or $yarnCliPresent) {
+        Write-Host "ℹ️  Yarn detected (yarn.lock or yarn CLI). Skipping npm -g installs for eslint/prettier/typescript/@angular/cli." -ForegroundColor Yellow
+        Write-Host "💡 Ensure these tools are available via devDependencies in your project." -ForegroundColor Yellow
+    } else {
+        npm install -g eslint prettier typescript "@angular/cli"
+    }
     
     Write-Host "✅ Node.js tools installed" -ForegroundColor Green
 }
@@ -390,6 +403,72 @@ function Main {
         Write-Host "Starting installation..." -ForegroundColor Cyan
         Write-Host ""
         
+        # Resolve profiles via resolver if requested
+        $selectedProfiles = $null
+        $resolverResult = $null
+        $scriptDir = Join-Path $PSScriptRoot "scripts"
+        if ($Auto) {
+            if (-not $Config) {
+                $defaultConfig = Join-Path (Get-Location) ".pre-commit-config.yaml"
+                if (Test-Path $defaultConfig) { $Config = $defaultConfig }
+            }
+            $resolverPath = Join-Path $scriptDir "resolve_deps.py"
+            if ($Config -and (Test-Path $Config) -and (Test-Path $resolverPath)) {
+                try {
+                    $profilesArg = if ($Profiles) { $Profiles } else { "" }
+                    $excludeArg = if ($Exclude) { $Exclude } else { "" }
+                    $py = Get-Command python -ErrorAction SilentlyContinue
+                    if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
+                    if ($py) {
+                        $resolverJson = & $py.Path $resolverPath --config $Config --os windows --profiles $profilesArg --exclude $excludeArg 2>$null
+                        if ($LASTEXITCODE -eq 0 -and $resolverJson) {
+                            $resolverResult = $resolverJson | ConvertFrom-Json
+                            $selectedProfiles = ($resolverResult.profiles -join ",")
+                        }
+                    } else {
+                        Write-Host "⚠️  Python not available; cannot auto-resolve. Falling back to manual selection." -ForegroundColor Yellow
+                    }
+                } catch {
+                    Write-Host "⚠️  Resolver failed; falling back to manual selection." -ForegroundColor Yellow
+                }
+            }
+        }
+
+        if (-not $selectedProfiles) {
+            if ($Profiles) {
+                $selectedProfiles = $Profiles
+            } else {
+                if ($Yes) {
+                    $selectedProfiles = "core"
+                } else {
+                    Write-Host "Select profiles to install (comma-separated):" -ForegroundColor Cyan
+                    Write-Host "  core, python, node, dotnet, go, java, ansible, infrastructure" -ForegroundColor White
+                    $selectedProfiles = Read-Host
+                }
+            }
+        }
+
+        Write-Host "📋 Selected profiles: $selectedProfiles" -ForegroundColor Cyan
+
+        if ($DryRun) {
+            if (-not $resolverResult -and $Config) {
+                $resolverPath = Join-Path $scriptDir "resolve_deps.py"
+                $py = Get-Command python -ErrorAction SilentlyContinue
+                if (-not $py) { $py = Get-Command python3 -ErrorAction SilentlyContinue }
+                if ($py -and (Test-Path $resolverPath)) {
+                    $resolverJson = & $py.Path $resolverPath --config $Config --os windows --profiles $selectedProfiles --exclude ($Exclude ?? "") 2>$null
+                    if ($LASTEXITCODE -eq 0 -and $resolverJson) { $resolverResult = $resolverJson | ConvertFrom-Json }
+                }
+            }
+            Write-Host "🔎 Dry run - planned installs:" -ForegroundColor Cyan
+            if ($resolverResult) {
+                $resolverResult | ConvertTo-Json -Depth 6 | Write-Output
+            } else {
+                Write-Host "(Resolver unavailable; will install groups corresponding to: $selectedProfiles)" -ForegroundColor Yellow
+            }
+            return
+        }
+
         if (-not (Test-Administrator)) {
             Write-Host "⚠️  Running without administrator privileges. Some installations may fail." -ForegroundColor Yellow
             Write-Host "💡 Consider running as administrator for best results." -ForegroundColor Yellow
@@ -397,14 +476,17 @@ function Main {
         }
         
         Install-CoreDependencies
-        Install-PythonTools
-        Install-NodeJSTools
-        Install-DotNet
-        Install-GoTools
-        Install-Java
-        Install-InfraTools
-        Install-Ansible
-        Install-SecurityTools
+
+        $profilesList = "," + $selectedProfiles + ","
+        if ($profilesList -like "*,core,*") { Install-SecurityTools }
+        if ($profilesList -like "*,python,*") { Install-PythonTools }
+        if ($profilesList -like "*,node,*") { Install-NodeJSTools }
+        if ($profilesList -like "*,dotnet,*") { Install-DotNet }
+        if ($profilesList -like "*,go,*") { Install-GoTools }
+        if ($profilesList -like "*,java,*") { Install-Java }
+        if ($profilesList -like "*,infrastructure,*") { Install-InfraTools }
+        if ($profilesList -like "*,ansible,*") { Install-Ansible }
+
         Set-Environment
         
         Write-Host "`n🎉 Installation complete!" -ForegroundColor Green
@@ -419,7 +501,31 @@ function Main {
         Write-Host ""
         Write-Host "📚 Documentation: https://github.com/TriaFed/pre-commit-library" -ForegroundColor Cyan
         
-        Test-Installations
+        # Build verification commands based on selected profiles
+        $verifyCmds = @(
+            @{Command = "python"; Args = "--version"; Name = "Python"},
+            @{Command = "git"; Args = "--version"; Name = "Git"},
+            @{Command = "pre-commit"; Args = "--version"; Name = "pre-commit"}
+        )
+        if ($profilesList -like "*,python,*") { $verifyCmds += @(@{Command="black";Args="--version";Name="Black"}, @{Command="flake8";Args="--version";Name="Flake8"}) }
+        if ($profilesList -like "*,node,*") { $verifyCmds += @(@{Command="node";Args="--version";Name="Node"}, @{Command="npm";Args="--version";Name="npm"}, @{Command="eslint";Args="--version";Name="ESLint"}) }
+        if ($profilesList -like "*,dotnet,*") { $verifyCmds += @(@{Command="dotnet";Args="--version";Name=".NET"}) }
+        if ($profilesList -like "*,go,*") { $verifyCmds += @(@{Command="go";Args="version";Name="Go"}, @{Command="golangci-lint";Args="--version";Name="golangci-lint"}) }
+        if ($profilesList -like "*,java,*") { $verifyCmds += @(@{Command="java";Args="--version";Name="Java"}, @{Command="mvn";Args="-v";Name="Maven"}, @{Command="gradle";Args="-v";Name="Gradle"}) }
+        if ($profilesList -like "*,infrastructure,*") { $verifyCmds += @(@{Command="terraform";Args="--version";Name="Terraform"}, @{Command="tflint";Args="--version";Name="TFLint"}, @{Command="hadolint";Args="--version";Name="Hadolint"}, @{Command="aws";Args="--version";Name="AWS CLI"}) }
+        if ($profilesList -like "*,ansible,*") { $verifyCmds += @(@{Command="ansible";Args="--version";Name="Ansible"}, @{Command="ansible-lint";Args="--version";Name="ansible-lint"}) }
+
+        Write-Host "`n🔍 Verifying selected tools..." -ForegroundColor Blue
+        Write-Host "================================" -ForegroundColor Blue
+        foreach ($tool in $verifyCmds) {
+            try {
+                & $tool.Command $tool.Args.Split() > $null 2>&1
+                Write-Host "✅ $($tool.Name)" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "❌ $($tool.Name) (not available)" -ForegroundColor Red
+            }
+        }
     }
     catch {
         Write-Host "❌ Installation failed: $_" -ForegroundColor Red

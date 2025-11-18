@@ -5,23 +5,64 @@ This guide helps developers install all necessary dependencies to run the pre-co
 ## 🚀 Quick Setup Scripts
 
 ### macOS Setup
+
 ```bash
 # Run this script to install all dependencies on macOS
 curl -fsSL https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-macos.sh | bash
 ```
 
 ### Windows Setup
+
 ```powershell
 # Run this script to install all dependencies on Windows
 irm https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/install-windows.ps1 | iex
 ```
 
+## 🎯 Selective Installation (Profile-Aware)
+
+To avoid installing unnecessary tools, use the profile-aware installers which parse your `.pre-commit-config.yaml` and install only what’s needed.
+
+macOS:
+
+```bash
+# Auto-detect from default config in current directory
+bash install-macos.sh
+
+# Force profiles (comma-separated) and optionally exclude
+bash install-macos.sh --profiles python,node --exclude java
+
+# Dry run to preview the plan
+bash install-macos.sh --auto --config /abs/path/to/.pre-commit-config.yaml --dry-run
+```
+
+Windows (PowerShell):
+
+```powershell
+# Auto-detect from default config in current directory
+./install-windows.ps1
+
+# Force profiles (comma-separated) and optionally exclude
+./install-windows.ps1 -Profiles python,node -Exclude java
+
+# Dry run to preview the plan
+./install-windows.ps1 -DryRun
+```
+
+Profiles: `core, python, node, dotnet, go, java, ansible, infrastructure`.
+
+Notes:
+
+- Optional tools like `trufflehog`, `hadolint`, and `cfn-lint` are installed only if the associated hooks are present in your config.
+- The resolver (`scripts/resolve_deps.py`) can be pointed at any config with `--config` (macOS) or `-Config` (Windows).
+
 ## 📋 Manual Installation Instructions
 
 ### Core Requirements (Required for All)
 
-#### 1. Python 3.8+ 
+#### 1. Python 3.8+
+
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install python3
@@ -33,6 +74,7 @@ pyenv global 3.11.0
 ```
 
 **Windows:**
+
 ```powershell
 # Using winget
 winget install Python.Python.3.11
@@ -44,13 +86,16 @@ choco install python
 ```
 
 #### 2. Git
+
 **macOS:**
+
 ```bash
 # Usually pre-installed, or:
 brew install git
 ```
 
 **Windows:**
+
 ```powershell
 # Using winget
 winget install Git.Git
@@ -60,7 +105,9 @@ choco install git
 ```
 
 #### 3. Pre-commit
+
 **Both platforms:**
+
 ```bash
 pip install pre-commit
 # or
@@ -70,7 +117,9 @@ pipx install pre-commit
 ### Language-Specific Dependencies
 
 #### Python Development
+
 **Both platforms:**
+
 ```bash
 pip install black flake8 isort mypy bandit safety detect_secrets
 ```
@@ -132,7 +181,9 @@ export OPENCODE_TIMEOUT=90          # Server startup timeout in seconds (default
 ```
 
 #### JavaScript/TypeScript/Node.js
+
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install node
@@ -143,6 +194,7 @@ nvm install --lts
 ```
 
 **Windows:**
+
 ```powershell
 # Using winget
 winget install OpenJS.NodeJS
@@ -155,12 +207,15 @@ winget install jasongin.nvs
 ```
 
 **Global packages (both platforms):**
+
 ```bash
 npm install -g eslint prettier typescript @angular/cli
 ```
 
 #### .NET Development
+
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install --cask dotnet
@@ -169,6 +224,7 @@ brew install --cask dotnet
 ```
 
 **Windows:**
+
 ```powershell
 # Using winget
 winget install Microsoft.DotNet.SDK.8
@@ -180,7 +236,9 @@ choco install dotnet
 ```
 
 #### Go Development
+
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install go
@@ -191,6 +249,7 @@ export PATH=$PATH:/usr/local/go/bin
 ```
 
 **Windows:**
+
 ```powershell
 # Using winget
 winget install GoLang.Go
@@ -202,6 +261,7 @@ choco install golang
 ```
 
 **Go tools (both platforms):**
+
 ```bash
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
@@ -209,7 +269,9 @@ go install honnef.co/go/tools/cmd/staticcheck@latest
 ```
 
 #### Java Development
+
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install openjdk@17
@@ -220,6 +282,7 @@ sdk install java 17.0.2-open
 ```
 
 **Windows:**
+
 ```powershell
 # Using winget
 winget install Microsoft.OpenJDK.17
@@ -229,18 +292,21 @@ choco install openjdk17
 ```
 
 **Build tools:**
+
 ```bash
 # Maven
 # macOS: brew install maven
 # Windows: winget install Apache.Maven
 
 # Gradle
-# macOS: brew install gradle  
+# macOS: brew install gradle
 # Windows: winget install Gradle.Gradle
 ```
 
 #### Terraform/Infrastructure
+
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install terraform tflint
@@ -252,6 +318,7 @@ tfenv use 1.5.0
 ```
 
 **Windows:**
+
 ```powershell
 # Using winget
 winget install Hashicorp.Terraform
@@ -263,7 +330,9 @@ choco install terraform tflint
 ```
 
 #### Ansible
+
 **Both platforms:**
+
 ```bash
 # Using pip
 pip install ansible ansible_lint
@@ -276,7 +345,9 @@ pipx install ansible_lint
 ### Security Scanning Tools
 
 #### Multi-language SAST
+
 **Both platforms:**
+
 ```bash
 # Semgrep
 pip install semgrep
@@ -288,7 +359,9 @@ pip install semgrep
 ```
 
 #### Docker Tools
+
 **macOS:**
+
 ```bash
 # Using Homebrew
 brew install hadolint
@@ -298,6 +371,7 @@ docker pull hadolint/hadolint
 ```
 
 **Windows:**
+
 ```powershell
 # Using Chocolatey
 choco install hadolint
@@ -310,7 +384,9 @@ docker pull hadolint/hadolint
 ```
 
 ### AWS Tools (Optional)
+
 **Both platforms:**
+
 ```bash
 # AWS CLI
 pip install awscli
@@ -364,7 +440,7 @@ If you prefer not to install dependencies locally, most tools can run via Docker
 # Example: Run linting via Docker
 docker run --rm -v $(pwd):/app -w /app node:18 npm install && npm run lint
 
-# Example: Run Go checks via Docker  
+# Example: Run Go checks via Docker
 docker run --rm -v $(pwd):/app -w /app golang:1.21 go vet ./...
 
 # Example: Run Python checks via Docker
@@ -374,15 +450,18 @@ docker run --rm -v $(pwd):/app -w /app python:3.11 pip install black && black --
 ## 🚨 Minimum Requirements by Hook Type
 
 ### Security-Only Setup (Minimal)
+
 - Python 3.8+
 - pip packages: `detect_secrets bandit safety semgrep`
 
 ### Full Stack Development
+
 - All language runtimes (.NET, Go, Node.js, Python, Java)
 - All linting tools
 - Security scanning tools
 
 ### CI/CD Pipeline Setup
+
 - Docker + pre-commit Docker images
 - Or language-specific CI images with tools pre-installed
 
@@ -391,6 +470,7 @@ docker run --rm -v $(pwd):/app -w /app python:3.11 pip install black && black --
 ### Common Issues
 
 **Windows PATH Issues:**
+
 ```powershell
 # Add to PATH manually or use:
 $env:PATH += ";C:\Program Files\dotnet"
@@ -398,6 +478,7 @@ $env:PATH += ";C:\Program Files\Go\bin"
 ```
 
 **macOS Permission Issues:**
+
 ```bash
 # Fix Python/pip permissions
 sudo chown -R $(whoami) $(python3 -m site --user-base)
@@ -408,6 +489,7 @@ export PATH=~/.npm-global/bin:$PATH
 ```
 
 **Tool Not Found After Installation:**
+
 ```bash
 # Reload shell or source profile
 source ~/.bashrc  # or ~/.zshrc
@@ -417,6 +499,7 @@ source ~/.bashrc  # or ~/.zshrc
 ### Tool-Specific Alternatives
 
 If primary tools aren't available, hooks will suggest alternatives:
+
 - **golangci-lint** → falls back to `go vet` + `staticcheck`
 - **ansible_lint** → falls back to `ansible-playbook --syntax-check`
 - **hadolint** → falls back to basic Dockerfile checks
@@ -424,6 +507,7 @@ If primary tools aren't available, hooks will suggest alternatives:
 ## 📱 IDE Integration
 
 Many tools integrate with popular IDEs for real-time feedback:
+
 - **VS Code**: Extensions for ESLint, Prettier, Go, .NET, Python
 - **JetBrains**: Built-in support for most linters
 - **Vim/Neovim**: ALE, coc.nvim plugins
