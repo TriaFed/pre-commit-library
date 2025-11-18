@@ -1,7 +1,7 @@
 #!/bin/bash
 # TFLint hook for handling multiple directories with Terraform files
 
-# Remove set -e to handle errors gracefully
+# Use pipefail to catch pipeline errors and handle them gracefully
 set -o pipefail
 
 # Global variables for cleanup
@@ -189,9 +189,9 @@ for dir in "${terraform_dirs[@]}"; do
         continue
     fi
     
-    # Change to the terraform directory
-    if ! cd "$dir"; then
-        echo "❌ Failed to change to directory: $dir"
+    # Change to the terraform directory with error handling
+    if ! cd "$dir" 2>/dev/null; then
+        echo "❌ Failed to change to directory: $dir ($(pwd))" >&2
         exit_code=1
         continue
     fi

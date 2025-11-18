@@ -8,7 +8,7 @@ import re
 import sys
 import os
 import argparse
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Optional, Pattern
 
 # Protocol definitions - defined early to avoid circular dependencies
 _WEB_PROTOCOLS = ['https', 'http']  # Standard web protocols
@@ -28,6 +28,19 @@ _DATABASE_PROTOCOLS = ['jdbc'] + _DIRECT_DB_PROTOCOLS
 # 3. Infrastructure-as-code often includes database configurations
 _ALL_PROTOCOLS = _WEB_PROTOCOLS + _DATABASE_PROTOCOLS
 
+# Regex pattern components for URL matching
+# RFC-compliant subdomain pattern: 1-63 chars, alphanumeric + hyphens (not at start/end)
+# This prevents domain spoofing like badsite.com.legitimate.gov matching legitimate.gov
+_SUBDOMAIN_PATTERN = r'[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
+
+# Optional subdomain prefix: up to 5 levels of subdomains
+# Each subdomain followed by a dot, entire group can appear 1-5 times, whole thing is optional
+_OPTIONAL_SUBDOMAIN_PREFIX = f'(?:(?:{_SUBDOMAIN_PATTERN}\\.)+)?'
+
+# URL component patterns
+_PORT_PATTERN = r'(?::\d+)?'      # Optional port number (:80, :443, :8080, etc.)
+_PATH_PATTERN = r'(?:/.*)?'       # Optional path and query string (/path?query=value)
+
 def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[str]:
     """Generate URL patterns for given domains and protocols.
     
@@ -42,9 +55,12 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
     """
     patterns = []
     
+    # Strip protocols once to avoid redundant operations in the loop
+    stripped_protocols = [protocol.strip() for protocol in protocols]
+    
     # Convert plain protocol names to regex patterns
     regex_protocols = []
-    for protocol in protocols:
+    for protocol in stripped_protocols:
         if protocol == 'jdbc':
             # JDBC URLs have format jdbc:subprotocol://...
             # Use the centrally defined JDBC subprotocols for consistency
@@ -53,7 +69,7 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
             regex_protocols.extend(jdbc_patterns)
         else:
             # For other protocols, escape any special regex characters to treat them as literals
-            escaped_protocol = re.escape(protocol.strip())
+            escaped_protocol = re.escape(protocol)
             regex_protocols.append(escaped_protocol)
     
     protocol_group = f'(?:{"|".join(regex_protocols)})'
@@ -62,13 +78,14 @@ def generate_domain_patterns(domains: List[str], protocols: List[str]) -> List[s
         # Escape dots in domain names for regex
         escaped_domain = domain.replace('.', r'\.')
         
-        # Unified pattern: Base domain with optional subdomains (e.g., https://cms.gov, https://api.cms.gov)
-        # Optional subdomain prefix: up to 5 levels of RFC-compliant subdomains
-        # This prevents badsite.com.cms.gov from matching cms.gov whitelist while allowing both:
-        # - Base domains: https://cms.gov
-        # - Legitimate subdomains: https://api.cms.gov, https://secure.login.cms.gov
-        # Each subdomain must be: alphanumeric, optional hyphens (not at start/end), 1-63 chars
-        patterns.append(f"{protocol_group}://(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{{0,61}}[a-zA-Z0-9])?\\.){{1,5}})?{escaped_domain}(?::\\d+)?(?:/.*)?")
+        # Build URL pattern with clear components:
+        # 1. Protocol group (https, http, jdbc:mysql, etc.)
+        # 2. Optional subdomain prefix (api., secure.login., etc.) - prevents domain spoofing
+        # 3. Base domain (cms.gov, github.com, etc.)
+        # 4. Optional port number (:80, :443, :8080, etc.)
+        # 5. Optional path and query string (/path?query=value, etc.)
+        url_pattern = f"{protocol_group}://{_OPTIONAL_SUBDOMAIN_PREFIX}{escaped_domain}{_PORT_PATTERN}{_PATH_PATTERN}"
+        patterns.append(url_pattern)
     
     return patterns
 
@@ -116,25 +133,36 @@ def _generate_url_detection_patterns() -> List[str]:
     """Generate URL detection patterns using our centralized protocol definitions."""
     patterns = [
         # HTTP/HTTPS URLs
-        r'https?://[^\s\'">\]]+',
+        r'https?://[^\s\'">\\]]+',
         # FTP URLs  
-        r'ftp://[^\s\'">\]]+',
+        r'ftp://[^\s\'">\\]]+',
         # API endpoints patterns
-        r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\]]*)?',
+        r'(?:api\.|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s\'">\\]]*)?',
     ]
     
     # Add direct database protocol patterns
     for protocol in _DIRECT_DB_PROTOCOLS:
-        patterns.append(f'{re.escape(protocol)}://[^\\s\'">\]]+')
+        patterns.append(f'{re.escape(protocol)}://[^\\s\'">\\\\]]+')
     
     # Add JDBC patterns for all allowed subprotocols
     for subprotocol in _JDBC_SUBPROTOCOLS:
-        patterns.append(f'jdbc:{re.escape(subprotocol)}://[^\\s\'">\]]+')
+        patterns.append(f'jdbc:{re.escape(subprotocol)}://[^\\s\'">\\\\]]+')
     
     return patterns
 
 # URL patterns that indicate hardcoded URLs (pre-compiled for performance)
-URL_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in _generate_url_detection_patterns()]
+def _compile_patterns_safely(patterns: List[str], pattern_type: str = "URL detection") -> List[Pattern[str]]:
+    """Compile regex patterns with error handling and user warnings."""
+    compiled = []
+    for i, pattern in enumerate(patterns):
+        try:
+            compiled.append(re.compile(pattern, re.IGNORECASE))
+        except re.error as err:
+            # Log a warning to stderr when skipping malformed regex patterns
+            print(f"Warning: Malformed {pattern_type} regex pattern ignored: '{pattern}' ({err})", file=sys.stderr)
+    return compiled
+
+URL_PATTERNS = _compile_patterns_safely(_generate_url_detection_patterns(), "URL detection")
 
 # Build the final SAFE_URL_PATTERNS by combining static and dynamic patterns
 SAFE_URL_PATTERNS = _STATIC_SAFE_PATTERNS.copy()
@@ -142,7 +170,7 @@ SAFE_URL_PATTERNS.extend(generate_domain_patterns(_GOVERNMENT_DOMAINS, _ALL_PROT
 SAFE_URL_PATTERNS.extend(generate_domain_patterns(_AWS_DOMAINS, _ALL_PROTOCOLS))
 
 # Pre-compile safe patterns for performance and security
-_COMPILED_SAFE_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in SAFE_URL_PATTERNS]
+_COMPILED_SAFE_PATTERNS = _compile_patterns_safely(SAFE_URL_PATTERNS, "safe URL whitelist")
 
 # File extensions to skip
 SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.pdf', '.zip', '.tar', '.gz'}
@@ -157,7 +185,18 @@ _COMMENT_PATTERN_STRINGS = [
 ]
 
 # Pre-compile regex patterns for performance
-COMMENT_PATTERNS = [re.compile(pattern) for pattern in _COMMENT_PATTERN_STRINGS]
+def _compile_comment_patterns_safely(patterns: List[str]) -> List[Pattern[str]]:
+    """Compile comment regex patterns with error handling (no IGNORECASE flag)."""
+    compiled = []
+    for i, pattern in enumerate(patterns):
+        try:
+            compiled.append(re.compile(pattern))
+        except re.error as err:
+            # Log a warning to stderr when skipping malformed regex patterns
+            print(f"Warning: Malformed comment detection regex pattern ignored: '{pattern}' ({err})", file=sys.stderr)
+    return compiled
+
+COMMENT_PATTERNS = _compile_comment_patterns_safely(_COMMENT_PATTERN_STRINGS)
 
 
 def is_in_comment(line: str) -> bool:
@@ -165,7 +204,7 @@ def is_in_comment(line: str) -> bool:
     return any(pattern.match(line) for pattern in COMMENT_PATTERNS)
 
 
-def is_safe_url(url: str, additional_patterns: List[str] = None) -> bool:
+def is_safe_url(url: str, additional_patterns: Optional[List[str]] = None) -> bool:
     """Check if URL matches safe patterns."""
     # Check pre-compiled safe patterns first (fastest path)
     for pattern in _COMPILED_SAFE_PATTERNS:
@@ -174,18 +213,18 @@ def is_safe_url(url: str, additional_patterns: List[str] = None) -> bool:
     
     # Only compile additional patterns if needed (slower path)
     if additional_patterns:
-        for pattern_str in additional_patterns:
+        for i, pattern_str in enumerate(additional_patterns):
             try:
                 if re.match(pattern_str, url, re.IGNORECASE):
                     return True
-            except re.error:
-                # Skip malformed regex patterns for security
-                continue
+            except re.error as err:
+                # Log a warning to stderr when skipping malformed regex patterns
+                print(f"Warning: Malformed additional safe pattern ignored: '{pattern_str}' ({err})", file=sys.stderr)
     
     return False
 
 
-def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_safe_patterns: List[str] = None) -> List[Tuple[int, str, str]]:
+def find_hardcoded_urls(file_path: str, skip_files: Optional[Set[str]] = None, additional_safe_patterns: Optional[List[str]] = None) -> List[Tuple[int, str, str]]:
     """
     Find hardcoded URLs in a file.
     Returns list of (line_number, line_content, url) tuples.
@@ -235,8 +274,12 @@ def find_hardcoded_urls(file_path: str, skip_files: Set[str] = None, additional_
                         else:
                             issues.append((line_num, stripped_line, url))
     
-    except Exception as e:
+    except (FileNotFoundError, PermissionError) as e:
         print(f"Error reading {file_path}: {e}", file=sys.stderr)
+    except UnicodeDecodeError as e:
+        print(f"Encoding error in {file_path}: {e}", file=sys.stderr)
+    except Exception as e:
+        print(f"Unexpected error reading {file_path}: {e}", file=sys.stderr)
     
     return issues
 
@@ -256,6 +299,11 @@ def main():
                         default=','.join(_ALL_PROTOCOLS),
                         help=f'Comma-separated list of protocol names for safe domains (default: {",".join(_ALL_PROTOCOLS)})')
     args = parser.parse_args()
+    
+    # Input validation
+    if not args.files:
+        print("No files specified to check", file=sys.stderr)
+        return 0
     
     exit_code = 0
     total_issues = 0
