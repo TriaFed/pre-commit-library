@@ -154,7 +154,7 @@ def _generate_url_detection_patterns() -> List[str]:
 def _compile_patterns_safely(patterns: List[str], pattern_type: str = "URL detection") -> List[Pattern[str]]:
     """Compile regex patterns with error handling and user warnings."""
     compiled = []
-    for i, pattern in enumerate(patterns):
+    for pattern in patterns:
         try:
             compiled.append(re.compile(pattern, re.IGNORECASE))
         except re.error as err:
@@ -188,7 +188,7 @@ _COMMENT_PATTERN_STRINGS = [
 def _compile_comment_patterns_safely(patterns: List[str]) -> List[Pattern[str]]:
     """Compile comment regex patterns with error handling (no IGNORECASE flag)."""
     compiled = []
-    for i, pattern in enumerate(patterns):
+    for pattern in patterns:
         try:
             compiled.append(re.compile(pattern))
         except re.error as err:
@@ -200,12 +200,27 @@ COMMENT_PATTERNS = _compile_comment_patterns_safely(_COMMENT_PATTERN_STRINGS)
 
 
 def is_in_comment(line: str) -> bool:
-    """Check if the line appears to be a comment."""
+    """Check if the line appears to be a comment.
+    
+    Args:
+        line: The line of text to check
+        
+    Returns:
+        True if the line matches any comment pattern (Python, Java, C++, HTML, etc.)
+    """
     return any(pattern.match(line) for pattern in COMMENT_PATTERNS)
 
 
 def is_safe_url(url: str, additional_patterns: Optional[List[str]] = None) -> bool:
-    """Check if URL matches safe patterns."""
+    """Check if URL matches safe patterns (whitelisted domains/protocols).
+    
+    Args:
+        url: The URL string to check
+        additional_patterns: Optional list of additional regex patterns to consider safe
+        
+    Returns:
+        True if the URL matches any safe pattern (government domains, AWS, localhost, etc.)
+    """
     # Check pre-compiled safe patterns first (fastest path)
     for pattern in _COMPILED_SAFE_PATTERNS:
         if pattern.match(url):
@@ -213,7 +228,7 @@ def is_safe_url(url: str, additional_patterns: Optional[List[str]] = None) -> bo
     
     # Only compile additional patterns if needed (slower path)
     if additional_patterns:
-        for i, pattern_str in enumerate(additional_patterns):
+        for pattern_str in additional_patterns:
             try:
                 if re.match(pattern_str, url, re.IGNORECASE):
                     return True
@@ -284,7 +299,7 @@ def find_hardcoded_urls(file_path: str, skip_files: Optional[Set[str]] = None, a
     return issues
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Detect hardcoded URLs in code')
     parser.add_argument('files', nargs='*', help='Files to check')
     parser.add_argument('--exclude-comments', action='store_true',

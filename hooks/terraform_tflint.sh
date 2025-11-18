@@ -16,7 +16,9 @@ cleanup() {
     done
     
     # Return to original directory
-    cd "$ORIGINAL_DIR" 2>/dev/null || true
+    if ! cd "$ORIGINAL_DIR" 2>/dev/null; then
+        echo "Warning: Failed to return to original directory '$ORIGINAL_DIR'. Current directory: $(pwd)" >&2
+    fi
 }
 
 # Set up trap for cleanup on exit, interrupt, or termination
@@ -111,11 +113,22 @@ find_terraform_files() {
     fi
     
     # Use process substitution with secure array expansion
+    # Capture find errors to temporary file for logging
+    local find_errors
+    find_errors=$(mktemp)
+    TEMP_FILES+=("$find_errors")
+    
     while IFS= read -r -d '' file && 
           [ "$TFLINT_MAX_FILES" -eq 0 ] || [ "$count" -lt "$TFLINT_MAX_FILES" ]; do
         tf_files_array+=("$file")
         ((count++))
-    done < <(find "${find_args[@]}" -print0 2>/dev/null)
+    done < <(find "${find_args[@]}" -print0 2>"$find_errors")
+    
+    # Log find errors if any occurred
+    if [ -s "$find_errors" ]; then
+        echo "Warning: Errors occurred while searching for Terraform files:" >&2
+        sed 's/^/  /' "$find_errors" >&2
+    fi
     
     # Warn if limits applied
     if [ "$TFLINT_MAX_FILES" -gt 0 ] && [ "$count" -ge "$TFLINT_MAX_FILES" ]; then
@@ -153,6 +166,8 @@ for file in "${tf_files_array[@]}"; do
     # Resolve absolute path
     if abs_dir=$(cd "$dir" 2>/dev/null && pwd); then
         unique_dirs["$abs_dir"]=1
+    else
+        echo "Warning: Unable to access directory '$dir', skipping" >&2
     fi
 done
 
@@ -210,7 +225,10 @@ for dir in "${terraform_dirs[@]}"; do
     if [ -n "$TFLINT_DISABLED_RULES" ]; then
         IFS=',' read -ra rules <<< "$TFLINT_DISABLED_RULES"
         for rule in "${rules[@]}"; do
-            # Efficient whitespace trim using bash parameter expansion
+            # POSIX-compliant whitespace trimming using bash parameter expansion
+            # This avoids external commands (sed/awk/tr) for better performance and portability
+            # Pattern: ${var#pattern} removes shortest match from beginning
+            #          ${var%pattern} removes shortest match from end
             rule="${rule#"${rule%%[![:space:]]*}"}"  # Remove leading whitespace
             rule="${rule%"${rule##*[![:space:]]}"}"  # Remove trailing whitespace
             
@@ -255,8 +273,11 @@ for dir in "${terraform_dirs[@]}"; do
         fi
     fi
     
-    # Return to original directory
-    cd "$ORIGINAL_DIR"
+    # Return to original directory with error handling
+    if ! cd "$ORIGINAL_DIR"; then
+        echo "❌ Fatal: Failed to return to original directory '$ORIGINAL_DIR'" >&2
+        exit 1
+    fi
 done
 
 if [ $exit_code -eq 0 ]; then
