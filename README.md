@@ -523,17 +523,6 @@ opencode auth login
 # In the opencode interface, enter: /models
 # Select: claude-sonnet-4.5
 
-# REQUIRED: Copy the security configuration to your repository root
-curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
-
-# Optional: Initialize AI instructions for your project
-# Run: opencode
-# Then in the opencode window, type: /init
-
-# Commit the configuration files
-git add opencode.jsonc
-git commit -m "Add AI commit check configuration"
-
 # Install pre-commit hooks
 pre-commit install
 
@@ -541,18 +530,32 @@ pre-commit install
 pre-commit install --hook-type pre-push
 ```
 
-**⚠️ Security Requirement:**
+**✅ Built-in Security Configuration:**
 
-The hook **requires** an `opencode.jsonc` file in your repository root for security. This file must deny dangerous operations:
+The hook includes a **bundled `opencode.jsonc` configuration** that enforces security by default. You don't need to create this file in your repository - it's automatically used via the `OPENCODE_CONFIG` environment variable.
+
+The bundled configuration enforces:
+- `share: "disabled"` - No sharing of conversations
+- `autoupdate: false` - No automatic updates
 - `webfetch: "deny"` - Prevents external network requests
-- `aws *: "deny"` - Blocks AWS CLI commands
-- `az *: "deny"` - Blocks Azure CLI commands
-- `gcloud *: "deny"` - Blocks Google Cloud CLI commands
-- `terraform *: "deny"` - Blocks Terraform commands
-- `curl *: "deny"` - Blocks curl requests
-- `wget *: "deny"` - Blocks wget requests
+- Model restrictions - Only GitHub Copilot and Amazon Bedrock Sonnet 4.5
+- Provider restrictions - All other AI providers blocked
+- Cloud CLI blocks - Denies `aws`, `az`, `gcloud`, `terraform`, `curl`, `wget`
 
-See the [OpenCode permissions documentation](https://opencode.ai/docs/permissions/) for details.
+**Runtime Verification:**
+
+When the hook runs, it verifies the bundled configuration file exists and displays:
+```
+✓ Using bundled security configuration: /path/to/hooks/opencode.jsonc
+```
+
+If the config file is missing or unreadable, the hook exits with an error.
+
+**Optional: Custom Configuration:**
+
+If you want to add project-specific settings, you can create an `opencode.jsonc` in your repo root. OpenCode will merge your project config with the bundled config using its [config merging strategy](https://opencode.ai/docs/config#config-merging). The bundled config always provides the security baseline.
+
+See the [OpenCode permissions documentation](https://opencode.ai/docs/permissions/) for customization options.
 
 **Environment Variables:**
 ```bash

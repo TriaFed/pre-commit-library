@@ -53,20 +53,29 @@ This runs automatically on `git push` and reviews all changes in your branch.
 
 #### Required Setup
 
-**⚠️ Security Requirement:** You must create an `opencode.jsonc` file in your repository root.
+**✅ Built-in Security Configuration:**
 
-```bash
-# Download the recommended configuration
-curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
+The AI commit check hook includes a **bundled `opencode.jsonc`** configuration file that enforces security automatically. The hook sets the `OPENCODE_CONFIG` environment variable to point to this bundled config, ensuring it's always used.
 
-# Commit the config file
-git add opencode.jsonc
-git commit -m "Add opencode security configuration"
+**What's included:**
+- Share disabled
+- Auto-updates disabled  
+- Only GitHub Copilot and Amazon Bedrock allowed
+- All other AI providers blocked
+- Dangerous operations denied (webfetch, cloud CLIs, curl, wget, terraform)
+
+**Runtime Verification:**
+
+The hook verifies the configuration file exists and displays:
+```
+✓ Using bundled security configuration: /path/to/hooks/opencode.jsonc
 ```
 
-The hook will fail if `opencode.jsonc` is not present to ensure safe operation.
+If the config file is missing, the hook exits with an error.
 
-See `examples/opencode.jsonc` for the full configuration with security defaults.
+**Optional: Project-Specific Settings:**
+
+You can create an `opencode.jsonc` in your repo root to add project-specific settings. OpenCode will merge it with the bundled config using [config merging](https://opencode.ai/docs/config#config-merging), so the bundled security settings are always enforced.
 
 #### Environment Variables
 

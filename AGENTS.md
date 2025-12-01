@@ -115,7 +115,9 @@ The `ai_commit_check` hook has special security requirements and dual-mode opera
 - **Mode Detection**: Checks `git diff --cached` for staged changes to determine mode
 - **Pre-commit mode**: Reviews staged changes using `git diff --cached`
 - **Pre-push mode**: Compares current branch to `origin/main` or `origin/master` using `git diff origin/{branch}...HEAD`
-- **Security**: Requires `opencode.jsonc` configuration file with denied dangerous operations
+- **Security**: Uses bundled `hooks/opencode.jsonc` configuration file with denied dangerous operations
+- **Config enforcement**: Sets `OPENCODE_CONFIG` environment variable to force use of bundled config
+- **Runtime verification**: Checks config file exists at startup and exits with error if missing
 - **Model Restrictions**: Only allows GitHub Copilot and Amazon Bedrock with Claude Sonnet 4.5
 - **Exit behavior**: Blocks commits/pushes with `-COMMIT REJECTED-` prefix in response
 

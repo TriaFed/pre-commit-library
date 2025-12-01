@@ -12,6 +12,7 @@ import time
 import socket
 import os
 from datetime import datetime
+from pathlib import Path
 
 try:
     from rich.console import Console
@@ -109,37 +110,19 @@ def main():
     try:
         repo_root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
         
-        opencode_config_path = os.path.join(repo_root, 'opencode.jsonc')
-        if not os.path.exists(opencode_config_path):
-            print("Error: opencode.jsonc configuration file not found in repository root.", file=sys.stderr)
-            print("", file=sys.stderr)
-            print("The AI commit check hook requires an opencode.jsonc file to ensure secure operation.", file=sys.stderr)
-            print("This file controls AI permissions and prevents unsafe operations.", file=sys.stderr)
-            print("", file=sys.stderr)
-            print("To fix this:", file=sys.stderr)
-            print("  1. Copy the example configuration:", file=sys.stderr)
-            print("     curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc", file=sys.stderr)
-            print("", file=sys.stderr)
-            print("  2. Or create opencode.jsonc with minimum required security settings:", file=sys.stderr)
-            print('     {', file=sys.stderr)
-            print('       "$schema": "https://opencode.ai/config.json",', file=sys.stderr)
-            print('       "permission": {', file=sys.stderr)
-            print('         "webfetch": "deny",', file=sys.stderr)
-            print('         "bash": {', file=sys.stderr)
-            print('           "aws *": "deny",', file=sys.stderr)
-            print('           "az *": "deny",', file=sys.stderr)
-            print('           "gcloud *": "deny",', file=sys.stderr)
-            print('           "terraform *": "deny",', file=sys.stderr)
-            print('           "curl *": "deny",', file=sys.stderr)
-            print('           "wget *": "deny"', file=sys.stderr)
-            print('         }', file=sys.stderr)
-            print('       }', file=sys.stderr)
-            print('     }', file=sys.stderr)
-            print("", file=sys.stderr)
-            print("  3. Review and customize permissions: https://opencode.ai/docs/permissions/", file=sys.stderr)
-            print("", file=sys.stderr)
-            print("  4. Commit the opencode.jsonc file to your repository", file=sys.stderr)
+        # Use the bundled opencode.jsonc from the hooks directory
+        hook_script_path = Path(__file__).resolve()
+        bundled_config_path = hook_script_path.parent / 'opencode.jsonc'
+        
+        # Verify bundled config exists
+        if not bundled_config_path.exists():
+            print(f"Error: Bundled config not found at {bundled_config_path}", file=sys.stderr)
+            print("This is a bug in the pre-commit hook installation.", file=sys.stderr)
             return 3
+        
+        # Set OPENCODE_CONFIG to force OpenCode to use our bundled config
+        os.environ['OPENCODE_CONFIG'] = str(bundled_config_path)
+        print(f"✓ Using bundled security configuration: {bundled_config_path}", file=sys.stderr)
         
         available_port = find_available_port(OPENCODE_PORT)
         if not available_port:
@@ -163,7 +146,7 @@ def main():
                 ['opencode', 'serve', '--port', str(OPENCODE_PORT)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=repo_root
+                cwd=repo_root  # Run in repo root so it can see git diffs
             )
         except FileNotFoundError:
             print("Error: opencode is not installed.", file=sys.stderr)
