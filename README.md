@@ -542,18 +542,28 @@ The bundled configuration enforces:
 - Provider restrictions - All other AI providers blocked
 - Cloud CLI blocks - Denies `aws`, `az`, `gcloud`, `terraform`, `curl`, `wget`
 
-**Runtime Verification:**
+**✅ Built-in Security Configuration:**
 
-When the hook runs, it verifies the bundled configuration file exists and displays:
-```
-✓ Using bundled security configuration: /path/to/hooks/opencode.jsonc
-```
+The hook includes an **embedded security configuration** that is automatically applied. The configuration is written to a temporary file and loaded via the `OPENCODE_CONFIG` environment variable.
 
-If the config file is missing or unreadable, the hook exits with an error.
+The embedded configuration enforces:
+- `share: "disabled"` - No sharing of conversations
+- `autoupdate: false` - No automatic updates
+- `webfetch: "deny"` - Prevents external network requests
+- Model restrictions - Only GitHub Copilot and Amazon Bedrock Sonnet 4.5
+- Provider restrictions - All other AI providers blocked
+- Cloud CLI blocks - Denies `aws`, `az`, `gcloud`, `terraform`, `curl`, `wget`
+
+**Runtime Output:**
+
+When the hook runs, you'll see:
+```
+✓ Using bundled security configuration
+```
 
 **Optional: Custom Configuration:**
 
-If you want to add project-specific settings, you can create an `opencode.jsonc` in your repo root. OpenCode will merge your project config with the bundled config using its [config merging strategy](https://opencode.ai/docs/config#config-merging). The bundled config always provides the security baseline.
+If you want to add project-specific settings, you can create an `opencode.jsonc` in your repo root. OpenCode will merge your project config with the embedded config using its [config merging strategy](https://opencode.ai/docs/config#config-merging). The embedded config provides the security baseline.
 
 See the [OpenCode permissions documentation](https://opencode.ai/docs/permissions/) for customization options.
 

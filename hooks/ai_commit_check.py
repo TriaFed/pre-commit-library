@@ -11,8 +11,63 @@ import sys
 import time
 import socket
 import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
+
+# Bundled security configuration - embedded in the script
+BUNDLED_CONFIG = """{
+  "$schema": "https://opencode.ai/config.json",
+  "share": "disabled",
+  "autoupdate": false,
+  "model": "github-copilot/claude-sonnet-4-5",
+  "small_model": "github-copilot/claude-sonnet-4-5",
+  "disabled_providers": [
+    "openai", "anthropic", "gemini", "azure", "openrouter",
+    "ollama", "lmstudio", "together", "fireworks", "groq",
+    "deepseek", "cohere", "mistral", "perplexity"
+  ],
+  "provider": {
+    "github-copilot": {
+      "models": {
+        "claude-sonnet-4-5": { "options": {} }
+      }
+    },
+    "bedrock": {
+      "models": {
+        "anthropic.claude-sonnet-4-5-v2:0": { "options": {} }
+      }
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "bash": {
+      "*": "deny",
+      "git status *": "allow",
+      "git diff *": "allow",
+      "git log *": "allow",
+      "git show *": "allow",
+      "git rev-parse *": "allow",
+      "ls *": "allow",
+      "pwd": "allow",
+      "cat *": "allow",
+      "grep *": "allow",
+      "find *": "allow",
+      "rg *": "allow",
+      "npm run test": "ask",
+      "npm run build": "ask",
+      "pytest *": "ask",
+      "aws *": "deny",
+      "az *": "deny",
+      "gcloud *": "deny",
+      "terraform *": "deny",
+      "curl *": "deny",
+      "wget *": "deny"
+    },
+    "webfetch": "deny"
+  },
+  "instructions": ["AGENTS.md"]
+}"""
 
 try:
     from rich.console import Console
@@ -107,22 +162,18 @@ def main():
             return 3
 
     serve_process = None
+    config_file = None
     try:
         repo_root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
         
-        # Use the bundled opencode.jsonc from the hooks directory
-        hook_script_path = Path(__file__).resolve()
-        bundled_config_path = hook_script_path.parent / 'opencode.jsonc'
-        
-        # Verify bundled config exists
-        if not bundled_config_path.exists():
-            print(f"Error: Bundled config not found at {bundled_config_path}", file=sys.stderr)
-            print("This is a bug in the pre-commit hook installation.", file=sys.stderr)
-            return 3
+        # Write bundled config to a temporary file
+        config_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+        config_file.write(BUNDLED_CONFIG)
+        config_file.close()
         
         # Set OPENCODE_CONFIG to force OpenCode to use our bundled config
-        os.environ['OPENCODE_CONFIG'] = str(bundled_config_path)
-        print(f"✓ Using bundled security configuration: {bundled_config_path}", file=sys.stderr)
+        os.environ['OPENCODE_CONFIG'] = config_file.name
+        print(f"✓ Using bundled security configuration", file=sys.stderr)
         
         available_port = find_available_port(OPENCODE_PORT)
         if not available_port:
@@ -366,6 +417,14 @@ def main():
 
             return 0
     finally:
+        # Clean up temporary config file
+        if config_file and os.path.exists(config_file.name):
+            try:
+                os.unlink(config_file.name)
+            except:
+                pass  # Ignore cleanup errors
+        
+        # Terminate OpenCode server
         if serve_process:
             serve_process.terminate()
             try:

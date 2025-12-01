@@ -55,7 +55,7 @@ This runs automatically on `git push` and reviews all changes in your branch.
 
 **✅ Built-in Security Configuration:**
 
-The AI commit check hook includes a **bundled `opencode.jsonc`** configuration file that enforces security automatically. The hook sets the `OPENCODE_CONFIG` environment variable to point to this bundled config, ensuring it's always used.
+The AI commit check hook includes an **embedded security configuration** that is automatically applied by writing it to a temporary file and loading it via the `OPENCODE_CONFIG` environment variable.
 
 **What's included:**
 - Share disabled
@@ -64,18 +64,16 @@ The AI commit check hook includes a **bundled `opencode.jsonc`** configuration f
 - All other AI providers blocked
 - Dangerous operations denied (webfetch, cloud CLIs, curl, wget, terraform)
 
-**Runtime Verification:**
+**Runtime Output:**
 
-The hook verifies the configuration file exists and displays:
+The hook displays:
 ```
-✓ Using bundled security configuration: /path/to/hooks/opencode.jsonc
+✓ Using bundled security configuration
 ```
-
-If the config file is missing, the hook exits with an error.
 
 **Optional: Project-Specific Settings:**
 
-You can create an `opencode.jsonc` in your repo root to add project-specific settings. OpenCode will merge it with the bundled config using [config merging](https://opencode.ai/docs/config#config-merging), so the bundled security settings are always enforced.
+You can create an `opencode.jsonc` in your repo root to add project-specific settings. OpenCode will merge it with the embedded config using [config merging](https://opencode.ai/docs/config#config-merging), so the embedded security settings are always enforced.
 
 #### Environment Variables
 
