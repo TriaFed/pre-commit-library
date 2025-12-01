@@ -79,10 +79,10 @@ You can create an `opencode.jsonc` in your repo root to add project-specific set
 
 ```bash
 export OPENCODE_PORT=61164              # Port for opencode server (default: 61164)
-export OPENCODE_MODEL=github-copilot/claude-sonnet-4-5 # AI model to use (default)
-export OPENCODE_PROVIDER=github-copilot # Provider: github-copilot, bedrock (default: github-copilot)
+export OPENCODE_MODEL=github-copilot/claude-sonnet-4.5 # AI model to use (default)
+export OPENCODE_PROVIDER=github-copilot # Provider: github-copilot, amazon-bedrock (default: github-copilot)
 export OPENCODE_TIMEOUT=90              # Timeout in seconds (default: 90)
-export OPENCODE_BEDROCK_REGION=us-east-1 # Required for bedrock provider
+export OPENCODE_BEDROCK_REGION=us-east-1 # Required for amazon-bedrock provider
 ```
 
 #### Permissions and Custom Instructions
@@ -126,8 +126,8 @@ repos:
 
 **Set environment variables:**
 ```bash
-export OPENCODE_PROVIDER=bedrock
-export OPENCODE_MODEL=bedrock/anthropic.claude-sonnet-4-5-v2:0
+export OPENCODE_PROVIDER=amazon-bedrock
+export OPENCODE_MODEL=amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
 export OPENCODE_BEDROCK_REGION=us-east-1
 ```
 
@@ -153,7 +153,7 @@ opencode run "hello world"
 **Example Usage:**
 ```bash
 # Set environment for the session
-export OPENCODE_PROVIDER=bedrock
+export OPENCODE_PROVIDER=amazon-bedrock
 export OPENCODE_BEDROCK_REGION=us-east-1
 
 # Run the AI commit check

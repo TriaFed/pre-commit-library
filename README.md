@@ -571,11 +571,11 @@ See the [OpenCode permissions documentation](https://opencode.ai/docs/permission
 ```bash
 # GitHub Copilot Configuration (Default)
 export OPENCODE_PROVIDER=github-copilot
-export OPENCODE_MODEL=github-copilot/claude-sonnet-4-5
+export OPENCODE_MODEL=github-copilot/claude-sonnet-4.5
 
 # Amazon Bedrock Configuration
-export OPENCODE_PROVIDER=bedrock
-export OPENCODE_MODEL=bedrock/anthropic.claude-sonnet-4-5-v2:0
+export OPENCODE_PROVIDER=amazon-bedrock
+export OPENCODE_MODEL=amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
 export OPENCODE_BEDROCK_REGION=us-east-1  # Required: us-east-1 or us-gov-*
 
 # Server Configuration
@@ -659,8 +659,8 @@ The AI commit check hook supports Amazon Bedrock with Claude Sonnet 4.5. For sec
 
 3. **Set environment variables:**
    ```bash
-   export OPENCODE_PROVIDER=bedrock
-   export OPENCODE_MODEL=bedrock/anthropic.claude-sonnet-4-5-v2:0
+   export OPENCODE_PROVIDER=amazon-bedrock
+   export OPENCODE_MODEL=amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
    export OPENCODE_BEDROCK_REGION=us-east-1
    ```
 

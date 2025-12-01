@@ -20,8 +20,8 @@ BUNDLED_CONFIG = """{
   "$schema": "https://opencode.ai/config.json",
   "share": "disabled",
   "autoupdate": false,
-  "model": "github-copilot/claude-sonnet-4-5",
-  "small_model": "github-copilot/claude-sonnet-4-5",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "small_model": "github-copilot/claude-sonnet-4.5",
   "disabled_providers": [
     "openai", "anthropic", "gemini", "azure", "openrouter",
     "ollama", "lmstudio", "together", "fireworks", "groq",
@@ -30,12 +30,12 @@ BUNDLED_CONFIG = """{
   "provider": {
     "github-copilot": {
       "models": {
-        "claude-sonnet-4-5": { "options": {} }
+        "github-copilot/claude-sonnet-4.5": { "options": {} }
       }
     },
-    "bedrock": {
+    "amazon-bedrock": {
       "models": {
-        "anthropic.claude-sonnet-4-5-v2:0": { "options": {} }
+        "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0": { "options": {} }
       }
     }
   },
@@ -105,7 +105,7 @@ def wait_for_port(port, timeout=30):
 
 def main():
     OPENCODE_PORT = int(os.getenv('OPENCODE_PORT', '61164'))
-    OPENCODE_MODEL = os.getenv('OPENCODE_MODEL', 'github-copilot/claude-sonnet-4-5')
+    OPENCODE_MODEL = os.getenv('OPENCODE_MODEL', 'github-copilot/claude-sonnet-4.5')
     OPENCODE_PROVIDER = os.getenv('OPENCODE_PROVIDER', 'github-copilot')
     OPENCODE_TIMEOUT = int(os.getenv('OPENCODE_TIMEOUT', '90'))
     OPENCODE_BEDROCK_REGION = os.getenv('OPENCODE_BEDROCK_REGION', 'us-east-1')
@@ -119,9 +119,9 @@ def main():
         return 3
 
     # Validate Bedrock region if using Bedrock provider
-    if OPENCODE_PROVIDER == 'bedrock':
+    if OPENCODE_PROVIDER == 'amazon-bedrock':
         if not OPENCODE_BEDROCK_REGION:
-            print("Error: OPENCODE_BEDROCK_REGION environment variable is required when using bedrock provider.", file=sys.stderr)
+            print("Error: OPENCODE_BEDROCK_REGION environment variable is required when using amazon-bedrock provider.", file=sys.stderr)
             print("", file=sys.stderr)
             print("Amazon Bedrock requires explicit region configuration for security and compliance.", file=sys.stderr)
             print("", file=sys.stderr)
@@ -188,7 +188,7 @@ def main():
         os.environ['OPENCODE_BASE_URL'] = OPENCODE_BASE_URL
 
         # Set AWS region environment variables for Bedrock if needed
-        if OPENCODE_PROVIDER == 'bedrock':
+        if OPENCODE_PROVIDER == 'amazon-bedrock':
             os.environ['AWS_DEFAULT_REGION'] = OPENCODE_BEDROCK_REGION
             os.environ['AWS_REGION'] = OPENCODE_BEDROCK_REGION
 
