@@ -11,63 +11,8 @@ import sys
 import time
 import socket
 import os
-import tempfile
 from datetime import datetime
 from pathlib import Path
-
-# Bundled security configuration - embedded in the script
-BUNDLED_CONFIG = """{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "disabled",
-  "autoupdate": false,
-  "model": "github-copilot/claude-sonnet-4.5",
-  "small_model": "github-copilot/claude-sonnet-4.5",
-  "disabled_providers": [
-    "openai", "anthropic", "gemini", "azure", "openrouter",
-    "ollama", "lmstudio", "together", "fireworks", "groq",
-    "deepseek", "cohere", "mistral", "perplexity"
-  ],
-  "provider": {
-    "github-copilot": {
-      "models": {
-        "github-copilot/claude-sonnet-4.5": { "options": {} }
-      }
-    },
-    "amazon-bedrock": {
-      "models": {
-        "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0": { "options": {} }
-      }
-    }
-  },
-  "permission": {
-    "edit": "allow",
-    "bash": {
-      "*": "deny",
-      "git status *": "allow",
-      "git diff *": "allow",
-      "git log *": "allow",
-      "git show *": "allow",
-      "git rev-parse *": "allow",
-      "ls *": "allow",
-      "pwd": "allow",
-      "cat *": "allow",
-      "grep *": "allow",
-      "find *": "allow",
-      "rg *": "allow",
-      "npm run test": "ask",
-      "npm run build": "ask",
-      "pytest *": "ask",
-      "aws *": "deny",
-      "az *": "deny",
-      "gcloud *": "deny",
-      "terraform *": "deny",
-      "curl *": "deny",
-      "wget *": "deny"
-    },
-    "webfetch": "deny"
-  },
-  "instructions": ["AGENTS.md"]
-}"""
 
 try:
     from rich.console import Console
@@ -162,18 +107,28 @@ def main():
             return 3
 
     serve_process = None
-    config_file = None
     try:
         repo_root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
         
-        # Write bundled config to a temporary file
-        config_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
-        config_file.write(BUNDLED_CONFIG)
-        config_file.close()
+        # Check for opencode.jsonc in repo root
+        config_path = os.path.join(repo_root, 'opencode.jsonc')
+        if not os.path.exists(config_path):
+            print("Error: opencode.jsonc not found in repository root.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("The AI commit check requires an opencode.jsonc configuration file", file=sys.stderr)
+            print("to enforce security policies and restrict AI capabilities.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("To set up:", file=sys.stderr)
+            print("  1. Download the security configuration:", file=sys.stderr)
+            print("     curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/hooks/opencode.jsonc", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("  2. Commit the file:", file=sys.stderr)
+            print("     git add opencode.jsonc && git commit -m 'Add OpenCode security config'", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("See CONFIGURATION_GUIDE.md for more details.", file=sys.stderr)
+            return 3
         
-        # Set OPENCODE_CONFIG to force OpenCode to use our bundled config
-        os.environ['OPENCODE_CONFIG'] = config_file.name
-        print(f"✓ Using bundled security configuration", file=sys.stderr)
+        print(f"✓ Using opencode.jsonc from repository root", file=sys.stderr)
         
         available_port = find_available_port(OPENCODE_PORT)
         if not available_port:
@@ -417,13 +372,6 @@ def main():
 
             return 0
     finally:
-        # Clean up temporary config file
-        if config_file and os.path.exists(config_file.name):
-            try:
-                os.unlink(config_file.name)
-            except:
-                pass  # Ignore cleanup errors
-        
         # Terminate OpenCode server
         if serve_process:
             serve_process.terminate()

@@ -6,10 +6,10 @@
   "autoupdate": false,
   
   // Model configuration - ONLY allow approved models
-  "model": "github-copilot/claude-sonnet-4-5",
-  "small_model": "github-copilot/claude-sonnet-4-5",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "small_model": "github-copilot/claude-sonnet-4.5",
   
-  // Disable all providers except approved ones (github-copilot and bedrock)
+  // Disable all providers except approved ones (github-copilot and amazon-bedrock)
   "disabled_providers": [
     "openai",
     "anthropic", 
@@ -31,14 +31,14 @@
   "provider": {
     "github-copilot": {
       "models": {
-        "claude-sonnet-4-5": {
+        "github-copilot/claude-sonnet-4.5": {
           "options": {}
         }
       }
     },
-    "bedrock": {
+    "amazon-bedrock": {
       "models": {
-        "anthropic.claude-sonnet-4-5-v2:0": {
+        "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0": {
           "options": {}
         }
       }

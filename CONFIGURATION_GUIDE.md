@@ -53,9 +53,19 @@ This runs automatically on `git push` and reviews all changes in your branch.
 
 #### Required Setup
 
-**✅ Built-in Security Configuration:**
+**Required: Security Configuration File:**
 
-The AI commit check hook includes an **embedded security configuration** that is automatically applied by writing it to a temporary file and loading it via the `OPENCODE_CONFIG` environment variable.
+The AI commit check hook **requires** an `opencode.jsonc` configuration file in your repository root to enforce security policies.
+
+**Setup:**
+```bash
+# Download the security configuration to your repo root
+curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/hooks/opencode.jsonc
+
+# Commit the configuration
+git add opencode.jsonc
+git commit -m "Add OpenCode security configuration"
+```
 
 **What's included:**
 - Share disabled
@@ -68,12 +78,10 @@ The AI commit check hook includes an **embedded security configuration** that is
 
 The hook displays:
 ```
-✓ Using bundled security configuration
+✓ Using opencode.jsonc from repository root
 ```
 
-**Optional: Project-Specific Settings:**
-
-You can create an `opencode.jsonc` in your repo root to add project-specific settings. OpenCode will merge it with the embedded config using [config merging](https://opencode.ai/docs/config#config-merging), so the embedded security settings are always enforced.
+If the file is missing, the hook will exit with an error and instructions on how to set it up.
 
 #### Environment Variables
 
@@ -87,7 +95,7 @@ export OPENCODE_BEDROCK_REGION=us-east-1 # Required for amazon-bedrock provider
 
 #### Permissions and Custom Instructions
 
-The recommended `opencode.jsonc` includes safe defaults that deny dangerous operations.
+The required `opencode.jsonc` includes safe defaults that deny dangerous operations.
 
 **To customize permissions**: See [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
 

@@ -115,8 +115,8 @@ The `ai_commit_check` hook has special security requirements and dual-mode opera
 - **Mode Detection**: Checks `git diff --cached` for staged changes to determine mode
 - **Pre-commit mode**: Reviews staged changes using `git diff --cached`
 - **Pre-push mode**: Compares current branch to `origin/main` or `origin/master` using `git diff origin/{branch}...HEAD`
-- **Security**: Embedded configuration with denied dangerous operations
-- **Config enforcement**: Writes config to temporary file and sets `OPENCODE_CONFIG` environment variable
+- **Security**: Requires `opencode.jsonc` file in repository root with security policies
+- **Config enforcement**: Hook checks for `opencode.jsonc` and exits with error if missing
 - **Model Restrictions**: Only allows GitHub Copilot and Amazon Bedrock with Claude Sonnet 4.5
 - **Exit behavior**: Blocks commits/pushes with `-COMMIT REJECTED-` prefix in response
 
@@ -131,6 +131,7 @@ The `ai_commit_check` hook has special security requirements and dual-mode opera
 - Exit codes: 0 (pass), 1 (fail/rejected), 3 (tool missing/error)
 - Denies: `webfetch`, cloud CLIs (`aws`, `az`, `gcloud`), `curl`, `wget`, `terraform`
 - Disables all AI providers except: `github-copilot` and `amazon-bedrock`
+- Requires `opencode.jsonc` in repository root
 - Starts temporary opencode server on available port (default: 61164)
 - Creates AI session with commit context and security review prompt
 - Sets AWS region environment variables (`AWS_DEFAULT_REGION`, `AWS_REGION`) when using Bedrock

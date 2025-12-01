@@ -530,27 +530,25 @@ pre-commit install
 pre-commit install --hook-type pre-push
 ```
 
-**✅ Built-in Security Configuration:**
+**Required: Security Configuration File:**
 
-The hook includes a **bundled `opencode.jsonc` configuration** that enforces security by default. You don't need to create this file in your repository - it's automatically used via the `OPENCODE_CONFIG` environment variable.
+This hook **requires** an `opencode.jsonc` configuration file in your repository root to enforce security policies.
 
-The bundled configuration enforces:
+**Setup:**
+```bash
+# Download the security configuration to your repo root
+curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/hooks/opencode.jsonc
+
+# Commit the configuration
+git add opencode.jsonc
+git commit -m "Add OpenCode security configuration"
+```
+
+The `opencode.jsonc` file enforces:
 - `share: "disabled"` - No sharing of conversations
 - `autoupdate: false` - No automatic updates
 - `webfetch: "deny"` - Prevents external network requests
-- Model restrictions - Only GitHub Copilot and Amazon Bedrock Sonnet 4.5
-- Provider restrictions - All other AI providers blocked
-- Cloud CLI blocks - Denies `aws`, `az`, `gcloud`, `terraform`, `curl`, `wget`
-
-**✅ Built-in Security Configuration:**
-
-The hook includes an **embedded security configuration** that is automatically applied. The configuration is written to a temporary file and loaded via the `OPENCODE_CONFIG` environment variable.
-
-The embedded configuration enforces:
-- `share: "disabled"` - No sharing of conversations
-- `autoupdate: false` - No automatic updates
-- `webfetch: "deny"` - Prevents external network requests
-- Model restrictions - Only GitHub Copilot and Amazon Bedrock Sonnet 4.5
+- Model restrictions - Only GitHub Copilot and Amazon Bedrock Claude Sonnet 4.5
 - Provider restrictions - All other AI providers blocked
 - Cloud CLI blocks - Denies `aws`, `az`, `gcloud`, `terraform`, `curl`, `wget`
 
@@ -558,14 +556,10 @@ The embedded configuration enforces:
 
 When the hook runs, you'll see:
 ```
-✓ Using bundled security configuration
+✓ Using opencode.jsonc from repository root
 ```
 
-**Optional: Custom Configuration:**
-
-If you want to add project-specific settings, you can create an `opencode.jsonc` in your repo root. OpenCode will merge your project config with the embedded config using its [config merging strategy](https://opencode.ai/docs/config#config-merging). The embedded config provides the security baseline.
-
-See the [OpenCode permissions documentation](https://opencode.ai/docs/permissions/) for customization options.
+If the file is missing, the hook will exit with an error and instructions.
 
 **Environment Variables:**
 ```bash
