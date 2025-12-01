@@ -110,17 +110,29 @@ exit $?
 The `ai_commit_check` hook has special security requirements and dual-mode operation:
 
 **Technical Implementation:**
+- **Disabled by default**: Hook uses `stages: [manual]` in `.pre-commit-hooks.yaml` to require explicit opt-in
+- **User opt-in required**: Users must add `stages: [pre-commit]` or `stages: [pre-push]` to their config to enable
 - **Mode Detection**: Checks `git diff --cached` for staged changes to determine mode
 - **Pre-commit mode**: Reviews staged changes using `git diff --cached`
 - **Pre-push mode**: Compares current branch to `origin/main` or `origin/master` using `git diff origin/{branch}...HEAD`
 - **Security**: Requires `opencode.jsonc` configuration file with denied dangerous operations
+- **Model Restrictions**: Only allows GitHub Copilot and Amazon Bedrock with Claude Sonnet 4.5
 - **Exit behavior**: Blocks commits/pushes with `-COMMIT REJECTED-` prefix in response
+
+**Supported Providers:**
+- **GitHub Copilot** (default): `github-copilot/claude-sonnet-4-5`
+- **Amazon Bedrock**: `bedrock/anthropic.claude-sonnet-4-5-v2:0`
+  - Required region: `us-east-1` or `us-gov-*`
+  - Enforced via `OPENCODE_BEDROCK_REGION` environment variable
+  - Hook exits with error code 3 if region is invalid or not us-east-1/us-gov-*
 
 **Key Implementation Details:**
 - Exit codes: 0 (pass), 1 (fail/rejected), 3 (tool missing/error)
 - Denies: `webfetch`, cloud CLIs (`aws`, `az`, `gcloud`), `curl`, `wget`, `terraform`
+- Disables all AI providers except: `github-copilot` and `bedrock`
 - Starts temporary opencode server on available port (default: 61164)
 - Creates AI session with commit context and security review prompt
+- Sets AWS region environment variables (`AWS_DEFAULT_REGION`, `AWS_REGION`) when using Bedrock
 
 For user-facing configuration and setup instructions, see CONFIGURATION_GUIDE.md and README.md.
 

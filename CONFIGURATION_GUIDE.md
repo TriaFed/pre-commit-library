@@ -27,8 +27,10 @@ repos:
     rev: v1.1.7
     hooks:
       - id: ai_commit_check
-        stages: [manual]
+        stages: [manual]  # Default: disabled, opt-in required
 ```
+
+**Note:** The hook is **disabled by default**. This is the default behavior - users must explicitly opt-in.
 
 Run with: `pre-commit run --hook-stage manual ai_commit_check`
 
@@ -70,9 +72,10 @@ See `examples/opencode.jsonc` for the full configuration with security defaults.
 
 ```bash
 export OPENCODE_PORT=61164              # Port for opencode server (default: 61164)
-export OPENCODE_MODEL=claude-sonnet-4.5 # AI model to use
-export OPENCODE_PROVIDER=github-copilot # Provider: github-copilot, anthropic, etc.
+export OPENCODE_MODEL=github-copilot/claude-sonnet-4-5 # AI model to use (default)
+export OPENCODE_PROVIDER=github-copilot # Provider: github-copilot, bedrock (default: github-copilot)
 export OPENCODE_TIMEOUT=90              # Timeout in seconds (default: 90)
+export OPENCODE_BEDROCK_REGION=us-east-1 # Required for bedrock provider
 ```
 
 #### Permissions and Custom Instructions
@@ -98,6 +101,70 @@ This creates instruction files with project-specific coding standards that the A
 | Pre-push (automatic) | `git push` (runs automatically) |
 | Pre-push (manual) | `pre-commit run --hook-stage pre-push ai_commit_check` |
 | Skip validation | `git commit --no-verify` or `git push --no-verify` |
+
+#### Amazon Bedrock Provider
+
+**Problem**: Need to use Amazon Bedrock instead of GitHub Copilot
+
+**Solution**: Configure Bedrock with required region validation
+
+```yaml
+repos:
+  - repo: https://github.com/TriaFed/pre-commit-library
+    rev: v1.2.0
+    hooks:
+      - id: ai_commit_check
+        stages: [manual]
+```
+
+**Set environment variables:**
+```bash
+export OPENCODE_PROVIDER=bedrock
+export OPENCODE_MODEL=bedrock/anthropic.claude-sonnet-4-5-v2:0
+export OPENCODE_BEDROCK_REGION=us-east-1
+```
+
+**Required AWS Setup:**
+```bash
+# 1. Configure AWS region (required)
+aws configure set region us-east-1
+
+# 2. Verify AWS credentials
+aws sts get-caller-identity
+
+# 3. Authenticate with OpenCode
+opencode auth login  # Select: Amazon Bedrock
+
+# 4. Test the connection
+opencode run "hello world"
+```
+
+**Allowed Regions**: `us-east-1`, `us-gov-west-1`, `us-gov-east-1`
+
+**Security Note**: Region validation is enforced for compliance. The hook will exit with an error if an unauthorized region is specified.
+
+**Example Usage:**
+```bash
+# Set environment for the session
+export OPENCODE_PROVIDER=bedrock
+export OPENCODE_BEDROCK_REGION=us-east-1
+
+# Run the AI commit check
+pre-commit run --hook-stage manual ai_commit_check
+```
+
+**Troubleshooting:**
+
+If you see:
+```
+Error: Amazon Bedrock region 'eu-west-1' is not allowed.
+```
+
+Fix with:
+```bash
+export OPENCODE_BEDROCK_REGION=us-east-1
+aws configure set region us-east-1
+```
 
 ## Common False Positive Issues and Solutions
 

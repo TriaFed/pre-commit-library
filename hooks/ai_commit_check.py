@@ -49,9 +49,10 @@ def wait_for_port(port, timeout=30):
 
 def main():
     OPENCODE_PORT = int(os.getenv('OPENCODE_PORT', '61164'))
-    OPENCODE_MODEL = os.getenv('OPENCODE_MODEL', 'claude-sonnet-4.5')
+    OPENCODE_MODEL = os.getenv('OPENCODE_MODEL', 'github-copilot/claude-sonnet-4-5')
     OPENCODE_PROVIDER = os.getenv('OPENCODE_PROVIDER', 'github-copilot')
     OPENCODE_TIMEOUT = int(os.getenv('OPENCODE_TIMEOUT', '90'))
+    OPENCODE_BEDROCK_REGION = os.getenv('OPENCODE_BEDROCK_REGION', 'us-east-1')
 
     if not (1024 <= OPENCODE_PORT <= 65535):
         print(f"Error: Invalid port {OPENCODE_PORT}. Port must be between 1024 and 65535.", file=sys.stderr)
@@ -60,6 +61,49 @@ def main():
     if not (1 <= OPENCODE_TIMEOUT <= 300):
         print(f"Error: Invalid timeout {OPENCODE_TIMEOUT}. Timeout must be between 1 and 300 seconds.", file=sys.stderr)
         return 3
+
+    # Validate Bedrock region if using Bedrock provider
+    if OPENCODE_PROVIDER == 'bedrock':
+        if not OPENCODE_BEDROCK_REGION:
+            print("Error: OPENCODE_BEDROCK_REGION environment variable is required when using bedrock provider.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("Amazon Bedrock requires explicit region configuration for security and compliance.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("Allowed regions:", file=sys.stderr)
+            print("  - us-east-1 (US East - N. Virginia)", file=sys.stderr)
+            print("  - us-gov-west-1 (AWS GovCloud US-West)", file=sys.stderr)
+            print("  - us-gov-east-1 (AWS GovCloud US-East)", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("To use Amazon Bedrock:", file=sys.stderr)
+            print("  1. Authenticate to AWS with the correct region:", file=sys.stderr)
+            print("     aws configure set region us-east-1", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("  2. Set the region environment variable:", file=sys.stderr)
+            print("     export OPENCODE_BEDROCK_REGION=us-east-1", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("  3. Authenticate with OpenCode:", file=sys.stderr)
+            print("     opencode auth login", file=sys.stderr)
+            print("     Select: Amazon Bedrock", file=sys.stderr)
+            print("", file=sys.stderr)
+            return 3
+        
+        # Validate region is in allowed list
+        allowed_regions = ['us-east-1']
+        is_govcloud = OPENCODE_BEDROCK_REGION.startswith('us-gov-')
+        
+        if not (OPENCODE_BEDROCK_REGION in allowed_regions or is_govcloud):
+            print(f"Error: Amazon Bedrock region '{OPENCODE_BEDROCK_REGION}' is not allowed.", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("For security and compliance reasons, only the following regions are permitted:", file=sys.stderr)
+            print("  ✓ us-east-1 (US East - N. Virginia)", file=sys.stderr)
+            print("  ✓ us-gov-* (AWS GovCloud regions)", file=sys.stderr)
+            print("", file=sys.stderr)
+            print(f"Current region: {OPENCODE_BEDROCK_REGION}", file=sys.stderr)
+            print("", file=sys.stderr)
+            print("To fix:", file=sys.stderr)
+            print("  export OPENCODE_BEDROCK_REGION=us-east-1", file=sys.stderr)
+            print("", file=sys.stderr)
+            return 3
 
     serve_process = None
     try:
@@ -108,6 +152,11 @@ def main():
 
         OPENCODE_BASE_URL = f'http://127.0.0.1:{OPENCODE_PORT}'
         os.environ['OPENCODE_BASE_URL'] = OPENCODE_BASE_URL
+
+        # Set AWS region environment variables for Bedrock if needed
+        if OPENCODE_PROVIDER == 'bedrock':
+            os.environ['AWS_DEFAULT_REGION'] = OPENCODE_BEDROCK_REGION
+            os.environ['AWS_REGION'] = OPENCODE_BEDROCK_REGION
 
         try:
             serve_process = subprocess.Popen(

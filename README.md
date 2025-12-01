@@ -490,8 +490,12 @@ repos:
     rev: v1.1.7
     hooks:
       - id: ai_commit_check
-        stages: [manual]  # Run manually to avoid slowing down every commit
+        stages: [manual]  # Default: Run manually (opt-in)
+        # To enable automatic pre-commit: stages: [pre-commit]
+        # To enable automatic pre-push: stages: [pre-push]
 ```
+
+**Note:** The AI commit check is **disabled by default** (manual stage). You must explicitly opt-in by changing the `stages` configuration.
 
 **Pre-push Configuration (Recommended for comprehensive review):**
 ```yaml
@@ -552,10 +556,18 @@ See the [OpenCode permissions documentation](https://opencode.ai/docs/permission
 
 **Environment Variables:**
 ```bash
-export OPENCODE_PORT=61164              # Default: 61164
-export OPENCODE_MODEL=claude-sonnet-4.5 # Default: claude-sonnet-4.5
-export OPENCODE_PROVIDER=github-copilot # Default: github-copilot
-export OPENCODE_TIMEOUT=90              # Default: 90 seconds
+# GitHub Copilot Configuration (Default)
+export OPENCODE_PROVIDER=github-copilot
+export OPENCODE_MODEL=github-copilot/claude-sonnet-4-5
+
+# Amazon Bedrock Configuration
+export OPENCODE_PROVIDER=bedrock
+export OPENCODE_MODEL=bedrock/anthropic.claude-sonnet-4-5-v2:0
+export OPENCODE_BEDROCK_REGION=us-east-1  # Required: us-east-1 or us-gov-*
+
+# Server Configuration
+export OPENCODE_PORT=61164                # Default: 61164
+export OPENCODE_TIMEOUT=90                # Default: 90 seconds
 ```
 
 **Usage:**
@@ -605,6 +617,71 @@ The required `opencode.jsonc` file includes safe defaults. You can customize per
 ```
 
 Learn more: [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
+
+### Using Amazon Bedrock
+
+The AI commit check hook supports Amazon Bedrock with Claude Sonnet 4.5. For security and compliance, only specific AWS regions are allowed.
+
+**Allowed Regions:**
+- `us-east-1` (US East - N. Virginia)
+- `us-gov-west-1` (AWS GovCloud US-West)
+- `us-gov-east-1` (AWS GovCloud US-East)
+
+**Setup Steps:**
+
+1. **Configure AWS credentials and region:**
+   ```bash
+   # Set your AWS region
+   aws configure set region us-east-1
+   
+   # Verify your configuration
+   aws sts get-caller-identity
+   ```
+
+2. **Authenticate with OpenCode:**
+   ```bash
+   opencode auth login
+   # Select: Amazon Bedrock
+   ```
+
+3. **Set environment variables:**
+   ```bash
+   export OPENCODE_PROVIDER=bedrock
+   export OPENCODE_MODEL=bedrock/anthropic.claude-sonnet-4-5-v2:0
+   export OPENCODE_BEDROCK_REGION=us-east-1
+   ```
+
+4. **Verify the configuration:**
+   ```bash
+   # Test that OpenCode can access Bedrock
+   opencode run "hello world"
+   ```
+
+5. **Run the AI commit check:**
+   ```bash
+   pre-commit run --hook-stage manual ai_commit_check
+   ```
+
+**Troubleshooting:**
+
+If you get a region error:
+```
+Error: Amazon Bedrock region 'us-west-2' is not allowed.
+```
+
+Fix by setting the correct region:
+```bash
+export OPENCODE_BEDROCK_REGION=us-east-1
+aws configure set region us-east-1
+```
+
+**Why only specific regions?**
+
+For security and compliance reasons, this hook restricts Amazon Bedrock to:
+- `us-east-1` - Standard AWS region with Claude Sonnet 4.5 availability
+- `us-gov-*` - AWS GovCloud regions for government compliance
+
+If you need a different region, please file an issue with your compliance requirements.
 
 **Custom Instructions (Optional):**
 
