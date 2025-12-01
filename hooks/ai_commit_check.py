@@ -120,7 +120,7 @@ def main():
             print("", file=sys.stderr)
             print("To set up:", file=sys.stderr)
             print("  1. Download the security configuration:", file=sys.stderr)
-            print("     curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/hooks/opencode.jsonc", file=sys.stderr)
+            print("     curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc", file=sys.stderr)
             print("", file=sys.stderr)
             print("  2. Commit the file:", file=sys.stderr)
             print("     git add opencode.jsonc && git commit -m 'Add OpenCode security config'", file=sys.stderr)

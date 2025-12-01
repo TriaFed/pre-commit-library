@@ -60,7 +60,7 @@ The AI commit check hook **requires** an `opencode.jsonc` configuration file in 
 **Setup:**
 ```bash
 # Download the security configuration to your repo root
-curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/hooks/opencode.jsonc
+curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
 
 # Commit the configuration
 git add opencode.jsonc
