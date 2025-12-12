@@ -54,7 +54,7 @@ def main():
     OPENCODE_PROVIDER = os.getenv('OPENCODE_PROVIDER', 'github-copilot')
     OPENCODE_TIMEOUT = int(os.getenv('OPENCODE_TIMEOUT', '90'))
     OPENCODE_BEDROCK_REGION = os.getenv('OPENCODE_BEDROCK_REGION', 'us-east-1')
-    
+
     # Parse model and provider from OPENCODE_MODEL if it contains a slash
     # Format: "provider/model-name" -> provider="provider", model="provider/model-name"
     # The SDK expects model_id to include the provider prefix
@@ -96,11 +96,11 @@ def main():
             print("     Select: Amazon Bedrock", file=sys.stderr)
             print("", file=sys.stderr)
             return 3
-        
+
         # Validate region is in allowed list
         allowed_regions = ['us-east-1']
         is_govcloud = OPENCODE_BEDROCK_REGION.startswith('us-gov-')
-        
+
         if not (OPENCODE_BEDROCK_REGION in allowed_regions or is_govcloud):
             print(f"Error: Amazon Bedrock region '{OPENCODE_BEDROCK_REGION}' is not allowed.", file=sys.stderr)
             print("", file=sys.stderr)
@@ -118,7 +118,7 @@ def main():
     serve_process = None
     try:
         repo_root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
-        
+
         # Check for opencode.jsonc in repo root
         config_path = os.path.join(repo_root, 'opencode.jsonc')
         if not os.path.exists(config_path):
@@ -136,11 +136,11 @@ def main():
             print("", file=sys.stderr)
             print("See CONFIGURATION_GUIDE.md for more details.", file=sys.stderr)
             return 3
-        
+
         print(f"✓ Using opencode.jsonc from repository root", file=sys.stderr)
         print(f"✓ Model: {OPENCODE_MODEL}", file=sys.stderr)
         print(f"✓ Provider: {OPENCODE_PROVIDER}", file=sys.stderr)
-        
+
         available_port = find_available_port(OPENCODE_PORT)
         if not available_port:
             print(f"Error: No available ports found starting from port {OPENCODE_PORT}. "
@@ -165,7 +165,7 @@ def main():
             # Start OpenCode server with explicit model selection
             # The --model flag accepts format: provider/model-name
             serve_process = subprocess.Popen(
-                ['opencode', 'serve', '--port', str(OPENCODE_PORT), '--model', OPENCODE_MODEL],
+                ['opencode', 'serve', '--port', str(OPENCODE_PORT)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=repo_root,  # Run in repo root so it can see git diffs
@@ -227,13 +227,13 @@ def main():
             review_target = "the staged changes for this commit"
             review_context = """
             **REVIEW MODE:** Pre-commit (staged changes)
-            
+
             Use `git diff --cached` to see the staged changes that are about to be committed.
             """
         else:
             # Pre-push mode: compare current branch to origin/main or origin/master
             review_mode = "pre-push"
-            
+
             # Determine the default branch (main or master)
             default_branch = None
             for branch in ['main', 'master']:
@@ -248,17 +248,17 @@ def main():
                     break
                 except subprocess.CalledProcessError:
                     continue
-            
+
             if not default_branch:
                 print("Error: Could not find origin/main or origin/master branch for comparison.", file=sys.stderr)
                 print("Please ensure you have a remote tracking branch set up.", file=sys.stderr)
                 return 3
-            
+
             review_target = f"all changes in the current branch compared to origin/{default_branch}"
             review_context = f"""
             **REVIEW MODE:** Pre-push (branch comparison)
-            
-            Use `git diff origin/{default_branch}...HEAD` to see all changes in the current branch 
+
+            Use `git diff origin/{default_branch}...HEAD` to see all changes in the current branch
             that differ from origin/{default_branch}. Review ALL commits and changes since branching.
             """
 
@@ -327,11 +327,11 @@ def main():
                     print(f"{title}\n\n{message}")
 
         last_msg = get_last_assistant_message(new_session_chat_messages)
-        
+
         is_rejected = last_msg and '-COMMIT REJECTED-' in last_msg
         if is_rejected and last_msg:
             last_msg = last_msg.replace('-COMMIT REJECTED-', '').strip()
-        
+
         render_markdown_terminal(last_msg)
 
         continue_command = f"opencode --session {new_session_id}"
