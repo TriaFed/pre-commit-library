@@ -31,7 +31,8 @@
     "deepseek",
     "cohere",
     "mistral",
-    "perplexity"
+    "perplexity",
+    "xai"
   ],
 
   // Provider-specific configuration
