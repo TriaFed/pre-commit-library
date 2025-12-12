@@ -5,8 +5,8 @@
   "share": "disabled",
   "autoupdate": false,
 
-  "model": "{env:OPENCODE_MODEL}",
-  "small_model": "{env:OPENCODE_MODEL}",
+  "model": "github-copilot/claude-sonnet-4.5",
+  "small_model": "github-copilot/claude-sonnet-4.5",
   // You can set the model using env vars if you need to alternate between bedrock and github-copilot.
 
   // "model": "{env:OPENCODE_MODEL}",
@@ -15,7 +15,7 @@
   // Set bedrock model
   // "model": "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0",
   // "small_model": "amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0",
-
+  // Note: Model selection is controlled via OPENCODE_MODEL environment variable
   // Disable all providers except approved ones (github-copilot and amazon-bedrock)
   "disabled_providers": [
     "openai",
