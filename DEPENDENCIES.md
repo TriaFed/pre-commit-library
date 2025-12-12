@@ -124,6 +124,59 @@ pipx install pre-commit
 pip install black flake8 isort mypy bandit safety detect_secrets
 ```
 
+#### AI-Powered Hooks (Optional)
+**Both platforms:**
+```bash
+# Required for ai_commit_check hook
+pip install opencode-ai rich
+
+# Or install opencode CLI directly
+npm install -g @sst/opencode
+```
+
+**Setup Opencode Authentication:**
+```bash
+# Authenticate with Opencode
+opencode auth login
+# Select: github-copilot
+
+# Configure the AI model
+# In the opencode interface, enter: /models
+# Select: claude-sonnet-4.5
+```
+
+**⚠️ Required Security Configuration:**
+
+Download the security configuration to your repository root:
+
+**Setup:**
+
+1. Copy the contents of [`examples/opencode.jsonc`](https://github.com/TriaFed/pre-commit-library/blob/main/examples/opencode.jsonc) from this repository
+2. Create a file named `opencode.jsonc` in your repository root
+3. Paste the contents into your `opencode.jsonc` file
+4. Commit the configuration to your repository
+
+**Optional:** Initialize AI instructions for your project by running `opencode` and typing `/init` in the OpenCode window.
+
+The `opencode.jsonc` file is **required** and must deny dangerous operations:
+- `webfetch: "deny"` - Blocks external network requests
+- `aws *: "deny"` - Blocks AWS CLI commands
+- `az *: "deny"` - Blocks Azure CLI commands
+- `gcloud *: "deny"` - Blocks Google Cloud CLI commands
+- `terraform *: "deny"` - Blocks Terraform commands
+- `curl/wget *: "deny"` - Blocks curl and wget
+
+Learn more: [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
+
+**Environment Variables:**
+```bash
+# Configure AI hook behavior (optional)
+export OPENCODE_PORT=61164          # Port for opencode server (default: 61164)
+export OPENCODE_MODEL=claude-sonnet-4.5  # AI model to use (default: claude-sonnet-4.5)
+export OPENCODE_PROVIDER=github-copilot  # AI provider (default: github-copilot)
+export OPENCODE_TIMEOUT=90          # Server startup timeout in seconds (default: 90)
+```
+
 #### JavaScript/TypeScript/Node.js
 
 **macOS:**
