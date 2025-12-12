@@ -130,9 +130,9 @@ pre-commit run --all-files
 
 ### 🤖 AI-Powered Hooks
 
-| Hook ID            | Description                                      | Languages |
-| ------------------ | ------------------------------------------------ | --------- |
-| `ai_commit_check`  | AI-powered commit validation with Opencode AI    | All       |
+| Hook ID           | Description                                   | Languages |
+| ----------------- | --------------------------------------------- | --------- |
+| `ai_commit_check` | AI-powered commit validation with Opencode AI | All       |
 
 ### 🔒 Security Hooks
 
@@ -484,13 +484,14 @@ The `ai_commit_check` hook uses Opencode AI to review your code changes. It supp
 - **Pre-push mode**: Reviews all branch changes against `origin/main` or `origin/master` before pushing
 
 **Pre-commit Configuration:**
+
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
     rev: v1.1.7
     hooks:
       - id: ai_commit_check
-        stages: [manual]  # Default: Run manually (opt-in)
+        stages: [manual] # Default: Run manually (opt-in)
         # To enable automatic pre-commit: stages: [pre-commit]
         # To enable automatic pre-push: stages: [pre-push]
 ```
@@ -498,10 +499,11 @@ repos:
 **Note:** The AI commit check is **disabled by default** (manual stage). You must explicitly opt-in by changing the `stages` configuration.
 
 **Pre-push Configuration (Recommended for comprehensive review):**
+
 ```yaml
 repos:
   - repo: https://github.com/TriaFed/pre-commit-library
-    rev: <version>  # Replace with latest release version
+    rev: <version> # Replace with latest release version
     hooks:
       - id: ai_commit_check
         stages:
@@ -509,6 +511,7 @@ repos:
 ```
 
 **Setup:**
+
 ```bash
 # Install opencode
 pip install opencode-ai rich
@@ -517,7 +520,7 @@ npm install -g @sst/opencode
 
 # Authenticate with Opencode
 opencode auth login
-# Select: github-copilot
+# Select: github, choose the Github Public option and follow the instructions, login in with your TriaFederal account.
 
 # Configure the AI model
 # In the opencode interface, enter: /models
@@ -542,6 +545,7 @@ This hook **requires** an `opencode.jsonc` configuration file in your repository
 4. Commit the configuration to your repository
 
 The `opencode.jsonc` file enforces:
+
 - `share: "disabled"` - No sharing of conversations
 - `autoupdate: false` - No automatic updates
 - `webfetch: "deny"` - Prevents external network requests
@@ -552,6 +556,7 @@ The `opencode.jsonc` file enforces:
 **Runtime Output:**
 
 When the hook runs, you'll see:
+
 ```
 ✓ Using opencode.jsonc from repository root
 ```
@@ -561,6 +566,7 @@ If the file is missing, the hook will exit with an error and instructions.
 **Important:** The `opencode.jsonc` file defines security policies and available models, but does NOT hardcode which model to use. Model selection is controlled via environment variables (see below), allowing you to switch between GitHub Copilot and Amazon Bedrock.
 
 **Environment Variables:**
+
 ```bash
 # GitHub Copilot Configuration (Default - no env vars needed)
 # The hook defaults to GitHub Copilot if no variables are set
@@ -576,6 +582,7 @@ export OPENCODE_TIMEOUT=90                # Default: 90 seconds
 ```
 
 **Pro Tip:** Add Bedrock variables to your `~/.zshrc` or `~/.bashrc` to avoid setting them every time:
+
 ```bash
 # Add to ~/.zshrc or ~/.bashrc
 export OPENCODE_PROVIDER=amazon-bedrock
@@ -584,6 +591,7 @@ export OPENCODE_BEDROCK_REGION=us-east-1
 ```
 
 **Usage:**
+
 ```bash
 # Pre-commit mode (review staged changes)
 pre-commit run --hook-stage manual ai_commit_check
@@ -600,42 +608,24 @@ pre-commit run --hook-stage pre-push ai_commit_check
 ```
 
 The hook automatically detects its mode:
+
 - **Pre-commit**: If there are staged changes, reviews only those changes
 - **Pre-push**: If no staged changes, compares current branch against `origin/main` or `origin/master`
 
 The hook will:
+
 - Review code quality and best practices
 - Identify potential bugs or security concerns
 - Suggest improvements
 - Block commits/pushes with critical issues (starting with "-COMMIT REJECTED-")
 - Provide commands to continue the AI session or auto-fix issues
 
-**Configuring Permissions (Optional):**
-
-The required `opencode.jsonc` file includes safe defaults. You can customize permissions further:
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "edit": "allow",      // Allow file edits for auto-fixing
-    "bash": {
-      "*": "deny",        // Deny all commands by default
-      "git status": "allow",
-      "npm run test": "ask"
-    },
-    "webfetch": "deny"    // Required: Must be denied
-  }
-}
-```
-
-Learn more: [OpenCode Permissions Documentation](https://opencode.ai/docs/permissions/)
-
 ### Using Amazon Bedrock
 
 The AI commit check hook supports Amazon Bedrock with Claude Sonnet 4.5. For security and compliance, only specific AWS regions are allowed.
 
 **Allowed Regions:**
+
 - `us-east-1` (US East - N. Virginia)
 - `us-gov-west-1` (AWS GovCloud US-West)
 - `us-gov-east-1` (AWS GovCloud US-East)
@@ -643,34 +633,31 @@ The AI commit check hook supports Amazon Bedrock with Claude Sonnet 4.5. For sec
 **Setup Steps:**
 
 1. **Configure AWS credentials and region:**
+
    ```bash
    # Set your AWS region
    aws configure set region us-east-1
-   
+
    # Verify your configuration
    aws sts get-caller-identity
    ```
 
-2. **Authenticate with OpenCode:**
-   ```bash
-   opencode auth login
-   # Select: Amazon Bedrock
-   ```
+2. **Set environment variables:**
 
-3. **Set environment variables:**
    ```bash
    export OPENCODE_PROVIDER=amazon-bedrock
    export OPENCODE_MODEL=amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
    export OPENCODE_BEDROCK_REGION=us-east-1
    ```
 
-4. **Verify the configuration:**
+3. **Verify the configuration:**
+
    ```bash
    # Test that OpenCode can access Bedrock
-   opencode run "hello world"
+   opencode run "hello world" --model amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
    ```
 
-5. **Run the AI commit check:**
+4. **Run the AI commit check:**
    ```bash
    pre-commit run --hook-stage manual ai_commit_check
    ```
@@ -678,11 +665,13 @@ The AI commit check hook supports Amazon Bedrock with Claude Sonnet 4.5. For sec
 **Troubleshooting:**
 
 If you get a region error:
+
 ```
 Error: Amazon Bedrock region 'us-west-2' is not allowed.
 ```
 
 Fix by setting the correct region:
+
 ```bash
 export OPENCODE_BEDROCK_REGION=us-east-1
 aws configure set region us-east-1
@@ -691,6 +680,7 @@ aws configure set region us-east-1
 **Why only specific regions?**
 
 For security and compliance reasons, this hook restricts Amazon Bedrock to:
+
 - `us-east-1` - Standard AWS region with Claude Sonnet 4.5 availability
 - `us-gov-*` - AWS GovCloud regions for government compliance
 
@@ -701,25 +691,30 @@ If you need a different region, please file an issue with your compliance requir
 Provide project-specific context to the AI by creating instruction files:
 
 1. **Initialize default instructions:**
+
    ```bash
    # Start opencode
    opencode
-   
+
    # Then in the opencode window, type:
    /init
    ```
+
    This creates instruction files (like `CLAUDE.md`) with AI guidelines for your project.
 
 2. **Or create custom instruction files manually:**
+
    ```markdown
    # AGENTS.md - Project-specific AI review guidelines
-   
+
    ## Code Standards
+
    - Use TypeScript strict mode
    - Follow React hooks best practices
    - All API calls must include error handling
-   
+
    ## Security Requirements
+
    - No hardcoded credentials or API keys
    - All user input must be validated
    - Database queries must use parameterized statements
@@ -728,11 +723,12 @@ Provide project-specific context to the AI by creating instruction files:
 3. **Reference instruction files in `opencode.jsonc`:**
    ```jsonc
    {
-     "instruction": ["AGENTS.md", "CLAUDE.md", "docs/CODING_STANDARDS.md"]
+     "instruction": ["AGENTS.md", "CLAUDE.md", "docs/CODING_STANDARDS.md"],
    }
    ```
 
 **Example Files:**
+
 - See `examples/opencode.jsonc` for recommended permission settings
 
 **Troubleshooting:**
@@ -785,8 +781,8 @@ Finds hardcoded passwords, API keys, and tokens:
 
 ```javascript
 // ❌ Will be flagged
-const apiKey = 'sk-1234567890abcdef';
-const password = 'mySecretPassword123';
+const apiKey = "sk-1234567890abcdef";
+const password = "mySecretPassword123";
 
 // ✅ Safe alternatives
 const apiKey = process.env.API_KEY;
@@ -794,7 +790,7 @@ const password = process.env.PASSWORD;
 
 // ✅ For false positives, use inline comments to suppress
 persistState(store, {
-  key: 'AppPreferences', // pragma: allowlist secret
+  key: "AppPreferences", // pragma: allowlist secret
   storage: sessionStorage,
 });
 ```
@@ -813,7 +809,7 @@ config = {
 ```javascript
 // JavaScript example
 const settings = {
-  key: 'PreferenceKey', // pragma: allowlist secret
+  key: "PreferenceKey", // pragma: allowlist secret
 };
 ```
 
@@ -1001,7 +997,7 @@ detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins
 
 ```javascript
 // eslint-disable-next-line rule-name
-const problematicCode = 'value';
+const problematicCode = "value";
 ```
 
 #### Semgrep

@@ -54,6 +54,15 @@ def main():
     OPENCODE_PROVIDER = os.getenv('OPENCODE_PROVIDER', 'github-copilot')
     OPENCODE_TIMEOUT = int(os.getenv('OPENCODE_TIMEOUT', '90'))
     OPENCODE_BEDROCK_REGION = os.getenv('OPENCODE_BEDROCK_REGION', 'us-east-1')
+    
+    # Parse model and provider from OPENCODE_MODEL if it contains a slash
+    # Format: "provider/model-name" -> provider="provider", model="provider/model-name"
+    # The SDK expects model_id to include the provider prefix
+    if '/' in OPENCODE_MODEL:
+        parsed_provider = OPENCODE_MODEL.split('/')[0]
+        # Use the parsed provider only if OPENCODE_PROVIDER wasn't explicitly set
+        if os.getenv('OPENCODE_PROVIDER') is None:
+            OPENCODE_PROVIDER = parsed_provider
 
     if not (1024 <= OPENCODE_PORT <= 65535):
         print(f"Error: Invalid port {OPENCODE_PORT}. Port must be between 1024 and 65535.", file=sys.stderr)
@@ -129,6 +138,8 @@ def main():
             return 3
         
         print(f"✓ Using opencode.jsonc from repository root", file=sys.stderr)
+        print(f"✓ Model: {OPENCODE_MODEL}", file=sys.stderr)
+        print(f"✓ Provider: {OPENCODE_PROVIDER}", file=sys.stderr)
         
         available_port = find_available_port(OPENCODE_PORT)
         if not available_port:
@@ -147,12 +158,18 @@ def main():
             os.environ['AWS_DEFAULT_REGION'] = OPENCODE_BEDROCK_REGION
             os.environ['AWS_REGION'] = OPENCODE_BEDROCK_REGION
 
+        # Create environment for the opencode server subprocess
+        server_env = os.environ.copy()
+
         try:
+            # Start OpenCode server with explicit model selection
+            # The --model flag accepts format: provider/model-name
             serve_process = subprocess.Popen(
-                ['opencode', 'serve', '--port', str(OPENCODE_PORT)],
+                ['opencode', 'serve', '--port', str(OPENCODE_PORT), '--model', OPENCODE_MODEL],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=repo_root  # Run in repo root so it can see git diffs
+                cwd=repo_root,  # Run in repo root so it can see git diffs
+                env=server_env
             )
         except FileNotFoundError:
             print("Error: opencode is not installed.", file=sys.stderr)
