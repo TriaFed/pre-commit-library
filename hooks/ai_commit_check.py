@@ -284,8 +284,9 @@ def main():
             **RESPONSE FORMAT:**
             - If you find critical issues that should block the commit, start your response with "-COMMIT REJECTED-"
               followed by a clear explanation of the blocking issues with specific file names and line numbers
-            - If the code has no significant issues, respond with exactly: "✅ **Code looks good!** No significant issues found."
-            - If you have suggestions but no blockers, provide constructive feedback with specific suggestions
+            - If the code has no significant issues that should block the commit, you MUST include "-COMMIT APPROVED-" 
+              in your response, followed by any optional feedback or suggestions
+            - Always provide specific, actionable feedback
              """}
         ], model_id=OPENCODE_MODEL, provider_id=OPENCODE_PROVIDER)
 
@@ -324,14 +325,27 @@ def main():
 
         last_msg = get_last_assistant_message(new_session_chat_messages)
 
-        is_rejected = last_msg and '-COMMIT REJECTED-' in last_msg
-        if is_rejected and last_msg:
-            last_msg = last_msg.replace('-COMMIT REJECTED-', '').strip()
+        # Check for valid AI response
+        if not last_msg:
+            render_markdown_terminal(None)
+            print("\n❌ ERROR: No response received from AI review. Blocking commit.", file=sys.stderr)
+            return 1
 
-        render_markdown_terminal(last_msg)
+        is_rejected = '-COMMIT REJECTED-' in last_msg
+        is_approved = '-COMMIT APPROVED-' in last_msg
+
+        # Clean up markers for display
+        display_msg = last_msg
+        if is_rejected:
+            display_msg = display_msg.replace('-COMMIT REJECTED-', '').strip()
+        if is_approved:
+            display_msg = display_msg.replace('-COMMIT APPROVED-', '').strip()
+
+        render_markdown_terminal(display_msg)
 
         continue_command = f"opencode --session {new_session_id}"
 
+        # If explicitly rejected, block the commit
         if is_rejected:
             fix_command = f"opencode run \"resolve these issues\" --session {new_session_id}"
 
@@ -358,6 +372,30 @@ def main():
                 print('='*80)
 
             return 1
+        
+        # If not explicitly approved, block the commit
+        elif not is_approved:
+            if Console and Panel:
+                console = Console()
+                console.print('\n')
+                console.print(Panel(
+                    f"[bold red]AI review did not explicitly approve this commit.[/bold red]",
+                    border_style='bold red',
+                    padding=(1, 2)
+                ))
+                console.print('\n[bold yellow]To continue chatting with this session:[/bold yellow]')
+                console.print(f'[bold cyan]{continue_command}[/bold cyan]')
+            else:
+                print('\n' + '='*80)
+                print('COMMIT REJECTED - AI review did not explicitly approve')
+                print('='*80)
+                print('\nTo continue chatting with this session:')
+                print(f"{continue_command}")
+                print('='*80)
+            
+            return 1
+        
+        # Explicitly approved - allow commit
         else:
             improve_command = f"opencode run \"apply the suggested improvements\" --session {new_session_id}"
 
@@ -365,7 +403,7 @@ def main():
                 console = Console()
                 console.print('\n')
                 console.print(Panel(
-                    f"[bold green]✓ No blocking issues found.[/bold green]",
+                    f"[bold green]✓ Commit approved by AI review.[/bold green]",
                     border_style='green',
                     padding=(1, 2)
                 ))
@@ -375,7 +413,7 @@ def main():
                 console.print(f'[bold cyan]{continue_command}[/bold cyan]')
             else:
                 print('\n' + '='*80)
-                print('No blocking issues found')
+                print('Commit approved by AI review')
                 print('='*80)
                 print('\nTo apply suggested improvements:')
                 print(f"{improve_command}\n")

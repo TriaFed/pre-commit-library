@@ -617,8 +617,14 @@ The hook will:
 - Review code quality and best practices
 - Identify potential bugs or security concerns
 - Suggest improvements
-- Block commits/pushes with critical issues (starting with "-COMMIT REJECTED-")
+- **Require explicit approval**: The AI must include "-COMMIT APPROVED-" in its response to allow the commit
+- **Block commits/pushes** in these cases:
+  - Critical issues found (response contains "-COMMIT REJECTED-")
+  - No response received from AI
+  - Response doesn't include explicit "-COMMIT APPROVED-" marker
 - Provide commands to continue the AI session or auto-fix issues
+
+**Important:** The hook enforces a strict approval model. The AI must explicitly approve each commit with "-COMMIT APPROVED-" in its response. This ensures the AI has actively reviewed your changes and found no blocking issues, rather than passively accepting by default.
 
 ### Using Amazon Bedrock
 
