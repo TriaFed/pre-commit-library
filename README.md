@@ -535,14 +535,11 @@ pre-commit install --hook-type pre-push
 This hook **requires** an `opencode.jsonc` configuration file in your repository root to enforce security policies.
 
 **Setup:**
-```bash
-# Download the security configuration to your repo root
-curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
 
-# Commit the configuration
-git add opencode.jsonc
-git commit -m "Add OpenCode security configuration"
-```
+1. Copy the contents of [`examples/opencode.jsonc`](https://github.com/TriaFed/pre-commit-library/blob/main/examples/opencode.jsonc) from this repository
+2. Create a file named `opencode.jsonc` in your repository root
+3. Paste the contents into your `opencode.jsonc` file
+4. Commit the configuration to your repository
 
 The `opencode.jsonc` file enforces:
 - `share: "disabled"` - No sharing of conversations
@@ -561,20 +558,29 @@ When the hook runs, you'll see:
 
 If the file is missing, the hook will exit with an error and instructions.
 
+**Important:** The `opencode.jsonc` file defines security policies and available models, but does NOT hardcode which model to use. Model selection is controlled via environment variables (see below), allowing you to switch between GitHub Copilot and Amazon Bedrock.
+
 **Environment Variables:**
 ```bash
-# GitHub Copilot Configuration (Default)
-export OPENCODE_PROVIDER=github-copilot
-export OPENCODE_MODEL=github-copilot/claude-sonnet-4.5
+# GitHub Copilot Configuration (Default - no env vars needed)
+# The hook defaults to GitHub Copilot if no variables are set
 
 # Amazon Bedrock Configuration
 export OPENCODE_PROVIDER=amazon-bedrock
 export OPENCODE_MODEL=amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
 export OPENCODE_BEDROCK_REGION=us-east-1  # Required: us-east-1 or us-gov-*
 
-# Server Configuration
+# Server Configuration (optional)
 export OPENCODE_PORT=61164                # Default: 61164
 export OPENCODE_TIMEOUT=90                # Default: 90 seconds
+```
+
+**Pro Tip:** Add Bedrock variables to your `~/.zshrc` or `~/.bashrc` to avoid setting them every time:
+```bash
+# Add to ~/.zshrc or ~/.bashrc
+export OPENCODE_PROVIDER=amazon-bedrock
+export OPENCODE_MODEL=amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
+export OPENCODE_BEDROCK_REGION=us-east-1
 ```
 
 **Usage:**

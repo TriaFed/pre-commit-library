@@ -149,17 +149,14 @@ opencode auth login
 
 Download the security configuration to your repository root:
 
-```bash
-cd /path/to/your/repo
-curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
+**Setup:**
 
-# Optional: Initialize AI instructions for your project
-# Run: opencode
-# Then in the opencode window, type: /init
+1. Copy the contents of [`examples/opencode.jsonc`](https://github.com/TriaFed/pre-commit-library/blob/main/examples/opencode.jsonc) from this repository
+2. Create a file named `opencode.jsonc` in your repository root
+3. Paste the contents into your `opencode.jsonc` file
+4. Commit the configuration to your repository
 
-git add opencode.jsonc
-git commit -m "Add opencode security configuration"
-```
+**Optional:** Initialize AI instructions for your project by running `opencode` and typing `/init` in the OpenCode window.
 
 The `opencode.jsonc` file is **required** and must deny dangerous operations:
 - `webfetch: "deny"` - Blocks external network requests

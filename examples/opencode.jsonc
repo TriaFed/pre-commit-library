@@ -5,9 +5,9 @@
   "share": "disabled",
   "autoupdate": false,
   
-  // Model configuration - ONLY allow approved models
-  "model": "github-copilot/claude-sonnet-4.5",
-  "small_model": "github-copilot/claude-sonnet-4.5",
+  // Note: Model selection is controlled via OPENCODE_MODEL environment variable
+  // Default: github-copilot/claude-sonnet-4.5
+  // Bedrock: amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
   
   // Disable all providers except approved ones (github-copilot and amazon-bedrock)
   "disabled_providers": [

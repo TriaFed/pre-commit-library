@@ -58,14 +58,11 @@ This runs automatically on `git push` and reviews all changes in your branch.
 The AI commit check hook **requires** an `opencode.jsonc` configuration file in your repository root to enforce security policies.
 
 **Setup:**
-```bash
-# Download the security configuration to your repo root
-curl -o opencode.jsonc https://raw.githubusercontent.com/TriaFed/pre-commit-library/main/examples/opencode.jsonc
 
-# Commit the configuration
-git add opencode.jsonc
-git commit -m "Add OpenCode security configuration"
-```
+1. Copy the contents of [`examples/opencode.jsonc`](https://github.com/TriaFed/pre-commit-library/blob/main/examples/opencode.jsonc) from this repository
+2. Create a file named `opencode.jsonc` in your repository root
+3. Paste the contents into your `opencode.jsonc` file
+4. Commit the configuration to your repository
 
 **What's included:**
 - Share disabled
