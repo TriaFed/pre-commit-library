@@ -137,10 +137,6 @@ def main():
             print("See CONFIGURATION_GUIDE.md for more details.", file=sys.stderr)
             return 3
 
-        print(f"✓ Using opencode.jsonc from repository root", file=sys.stderr)
-        print(f"✓ Model: {OPENCODE_MODEL}", file=sys.stderr)
-        print(f"✓ Provider: {OPENCODE_PROVIDER}", file=sys.stderr)
-
         available_port = find_available_port(OPENCODE_PORT)
         if not available_port:
             print(f"Error: No available ports found starting from port {OPENCODE_PORT}. "

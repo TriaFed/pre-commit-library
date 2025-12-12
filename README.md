@@ -624,6 +624,8 @@ The hook will:
 
 The AI commit check hook supports Amazon Bedrock with Claude Sonnet 4.5. For security and compliance, only specific AWS regions are allowed.
 
+You need to set the model in your opencode.jsonc. There is an example in examples/opencode.jsonc. You can set it with an env variable or set it directly to bedrock.
+
 **Allowed Regions:**
 
 - `us-east-1` (US East - N. Virginia)
@@ -645,7 +647,6 @@ The AI commit check hook supports Amazon Bedrock with Claude Sonnet 4.5. For sec
 2. **Set environment variables:**
 
    ```bash
-   export OPENCODE_PROVIDER=amazon-bedrock
    export OPENCODE_MODEL=amazon-bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
    export OPENCODE_BEDROCK_REGION=us-east-1
    ```
@@ -729,7 +730,7 @@ Provide project-specific context to the AI by creating instruction files:
 
 **Example Files:**
 
-- See `examples/opencode.jsonc` for recommended permission settings
+- See [`examples/opencode.jsonc`](examples/opencode.jsonc) for recommended permission settings
 
 **Troubleshooting:**
 If the hook fails with authentication errors, ensure you've completed the `opencode auth login` setup above.
